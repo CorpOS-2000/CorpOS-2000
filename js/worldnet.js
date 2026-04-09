@@ -1002,6 +1002,31 @@ function navigate(key, sub = '', opts = {}) {
   setHistoryButtons();
 }
 
+/**
+ * Normalize legacy / shorthand page keys used by in-world apps (e.g. Black Cherry).
+ */
+function normalizeWorldNetNavigateTarget(pageKey, subPath = '') {
+  const k = String(pageKey || '').trim();
+  const sub = typeof subPath === 'string' ? subPath : '';
+  if (k === 'wahoo') return { key: 'home', sub };
+  if (k === 'jeemail') return { key: 'jeemail_inbox', sub };
+  return { key: k || 'moogle_home', sub };
+}
+
+/**
+ * Open WorldNet Explorer and navigate to an internal page (used by Black Cherry Maps, etc.).
+ */
+function navigateToWorldNetPage(pageKey, subPath = '', opts = {}) {
+  const { key, sub } = normalizeWorldNetNavigateTarget(pageKey, subPath);
+  const pushHistory = opts.pushHistory !== false;
+  try {
+    window.openW?.('worldnet');
+  } catch {
+    /* ignore */
+  }
+  navigate(key, sub, { pushHistory });
+}
+
 function mountSsaPage(container) {
   const curEl = container.querySelector('#ssa-addr-current');
   if (curEl) {
@@ -1521,7 +1546,8 @@ export async function initWorldNet(loadJsonText) {
     window.WorldNet = {
       ...(window.WorldNet || {}),
       ads: getAdsApi(),
-      shop: getShopApi()
+      shop: getShopApi(),
+      navigateTo: navigateToWorldNetPage
     };
   }
 
