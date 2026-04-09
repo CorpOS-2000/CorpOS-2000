@@ -1,0 +1,415 @@
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tahoma','MS Sans Serif',Arial,sans-serif;font-size:11px;background:#1a1a2e;color:#222;}
+.studio{display:flex;flex-direction:column;height:100vh;min-height:700px;background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;}
+.titlebar{background:linear-gradient(to right,#0a246a,#a6b5e7);color:#fff;font-weight:bold;font-size:12px;padding:4px 8px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.tb-logo{display:flex;align-items:center;gap:6px;}
+.menubar{background:#d4d0c8;border-bottom:1px solid #404040;padding:2px 6px;display:flex;gap:0;flex-shrink:0;}
+.mitem{padding:2px 8px;font-size:11px;cursor:default;}
+.mitem:hover{background:#0a246a;color:#fff;}
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT SIDEBAR - ENGINE TABS */
+.sidebar{width:160px;background:#c8c4bc;border-right:2px solid;border-color:#404040 #fff #fff #404040;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-header{background:#0a246a;color:#fff;font-size:10px;font-weight:bold;padding:5px 8px;letter-spacing:.5px;}
+.engine-tab{padding:8px 10px;cursor:pointer;border-bottom:1px solid #b0aca4;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:bold;color:#333;transition:background .1s;}
+.engine-tab:hover{background:#b8b4ac;}
+.engine-tab.active{background:#fff;border-left:3px solid #0a246a;color:#0a246a;}
+.engine-tab .eico{font-size:14px;}
+.engine-tab .ecount{margin-left:auto;background:#0a246a;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;}
+.sidebar-foot{margin-top:auto;padding:8px;border-top:1px solid #b0aca4;}
+.build-btn{width:100%;padding:5px;background:#006600;color:#fff;border:2px solid;border-color:#00aa00 #003300 #003300 #00aa00;font-size:11px;font-weight:bold;cursor:pointer;text-align:center;}
+.build-btn:hover{background:#008800;}
+
+/* CONTENT AREA */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* SUB-TABS */
+.subtabs{background:#d4d0c8;border-bottom:2px solid;border-color:#404040 #fff #fff #404040;display:flex;padding:4px 6px 0;gap:2px;flex-shrink:0;}
+.stab{padding:4px 12px;font-size:11px;background:#b8b4ac;border:1px solid;border-color:#fff #404040 #404040 #fff;border-bottom:none;cursor:pointer;color:#555;}
+.stab.active{background:#d4d0c8;color:#0a246a;font-weight:bold;border-color:#fff #404040 #d4d0c8 #fff;position:relative;top:1px;}
+.stab:hover:not(.active){background:#c4c0b8;}
+
+/* PANELS */
+.panel-area{flex:1;display:flex;overflow:hidden;}
+.left-panel{width:260px;border-right:2px solid;border-color:#404040 #fff #fff #404040;display:flex;flex-direction:column;background:#d4d0c8;overflow:hidden;}
+.lp-header{background:#1a3a8f;color:#fff;font-size:10px;font-weight:bold;padding:4px 8px;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;}
+.lp-list{flex:1;overflow-y:auto;padding:4px;}
+.list-item{padding:6px 8px;border:1px solid #b0aca4;background:#fff;margin-bottom:3px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:11px;}
+.list-item:hover{background:#e8ecf8;border-color:#0a246a;}
+.list-item.selected{background:#ccd6ff;border-color:#0a246a;font-weight:bold;}
+.list-item .li-badge{font-size:9px;padding:1px 5px;margin-left:auto;border:1px solid;}
+.badge-contact{background:#ccffcc;color:#004400;border-color:#006600;}
+.badge-rival{background:#ffcccc;color:#660000;border-color:#990000;}
+.badge-investigator{background:#fff0aa;color:#554400;border-color:#aa8800;}
+.badge-story{background:#e8ccff;color:#330066;border-color:#6600aa;}
+.add-btn{margin:6px;padding:5px;background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;font-weight:bold;color:#0a246a;}
+.add-btn:hover{background:#c0d0ff;}
+
+/* FORM PANEL */
+.form-panel{flex:1;overflow-y:auto;padding:8px;}
+.section-group{background:#fff;border:1px solid #ccc;margin-bottom:8px;}
+.sg-header{background:#e8ecf8;border-bottom:1px solid #ccc;padding:4px 8px;font-weight:bold;font-size:11px;color:#0a246a;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.sg-body{padding:8px;}
+.field-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.field-row label{width:110px;font-size:10px;color:#555;flex-shrink:0;text-align:right;}
+.field-row input[type=text],.field-row input[type=number],.field-row select,.field-row textarea{flex:1;height:20px;border:2px solid;border-color:#404040 #fff #fff #404040;background:#fff;padding:0 4px;font-size:11px;font-family:Tahoma,Arial,sans-serif;}
+.field-row textarea{height:50px;resize:vertical;}
+.field-row select{height:22px;}
+.slider-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.slider-row label{width:110px;font-size:10px;color:#555;flex-shrink:0;text-align:right;}
+.slider-row input[type=range]{flex:1;}
+.slider-row .sv{width:32px;text-align:center;font-size:11px;font-weight:bold;color:#0a246a;}
+.slider-row .sl{font-size:9px;color:#888;width:60px;}
+.check-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.check-row label{font-size:11px;color:#333;}
+.tag-area{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border:2px solid;border-color:#404040 #fff #fff #404040;background:#fff;min-height:30px;}
+.tag{background:#ccd6ff;border:1px solid #0a246a;padding:1px 6px;font-size:10px;display:flex;align-items:center;gap:4px;color:#0a246a;}
+.tag .tx{cursor:pointer;color:#990000;font-weight:bold;}
+.conn-item{display:flex;align-items:center;gap:4px;margin-bottom:4px;padding:4px;background:#f5f5f5;border:1px solid #ddd;}
+.conn-item select{height:20px;font-size:10px;border:1px solid #ccc;}
+.conn-item .rm{background:#ffcccc;border:1px solid #990000;color:#660000;padding:1px 5px;cursor:pointer;font-size:10px;}
+
+/* RIGHT PREVIEW PANEL */
+.preview-panel{width:220px;border-left:2px solid;border-color:#404040 #fff #fff #404040;background:#1a1a2e;display:flex;flex-direction:column;flex-shrink:0;}
+.pp-header{background:#0a246a;color:#fff;font-size:10px;font-weight:bold;padding:4px 8px;letter-spacing:.5px;}
+.phone-frame{margin:10px auto;width:160px;background:#111;border-radius:12px;border:3px solid #333;padding:8px;position:relative;}
+.pf-screen{background:#0d1a2e;border-radius:6px;padding:8px;min-height:220px;}
+.pf-contact-card{background:#1a2a4a;border-radius:4px;padding:8px;margin-bottom:8px;}
+.pfc-name{color:#fff;font-size:12px;font-weight:bold;margin-bottom:2px;}
+.pfc-handle{color:#a6b5e7;font-size:10px;margin-bottom:6px;}
+.pfc-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.pfc-badge{font-size:9px;padding:2px 6px;border-radius:8px;}
+.pf-stat-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+.pf-stat-label{color:#556699;font-size:9px;}
+.pf-stat-bar{flex:1;height:6px;background:#0a1520;margin:2px 6px 0;border-radius:3px;overflow:hidden;}
+.pf-stat-fill{height:100%;border-radius:3px;}
+.pf-stat-val{color:#a6b5e7;font-size:9px;width:24px;text-align:right;}
+.pp-actions{padding:8px;border-top:1px solid #333;display:flex;flex-direction:column;gap:4px;}
+.pp-btn{background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;padding:3px;font-size:10px;cursor:pointer;text-align:center;font-family:Tahoma,Arial,sans-serif;}
+.pp-btn:hover{background:#e8ecf8;}
+.pp-btn.save{background:#ccffcc;border-color:#00aa00 #004400 #004400 #00aa00;color:#004400;font-weight:bold;}
+.pp-btn.export{background:#ccd6ff;border-color:#a6b5e7 #0a246a #0a246a #a6b5e7;color:#0a246a;}
+
+/* STATUS BAR */
+.statusbar{height:20px;background:#d4d0c8;border-top:1px solid #404040;display:flex;align-items:center;padding:0 8px;gap:8px;font-size:10px;flex-shrink:0;}
+.sb-panel{border:1px solid;border-color:#404040 #fff #fff #404040;padding:0 6px;height:14px;display:flex;align-items:center;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:16px;height:16px;}
+::-webkit-scrollbar-track{background:#d4d0c8;border:1px solid #b0aca4;}
+::-webkit-scrollbar-thumb{background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;}
+</style>
+
+<div class="studio">
+  <div class="titlebar">
+    <div class="tb-logo">
+      <svg width="14" height="14" viewBox="0 0 140 140"><rect x="4" y="4" width="132" height="132" rx="5" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="3"/><text x="52" y="76" font-family="Arial" font-weight="900" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="108" y="46" font-family="Arial" font-weight="900" font-size="30" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><text x="108" y="100" font-family="Arial" font-weight="900" font-size="30" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">S</text></svg>
+      CorpOS 2000 — Content Studio &nbsp;|&nbsp; Administrative Terminal &nbsp;|&nbsp; v1.0
+    </div>
+    <div style="margin-left:auto;display:flex;gap:4px;">
+      <button style="width:16px;height:14px;background:#d4d0c8;border:1px solid;border-color:#fff #404040 #404040 #fff;font-size:9px;cursor:pointer;">_</button>
+      <button style="width:16px;height:14px;background:#d4d0c8;border:1px solid;border-color:#fff #404040 #404040 #fff;font-size:9px;cursor:pointer;">□</button>
+      <button style="width:16px;height:14px;background:#d4d0c8;border:1px solid;border-color:#fff #404040 #404040 #fff;font-size:9px;cursor:pointer;">✕</button>
+    </div>
+  </div>
+  <div class="menubar">
+    <span class="mitem">File</span><span class="mitem">Edit</span><span class="mitem">View</span><span class="mitem">Registry</span><span class="mitem">Validate</span><span class="mitem">Build</span><span class="mitem">Help</span>
+  </div>
+
+  <div class="main">
+    <!-- SIDEBAR ENGINE SELECTOR -->
+    <div class="sidebar">
+      <div class="sidebar-header">◆ ENGINES</div>
+      <div class="engine-tab active" onclick="switchEngine('npc',this)">
+        <span class="eico">👤</span> NPC Creator<span class="ecount">12</span>
+      </div>
+      <div class="engine-tab" onclick="switchEngine('company',this)">
+        <span class="eico">🏢</span> Companies<span class="ecount">8</span>
+      </div>
+      <div class="engine-tab" onclick="switchEngine('gov',this)">
+        <span class="eico">⚖️</span> Government
+      </div>
+      <div class="engine-tab" onclick="switchEngine('web',this)">
+        <span class="eico">🌐</span> Web Editor<span class="ecount">24</span>
+      </div>
+      <div class="engine-tab" onclick="switchEngine('ads',this)">
+        <span class="eico">📢</span> Ad Engine<span class="ecount">18</span>
+      </div>
+      <div style="height:1px;background:#b0aca4;margin:4px 0;"></div>
+      <div class="sidebar-header" style="background:#334466;">◆ DASHBOARD</div>
+      <div class="engine-tab" onclick="switchEngine('dash',this)">
+        <span class="eico">📊</span> Overview
+      </div>
+      <div class="sidebar-foot">
+        <div class="build-btn" onclick="alert('Validating & publishing...')">▶ PUBLISH ALL</div>
+        <div style="margin-top:4px;font-size:9px;color:#666;text-align:center;">Last saved: 14:32</div>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content">
+      <!-- SUB-TABS -->
+      <div class="subtabs" id="subtabs">
+        <div class="stab active">Identity</div>
+        <div class="stab">Social Profile</div>
+        <div class="stab">Opinions</div>
+        <div class="stab">Connections</div>
+        <div class="stab">Criminal Record</div>
+        <div class="stab">Contact Settings</div>
+        <div class="stab">Modifiers</div>
+        <div class="stab">Lore</div>
+      </div>
+
+      <div class="panel-area">
+        <!-- LEFT: REGISTRY LIST -->
+        <div class="left-panel">
+          <div class="lp-header">
+            <span>NPC REGISTRY</span>
+            <span style="font-weight:normal;opacity:.7;">12 records</span>
+          </div>
+          <div style="padding:4px;border-bottom:1px solid #b0aca4;">
+            <input type="text" placeholder="🔍 Search NPCs..." style="width:100%;height:20px;border:2px solid;border-color:#404040 #fff #fff #404040;background:#fff;padding:0 4px;font-size:11px;">
+          </div>
+          <div style="padding:4px;border-bottom:1px solid #b0aca4;display:flex;gap:4px;">
+            <select style="flex:1;height:20px;font-size:10px;border:1px solid #ccc;">
+              <option>All Roles</option>
+              <option>Contact</option>
+              <option>Rival</option>
+              <option>Investigator</option>
+              <option>Story</option>
+            </select>
+            <select style="flex:1;height:20px;font-size:10px;border:1px solid #ccc;">
+              <option>All</option>
+              <option>Available</option>
+              <option>Hidden</option>
+            </select>
+          </div>
+          <div class="lp-list">
+            <div class="list-item selected">
+              <span>👤</span>
+              <div><div style="font-weight:bold;">Barbara Moseng</div><div style="font-size:9px;color:#666;">Investigator — Exile</div></div>
+              <span class="li-badge badge-story">STORY</span>
+            </div>
+            <div class="list-item">
+              <span>👤</span>
+              <div><div style="font-weight:bold;">Derek Sanderson</div><div style="font-size:9px;color:#666;">Exec — Damaged</div></div>
+              <span class="li-badge badge-contact">CONTACT</span>
+            </div>
+            <div class="list-item">
+              <span>👤</span>
+              <div><div style="font-weight:bold;">Gerald Hicks</div><div style="font-size:9px;color:#666;">FRA — Sr. Auditor</div></div>
+              <span class="li-badge badge-investigator">INVEST.</span>
+            </div>
+            <div class="list-item">
+              <span>👤</span>
+              <div><div style="font-weight:bold;">Marcus Webb</div><div style="font-size:9px;color:#666;">Ex-Director</div></div>
+              <span class="li-badge badge-contact">CONTACT</span>
+            </div>
+            <div class="list-item">
+              <span>👤</span>
+              <div><div style="font-weight:bold;">V. Caruso</div><div style="font-size:9px;color:#666;">Dark Web — Fixer</div></div>
+              <span class="li-badge badge-rival">RIVAL</span>
+            </div>
+          </div>
+          <div class="add-btn">＋ New NPC</div>
+        </div>
+
+        <!-- CENTER: FORM -->
+        <div class="form-panel">
+
+          <!-- IDENTITY SECTION -->
+          <div class="section-group">
+            <div class="sg-header">
+              <span>▼ Identity</span>
+              <span style="font-size:9px;font-weight:normal;color:#555;">Core legal information</span>
+            </div>
+            <div class="sg-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                <div class="field-row"><label>Full Name</label><input type="text" value="Barbara Moseng"></div>
+                <div class="field-row"><label>Date of Birth</label><input type="text" value="March 3, 1961"></div>
+                <div class="field-row"><label>Age</label><input type="number" value="39" style="width:60px;flex:none;"></div>
+                <div class="field-row"><label>Gender</label><select><option>Female</option><option>Male</option><option>Other</option></select></div>
+                <div class="field-row"><label>Profession</label><input type="text" value="Investigative Journalist"></div>
+                <div class="field-row"><label>Employer</label><input type="text" value="Independent / Freelance"></div>
+                <div class="field-row"><label>Employer Type</label><select><option>Self-employed</option><option>Company</option><option>Institution</option></select></div>
+                <div class="field-row"><label>Annual Income</label><input type="number" value="85000"></div>
+                <div class="field-row"><label>Net Worth</label><input type="number" value="210000"></div>
+                <div class="field-row"><label>Lifestyle</label><select><option>Middle</option><option>Low</option><option>Upper-Middle</option><option>Wealthy</option></select></div>
+              </div>
+              <div class="field-row"><label>Home Address</label><input type="text" value="Unknown — abroad" style="width:100%;"></div>
+              <div class="field-row"><label>Phone</label><input type="text" value="+44-XXX-XXXX-XXXX"></div>
+              <div class="field-row"><label>Email</label><input type="text" value="bmoseng@globalpress.net"></div>
+              <div class="field-row"><label>SSN</label><input type="text" value="Redacted — Non-US resident"></div>
+            </div>
+          </div>
+
+          <!-- SOCIAL PROFILE -->
+          <div class="section-group">
+            <div class="sg-header">▼ Social Profile &amp; Perception</div>
+            <div class="sg-body">
+              <div class="field-row"><label>Social Weight</label><input type="range" min="0" max="100" value="78" style="flex:1;"><span class="sv">78</span><span style="font-size:9px;color:#888;">High — international reach</span></div>
+              <div class="field-row"><label>Weight Source</label><input type="text" value="International journalism — 40K+ readers, foreign press corps"></div>
+              <div style="margin-top:8px;">
+                <div class="slider-row"><label>Public Perception</label><input type="range" min="0" max="100" value="82"><span class="sv" style="color:#006600;">82</span><span class="sl">Widely trusted</span></div>
+                <div class="slider-row"><label>Corporate Perception</label><input type="range" min="0" max="100" value="24"><span class="sv" style="color:#cc0000;">24</span><span class="sl">Feared / avoided</span></div>
+                <div class="slider-row"><label>Govt Perception</label><input type="range" min="0" max="100" value="31"><span class="sv" style="color:#cc6600;">31</span><span class="sl">Monitored</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VULNERABILITIES -->
+          <div class="section-group">
+            <div class="sg-header">▼ Vulnerabilities &amp; Pressure Points</div>
+            <div class="sg-body">
+              <div class="tag-area" id="vuln-area">
+                <div class="tag">Estranged from US contacts <span class="tx" onclick="this.parentElement.remove()">✕</span></div>
+                <div class="tag">Relies on secure comms <span class="tx" onclick="this.parentElement.remove()">✕</span></div>
+                <div class="tag">Former colleague at risk <span class="tx" onclick="this.parentElement.remove()">✕</span></div>
+              </div>
+              <div style="display:flex;gap:4px;margin-top:6px;">
+                <input type="text" id="vuln-input" placeholder="Add vulnerability..." style="flex:1;height:20px;border:2px solid;border-color:#404040 #fff #fff #404040;background:#fff;padding:0 4px;font-size:11px;">
+                <button onclick="addVuln()" style="padding:0 8px;background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;font-size:11px;cursor:pointer;">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONNECTIONS -->
+          <div class="section-group">
+            <div class="sg-header">▼ Connection Network</div>
+            <div class="sg-body">
+              <div class="conn-item">
+                <span style="font-size:10px;width:90px;color:#555;">Derek Sanderson</span>
+                <select><option>Investigation target</option><option>Ally</option><option>Rival</option><option>Informant</option></select>
+                <span style="font-size:10px;color:#555;">Strength:</span>
+                <input type="range" min="1" max="10" value="6" style="width:60px;">
+                <span style="font-size:10px;font-weight:bold;color:#0a246a;">6</span>
+                <button class="rm">✕</button>
+              </div>
+              <div class="conn-item">
+                <span style="font-size:10px;width:90px;color:#555;">Marcus Webb</span>
+                <select><option>Source</option><option>Ally</option></select>
+                <span style="font-size:10px;color:#555;">Strength:</span>
+                <input type="range" min="1" max="10" value="8" style="width:60px;">
+                <span style="font-size:10px;font-weight:bold;color:#0a246a;">8</span>
+                <button class="rm">✕</button>
+              </div>
+              <button onclick="" style="padding:3px 8px;background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;font-size:11px;cursor:pointer;margin-top:4px;">＋ Add Connection</button>
+            </div>
+          </div>
+
+          <!-- CONTACT SETTINGS -->
+          <div class="section-group">
+            <div class="sg-header">▼ Contact Settings &amp; Role</div>
+            <div class="sg-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                <div class="field-row"><label>Role</label><select><option>Story Character</option><option>Contact</option><option>Rival</option><option>Investigator</option><option>Neutral</option></select></div>
+                <div class="field-row"><label>Availability</label><select><option>Hidden</option><option>Always</option><option>Unlocked</option><option>Dark Web Only</option></select></div>
+                <div class="field-row"><label>Black Cherry Handle</label><input type="text" value="MOSENG_B"></div>
+                <div class="field-row"><label>Unlock Condition</label><input type="text" value="Dark web + Reputation > 80"></div>
+              </div>
+              <div class="check-row"><input type="checkbox" checked> <label>Key Story Character — marks as narrative-critical</label></div>
+              <div class="check-row"><input type="checkbox"> <label>Investigator — show Tier selector</label></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: PREVIEW -->
+        <div class="preview-panel">
+          <div class="pp-header">PREVIEW — BLACK CHERRY</div>
+          <div class="phone-frame">
+            <div style="width:40px;height:6px;background:#222;border-radius:3px;margin:0 auto 8px;"></div>
+            <div class="pf-screen">
+              <div style="color:#a6b5e7;font-size:9px;margin-bottom:6px;letter-spacing:1px;">◆ CONTACTS — HIDDEN</div>
+              <div class="pf-contact-card">
+                <div class="pfc-name">Barbara Moseng</div>
+                <div class="pfc-handle">@MOSENG_B</div>
+                <div class="pfc-badges">
+                  <span class="pfc-badge" style="background:#330066;color:#e8ccff;">STORY</span>
+                  <span class="pfc-badge" style="background:#003300;color:#ccffcc;">HIDDEN</span>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="color:#556699;font-size:9px;margin-bottom:4px;letter-spacing:1px;">PERCEPTION</div>
+                <div class="pf-stat-row">
+                  <div class="pf-stat-label">Public</div>
+                  <div class="pf-stat-bar"><div class="pf-stat-fill" style="width:82%;background:#006600;"></div></div>
+                  <div class="pf-stat-val">82</div>
+                </div>
+                <div class="pf-stat-row">
+                  <div class="pf-stat-label">Corporate</div>
+                  <div class="pf-stat-bar"><div class="pf-stat-fill" style="width:24%;background:#cc0000;"></div></div>
+                  <div class="pf-stat-val">24</div>
+                </div>
+                <div class="pf-stat-row">
+                  <div class="pf-stat-label">Govt</div>
+                  <div class="pf-stat-bar"><div class="pf-stat-fill" style="width:31%;background:#cc6600;"></div></div>
+                  <div class="pf-stat-val">31</div>
+                </div>
+                <div style="margin-top:8px;border-top:1px solid #1a3a5a;padding-top:6px;">
+                  <div style="color:#556699;font-size:9px;margin-bottom:2px;">SOCIAL WEIGHT</div>
+                  <div style="color:#a6b5e7;font-size:16px;font-weight:bold;">78 <span style="font-size:9px;color:#556699;">/ 100</span></div>
+                  <div style="font-size:9px;color:#445566;">International reach</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-around;margin-top:8px;">
+              <div style="width:12px;height:12px;background:#333;border-radius:50%;"></div>
+              <div style="width:20px;height:12px;background:#333;border-radius:2px;display:flex;align-items:center;justify-content:center;"><div style="width:6px;height:6px;background:#555;border-radius:50%;"></div></div>
+              <div style="width:12px;height:12px;background:#333;border-radius:50%;"></div>
+            </div>
+          </div>
+          <div class="pp-actions">
+            <div class="pp-btn save" onclick="alert('NPC saved to registry.')">💾 Save NPC</div>
+            <div class="pp-btn export" onclick="alert('Exported to npcs.json')">⬆ Export JSON</div>
+            <div class="pp-btn" onclick="alert('Duplicate created.')">⧉ Duplicate</div>
+            <div class="pp-btn" style="color:#990000;" onclick="alert('Delete?')">✕ Delete NPC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <div class="sb-panel">Content Studio v1.0</div>
+    <div class="sb-panel">NPC Creator — Active</div>
+    <div class="sb-panel" style="color:#006600;">✓ Registry valid</div>
+    <div class="sb-panel">12 NPCs | 8 Companies | 24 Pages | 18 Ads</div>
+    <div class="sb-panel" style="margin-left:auto;">CorpOS 2000 | Administrative Terminal</div>
+  </div>
+</div>
+
+<script>
+function switchEngine(engine, el){
+  document.querySelectorAll('.engine-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const subtabs = document.getElementById('subtabs');
+  const maps = {
+    npc:['Identity','Social Profile','Opinions','Connections','Criminal Record','Contact Settings','Modifiers','Lore'],
+    company:['Identity','Financials','Perception','Risk Status','Judicial Record','Ownership','Combat','Rival AI','Lore'],
+    gov:['Tax System','Reg. Thresholds','Compliance','Hidden Values','Investigator Fines','Notoriety Tiers','CE Tiers','Personnel','Agencies'],
+    web:['Page Settings','Sections','Navigation','Ad Slots','Shop Link','Login System','Game State','Event Triggers'],
+    ads:['Ad Library','Create Ad','Slot Mapping','Templates','Animation','Preview'],
+    dash:['Overview','Registry Stats','Validation','Backups','Build Log'],
+  };
+  const tabs = maps[engine] || maps.npc;
+  subtabs.innerHTML = tabs.map((t,i)=>`<div class="stab${i===0?' active':''}">${t}</div>`).join('');
+  document.querySelectorAll('.stab').forEach(t=>{
+    t.onclick = function(){document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));this.classList.add('active');};
+  });
+}
+function addVuln(){
+  const inp = document.getElementById('vuln-input');
+  if(!inp.value.trim()) return;
+  const div = document.createElement('div');
+  div.className = 'tag';
+  div.innerHTML = inp.value + ' <span class="tx" onclick="this.parentElement.remove()">✕</span>';
+  document.getElementById('vuln-area').appendChild(div);
+  inp.value = '';
+}
+document.querySelectorAll('.stab').forEach(t=>{
+  t.onclick = function(){document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));this.classList.add('active');};
+});
+</script>

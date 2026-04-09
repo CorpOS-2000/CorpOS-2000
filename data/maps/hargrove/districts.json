@@ -1,0 +1,122 @@
+[
+  {
+    "id": "downtown",
+    "name": "Downtown Hargrove",
+    "label": "Downtown",
+    "bounds": { "x": 420, "y": 280, "w": 120, "h": 100 },
+    "zone": "commercial",
+    "color": "#e8d8c0",
+    "density": "high",
+    "description": "Central business district. City hall, banks, law offices, the Daily Register building."
+  },
+  {
+    "id": "northside",
+    "name": "North Hargrove",
+    "label": "Northside",
+    "bounds": { "x": 350, "y": 80, "w": 260, "h": 200 },
+    "zone": "residential_upper",
+    "color": "#d4e8d0",
+    "density": "low",
+    "description": "Upper-middle-class residential. Tree-lined streets, larger lots, established families."
+  },
+  {
+    "id": "eastside",
+    "name": "East Hargrove",
+    "label": "Eastside",
+    "bounds": { "x": 600, "y": 280, "w": 200, "h": 220 },
+    "zone": "residential_middle",
+    "color": "#dce8d8",
+    "density": "medium",
+    "description": "Middle-class residential and small commercial. Strip malls, family restaurants, auto shops."
+  },
+  {
+    "id": "westside",
+    "name": "West Hargrove",
+    "label": "Westside",
+    "bounds": { "x": 160, "y": 260, "w": 200, "h": 220 },
+    "zone": "mixed",
+    "color": "#e0dcc8",
+    "density": "medium",
+    "description": "Mixed residential and light commercial. Older housing stock, corner stores, community feel."
+  },
+  {
+    "id": "southside",
+    "name": "South Hargrove",
+    "label": "Southside",
+    "bounds": { "x": 300, "y": 520, "w": 300, "h": 180 },
+    "zone": "industrial",
+    "color": "#d8d0c4",
+    "density": "low",
+    "description": "Industrial zone. Warehouses, distribution centers, manufacturing plants, freight yards."
+  },
+  {
+    "id": "university_dist",
+    "name": "University District",
+    "label": "University Dist.",
+    "bounds": { "x": 160, "y": 80, "w": 180, "h": 160 },
+    "zone": "mixed_edu",
+    "color": "#d8e4ec",
+    "density": "high",
+    "description": "Hargrove State University campus and surrounding area. Rentals, cafes, bookstores, tech startups."
+  },
+  {
+    "id": "tech_corridor",
+    "name": "Innovation Corridor",
+    "label": "Tech Corridor",
+    "bounds": { "x": 100, "y": 260, "w": 160, "h": 120 },
+    "zone": "commercial_tech",
+    "color": "#d4dce8",
+    "density": "medium",
+    "description": "Office parks and tech companies. Dot-com era startups, server farms, ISP offices."
+  },
+  {
+    "id": "old_town",
+    "name": "Old Town",
+    "label": "Old Town",
+    "bounds": { "x": 380, "y": 380, "w": 120, "h": 100 },
+    "zone": "commercial_historic",
+    "color": "#e8e0cc",
+    "density": "medium",
+    "description": "Historic district. Preserved storefronts, antiques, local restaurants, city museum."
+  },
+  {
+    "id": "valley_heights",
+    "name": "Valley Heights",
+    "label": "Valley Heights",
+    "bounds": { "x": 620, "y": 80, "w": 200, "h": 200 },
+    "zone": "residential_upper",
+    "color": "#d8ecd4",
+    "density": "low",
+    "description": "Affluent residential. New developments, gated communities, large properties."
+  },
+  {
+    "id": "harbor_district",
+    "name": "Harbor District",
+    "label": "Harbor",
+    "bounds": { "x": 680, "y": 500, "w": 200, "h": 180 },
+    "zone": "industrial_port",
+    "color": "#ccd4d8",
+    "density": "low",
+    "description": "Port and logistics area. Rail yard, trucking companies, cold storage facilities."
+  },
+  {
+    "id": "midtown",
+    "name": "Midtown Hargrove",
+    "label": "Midtown",
+    "bounds": { "x": 360, "y": 140, "w": 180, "h": 140 },
+    "zone": "commercial_mixed",
+    "color": "#e4dcd0",
+    "density": "high",
+    "description": "Dense mixed-use. Offices, retail, apartments above shops. The working city."
+  },
+  {
+    "id": "riverside",
+    "name": "Riverside",
+    "label": "Riverside",
+    "bounds": { "x": 100, "y": 400, "w": 240, "h": 200 },
+    "zone": "residential_low",
+    "color": "#dce4d4",
+    "density": "medium",
+    "description": "Working-class residential near the river. Smaller homes, community parks, local businesses."
+  }
+]

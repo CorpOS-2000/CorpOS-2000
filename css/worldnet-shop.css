@@ -1,0 +1,419 @@
+/* WorldNet Shopping — Y2K storefront (tables, loud buttons, sale stripe) */
+
+.wn-shop-root {
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  color: #111;
+  background: #f4f4f0;
+  padding: 8px 10px 12px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.wn-shop-muted {
+  color: #666;
+  font-size: 11px;
+}
+
+.wn-shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #ffffcc 0%, #fff8e0 100%);
+  border: 2px solid #cc6600;
+  box-shadow: inset 1px 1px 0 #fff, 2px 2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.wn-shop-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #990000;
+  letter-spacing: 0.5px;
+}
+
+.wn-shop-tag {
+  font-size: 10px;
+  color: #444;
+  margin-top: 2px;
+}
+
+.wn-shop-header-actions a {
+  font-size: 11px;
+  font-weight: bold;
+  color: #0a246a;
+}
+
+.wn-shop-layout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.wn-shop-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.wn-shop-main.solo {
+  max-width: 720px;
+}
+
+.wn-shop-aside {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.wn-shop-crumb {
+  font-size: 10px;
+  color: #555;
+  margin: 0 0 8px;
+}
+
+.wn-shop-crumb a {
+  color: #0a246a;
+}
+
+.wn-shop-h1 {
+  font-size: 16px;
+  color: #000080;
+  margin: 0 0 8px;
+}
+
+.wn-shop-h2 {
+  font-size: 13px;
+  color: #333;
+  margin: 12px 0 6px;
+}
+
+.wn-shop-banner-row {
+  margin-bottom: 8px;
+}
+
+.wn-shop-banner-row--inline {
+  margin: 10px 0;
+}
+
+.wn-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.wn-shop-card {
+  border: 2px solid #999;
+  background: #fff;
+  box-shadow: 2px 2px 0 #bbb;
+}
+
+.wn-shop-card-img {
+  height: 72px;
+  border-bottom: 1px solid #ccc;
+}
+
+.wn-shop-card-body {
+  padding: 6px;
+}
+
+.wn-shop-card-title a {
+  font-size: 11px;
+  font-weight: bold;
+  color: #000080;
+}
+
+.wn-shop-price-row {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.wn-shop-price-row.big {
+  font-size: 14px;
+}
+
+.wn-shop-price {
+  color: #006600;
+  font-weight: bold;
+}
+
+.wn-shop-price-sale {
+  color: #cc0000;
+  font-weight: bold;
+}
+
+.wn-shop-price-was {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+.wn-shop-stock {
+  font-size: 10px;
+  color: #444;
+  margin-top: 2px;
+}
+
+.wn-shop-side-cat {
+  border: 1px solid #666;
+  background: #eef3ff;
+  padding: 6px;
+  margin-bottom: 8px;
+}
+
+.wn-shop-side-title {
+  font-size: 10px;
+  font-weight: bold;
+  color: #000080;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #99c;
+  padding-bottom: 2px;
+}
+
+.wn-shop-cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wn-shop-cat-list li {
+  margin: 3px 0;
+}
+
+.wn-shop-cat-list a {
+  font-size: 10px;
+  color: #0a246a;
+}
+
+.wn-shop-ship-banner {
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 2px dashed #996600;
+  background: #fffaf0;
+  font-size: 11px;
+  font-weight: bold;
+  color: #663300;
+}
+
+.wn-shop-ship-banner--ok {
+  border-style: solid;
+  border-color: #006600;
+  color: #004400;
+  background: #e8ffe8;
+}
+
+.wn-shop-product {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.wn-shop-product-visual {
+  width: 180px;
+  height: 160px;
+  border: 2px solid #666;
+  flex-shrink: 0;
+}
+
+.wn-shop-desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #333;
+}
+
+.wn-shop-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.wn-shop-qty {
+  width: 48px;
+  height: 20px;
+}
+
+.wn-shop-btn,
+a.wn-shop-btn {
+  display: inline-block;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: Tahoma, Arial, sans-serif;
+  background: linear-gradient(180deg, #ffcc66 0%, #ff9900 100%);
+  border: 2px solid;
+  border-color: #fff #996600 #996600 #fff;
+  color: #330000;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.wn-shop-btn:hover,
+a.wn-shop-btn:hover {
+  filter: brightness(1.05);
+}
+
+.wn-shop-btn-small {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: #ddd;
+  border: 2px solid;
+  border-color: #fff #666 #666 #fff;
+  cursor: pointer;
+}
+
+.wn-shop-related {
+  font-size: 11px;
+  padding-left: 18px;
+  margin: 0;
+}
+
+.wn-shop-related a {
+  color: #0a246a;
+}
+
+.wn-shop-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 2px solid #666;
+  margin-bottom: 10px;
+}
+
+.wn-shop-table th,
+.wn-shop-table td {
+  border: 1px solid #aaa;
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.wn-shop-table th {
+  background: #003399;
+  color: #fff;
+  text-align: left;
+}
+
+.wn-shop-form-table input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 11px;
+}
+
+.wn-shop-cart-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wn-shop-qty-input {
+  width: 52px;
+  font-size: 11px;
+}
+
+.wn-shop-radio-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.wn-shop-radio-col label {
+  font-size: 11px;
+}
+
+.wn-shop-summary {
+  font-size: 11px;
+  margin: 8px 0;
+}
+
+/* ── Active Tasks window ── */
+
+.win-tasks-body {
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  padding: 8px;
+}
+
+.tasks-empty {
+  color: #666;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table th,
+.tasks-table td {
+  border: 1px solid #ccc;
+  padding: 5px 6px;
+  text-align: left;
+}
+
+.tasks-table th {
+  background: #0a246a;
+  color: #fff;
+  font-size: 10px;
+}
+
+.task-handler-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-handler-toolbar {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #b8b8b8;
+}
+
+.task-handler-table tbody tr {
+  cursor: pointer;
+}
+
+.task-handler-table tbody tr.is-selected {
+  background: #dbe7ff;
+}
+
+.task-icon {
+  display: inline-block;
+  width: 18px;
+  margin-right: 4px;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-progress__bar {
+  width: 110px;
+  height: 10px;
+  border: 1px solid #888;
+  background: #f1f1f1;
+}
+
+.task-progress__fill {
+  height: 100%;
+  background: #0a246a;
+}
+
+.task-handler-selection {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #b8b8b8;
+  background: #f6f6f6;
+  font-size: 10px;
+}

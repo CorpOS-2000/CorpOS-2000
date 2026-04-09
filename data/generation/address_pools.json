@@ -1,0 +1,14 @@
+{
+  "streets": [
+    "Starter St",
+    "Commerce Ave",
+    "Federal Way",
+    "Market Blvd",
+    "Network Dr",
+    "Liberty Rd",
+    "Harbor Ln"
+  ],
+  "cities": ["Suburbia", "Oakpoint", "Riverton", "Westbridge", "Clearwater"],
+  "states": ["CA", "NY", "IL", "TX", "WA"],
+  "zips": ["90210", "10012", "60611", "77002", "98101"]
+}

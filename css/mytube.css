@@ -1,0 +1,370 @@
+/* mytube.net — Y2K video portal parody */
+
+.mt-page {
+  font-family: Tahoma, Verdana, Arial, sans-serif;
+  background: #e8e8e8;
+  color: #222;
+}
+
+.mt-chrome {
+  background: linear-gradient(180deg, #ffd428 0%, #f5b800 45%, #d49800 100%);
+  border-bottom: 2px solid #8a6a00;
+  padding: 6px 8px;
+}
+
+.mt-chrome-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mt-logo {
+  font-family: Impact, Haettenschweiler, Arial Narrow, sans-serif;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: #1a1a8c;
+  text-shadow: 1px 1px 0 #fff, 2px 2px 0 #ff6699;
+}
+
+.mt-tag {
+  font-size: 9px;
+  color: #4a3a00;
+  max-width: 140px;
+  line-height: 1.2;
+}
+
+.mt-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.mt-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 2px inset #ccc;
+}
+
+.mt-search button,
+.mt-navbtn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  background: linear-gradient(180deg, #fff 0%, #ddd 100%);
+  border: 2px solid;
+  border-color: #fff #666 #666 #fff;
+}
+
+.mt-navbtn:active {
+  border-color: #666 #fff #fff #666;
+}
+
+.mt-user {
+  font-size: 10px;
+  color: #222;
+  white-space: nowrap;
+}
+
+.mt-user a {
+  color: #00c;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.mt-body {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 8px;
+  max-width: 920px;
+}
+
+.mt-side {
+  width: 140px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 8px;
+  font-size: 10px;
+}
+
+.mt-side h4 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #1a1a8c;
+}
+
+.mt-side ul {
+  margin: 0;
+  padding-left: 14px;
+  color: #555;
+}
+
+.mt-main {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 10px;
+}
+
+.mt-h1 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #1a1a8c;
+  border-bottom: 2px solid #ffd428;
+  padding-bottom: 4px;
+}
+
+.mt-vlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mt-vrow {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  align-items: flex-start;
+}
+
+.mt-thumb {
+  width: 120px;
+  height: 90px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #1a1a2e 0%, #2d2d44 40%, #0f0f18 100%);
+  border: 2px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.mt-thumb::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 0 10px 16px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.85);
+  margin-left: 4px;
+}
+
+.mt-thumb-dur {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffeb3b;
+  padding: 1px 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.mt-vmeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.mt-vtitle {
+  font-size: 13px;
+  font-weight: bold;
+  color: #00c;
+  cursor: pointer;
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+.mt-vtitle:hover {
+  color: #c06;
+}
+
+.mt-vchan {
+  font-size: 10px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.mt-vdesc {
+  font-size: 10px;
+  color: #444;
+  margin-top: 4px;
+  line-height: 1.35;
+  max-height: 2.7em;
+  overflow: hidden;
+}
+
+.mt-pager {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.mt-pager button {
+  padding: 2px 10px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.mt-watch-player {
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 4 / 3;
+  background: radial-gradient(circle at 50% 40%, #2a3a55 0%, #0a0a12 70%);
+  border: 3px solid;
+  border-color: #fff #444 #444 #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.mt-watch-player::before {
+  content: '▶';
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.mt-watch-player--real {
+  padding: 0;
+}
+
+.mt-watch-player--real video,
+.mt-watch-player--real img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.mt-watch-h1 {
+  font-size: 16px;
+  margin: 0 0 6px;
+  color: #111;
+}
+
+.mt-watch-sub {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.mt-votes {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.mt-vbtn {
+  padding: 4px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid #999;
+  background: linear-gradient(180deg, #f8f8f8, #ddd);
+}
+
+.mt-vbtn.is-on.mt-vbtn-up {
+  background: #dfd;
+  border-color: #393;
+}
+
+.mt-vbtn.is-on.mt-vbtn-down {
+  background: #fdd;
+  border-color: #933;
+}
+
+.mt-comments {
+  margin-top: 14px;
+  border-top: 1px dashed #ccc;
+  padding-top: 10px;
+}
+
+.mt-comment {
+  font-size: 11px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.mt-comment-v {
+  margin-top: 4px;
+  display: flex;
+  gap: 6px;
+}
+
+.mt-comment-v button {
+  font-size: 9px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+
+.mt-compose {
+  margin-top: 12px;
+  padding: 8px;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+}
+
+.mt-compose textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.mt-compose textarea.mt-compose-input--locked {
+  background: #eef;
+}
+
+.mt-upload-form label {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.mt-upload-form input[type='text'],
+.mt-upload-form select {
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
+  padding: 4px;
+  font-size: 11px;
+}
+
+.mt-random {
+  font-size: 10px;
+  margin-top: 8px;
+}
+
+.mt-random a {
+  color: #00c;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.mt-loading {
+  font-size: 12px;
+  color: #666;
+}
+
+.mt-fake-badge {
+  display: inline-block;
+  font-size: 9px;
+  background: #333;
+  color: #ffeb3b;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}

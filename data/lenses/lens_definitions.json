@@ -1,0 +1,43 @@
+{
+  "social": {
+    "fields": ["actor_id", "public_profile", "aliases", "relationships", "taglets", "social_weight", "opinion_profile"],
+    "alias_mode": "display_name",
+    "relationship_depth": 1
+  },
+  "forum": {
+    "fields": ["actor_id", "aliases", "taglets", "activity_schedule"],
+    "alias_mode": "alias",
+    "relationship_depth": 0
+  },
+  "news": {
+    "fields": ["actor_id", "public_profile", "profession", "employer_id", "reputation", "memory"],
+    "alias_mode": "display_name",
+    "relationship_depth": 0
+  },
+  "email": {
+    "fields": ["actor_id", "full_legal_name", "emails", "public_profile"],
+    "alias_mode": "full_legal_name",
+    "relationship_depth": 0
+  },
+  "corporate": {
+    "fields": ["actor_id", "full_legal_name", "profession", "employer_id", "public_profile"],
+    "alias_mode": "full_legal_name",
+    "relationship_depth": 1
+  },
+  "anonymous": {
+    "fields": ["actor_id", "aliases", "taglets"],
+    "alias_mode": "alias",
+    "relationship_depth": 0,
+    "mask_actor_id": true
+  },
+  "banking": {
+    "fields": ["actor_id", "full_legal_name", "ssn", "phone_numbers", "emails", "home_address", "dob", "age", "profession", "employer_id", "lifestyle_tier"],
+    "alias_mode": "full_legal_name",
+    "relationship_depth": 0
+  },
+  "government": {
+    "fields": "*",
+    "alias_mode": "full_legal_name",
+    "relationship_depth": 2
+  }
+}

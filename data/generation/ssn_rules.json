@@ -1,0 +1,12 @@
+{
+  "format": "XXX-XX-XXXX",
+  "area_min": 100,
+  "area_max": 899,
+  "group_min": 10,
+  "group_max": 99,
+  "serial_min": 1000,
+  "serial_max": 9999,
+  "reserved_ranges": [
+    { "start": "666-00-0000", "end": "666-99-9999" }
+  ]
+}

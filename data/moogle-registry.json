@@ -1,0 +1,15 @@
+{
+  "pageId": "moogle_home",
+  "url": "http://www.moogle.com",
+  "title": "Moogle",
+  "category": "search",
+  "aestheticTheme": "year2000-casual",
+  "primaryColor": "#111111",
+  "secondaryColor": "#ffffff",
+  "backgroundColor": "#ffffff",
+  "siteName": "Moogle",
+  "siteTagline": "The Whole Herd of the Web",
+  "hasAdSlots": false,
+  "requiresLogin": false,
+  "note": "In-world site is implemented in js/moogle.js (not the content pipeline) so http://www.moogle.com/ resolves via worldnet-routes host map. Do not add a duplicate pipeline URL for the same host."
+}

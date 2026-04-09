@@ -1,0 +1,21 @@
+{
+  "readme": "Designer-editable virtual folder contents for Explorer (generic files only). Music listings are merged from assets/music/tracks.json in code.",
+  "userFiles": [
+    {
+      "id": "vf-welcome",
+      "parentId": "folder-documents",
+      "name": "Welcome to CorpOS.txt",
+      "kind": "file",
+      "size": 512,
+      "description": "Getting started document."
+    },
+    {
+      "id": "vf-readme-dl",
+      "parentId": "folder-downloads",
+      "name": "readme.txt",
+      "kind": "file",
+      "size": 128,
+      "description": "Empty downloads folder placeholder."
+    }
+  ]
+}

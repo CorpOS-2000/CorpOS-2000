@@ -1,0 +1,6 @@
+{
+  "format": "555-XXX-XXXX",
+  "area_codes": ["555"],
+  "exchange_min": 100,
+  "exchange_max": 999
+}

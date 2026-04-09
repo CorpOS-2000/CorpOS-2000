@@ -1,0 +1,10 @@
+[
+  { "profession": "Warehouse Associate", "lifestyle_tier": "low", "min_age": 22, "max_age": 65 },
+  { "profession": "Retail Clerk", "lifestyle_tier": "low", "min_age": 22, "max_age": 65 },
+  { "profession": "Office Administrator", "lifestyle_tier": "middle", "min_age": 22, "max_age": 65 },
+  { "profession": "Accountant", "lifestyle_tier": "middle", "min_age": 24, "max_age": 65 },
+  { "profession": "Software Technician", "lifestyle_tier": "upper-middle", "min_age": 23, "max_age": 65 },
+  { "profession": "Corporate Manager", "lifestyle_tier": "upper-middle", "min_age": 28, "max_age": 65 },
+  { "profession": "Director", "lifestyle_tier": "wealthy", "min_age": 32, "max_age": 70 },
+  { "profession": "Executive", "lifestyle_tier": "elite", "min_age": 35, "max_age": 75 }
+]

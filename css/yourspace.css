@@ -1,0 +1,406 @@
+/* yourspace.net — Y2K MySpace parody shell */
+
+.ys-page {
+  font-family: Verdana, Tahoma, Arial, sans-serif;
+  background: linear-gradient(180deg, #ffd6ff 0%, #d6e8ff 35%, #ffffff 100%);
+}
+
+.ys-glitter-bar {
+  font-size: 10px;
+  font-weight: bold;
+  color: #4a0066;
+  text-align: center;
+  padding: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffbef3,
+    #ffbef3 8px,
+    #bef3ff 8px,
+    #bef3ff 16px
+  );
+  border: 1px solid #990066;
+  margin-bottom: 8px;
+}
+
+.ys-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #fff;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+}
+
+.ys-logo {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0066cc;
+  letter-spacing: -1px;
+  text-shadow: 2px 2px 0 #ff66cc;
+}
+
+.ys-tag {
+  font-size: 11px;
+  color: #666;
+}
+
+.ys-layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.ys-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ys-side {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.ys-side-box {
+  background: #ffffee;
+  border: 1px solid #cc9933;
+  padding: 6px;
+  font-size: 10px;
+}
+
+.ys-side-box h4 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #663300;
+}
+
+.ys-muted {
+  color: #777;
+  font-size: 10px;
+}
+
+.ys-h3 {
+  font-size: 13px;
+  color: #003366;
+  margin: 0 0 6px;
+  background: linear-gradient(90deg, #ffccff, #ccffff);
+  padding: 4px 6px;
+  border: 1px solid #6699cc;
+}
+
+.ys-top8-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ys-friend {
+  border: 2px solid;
+  border-color: #fff #888 #888 #fff;
+  padding: 6px 4px;
+  text-align: center;
+  min-height: 56px;
+}
+
+.ys-friend-rank {
+  font-size: 9px;
+  color: #333;
+}
+
+.ys-friend-name {
+  font-size: 10px;
+  font-weight: bold;
+  color: #000080;
+  word-break: break-word;
+}
+
+.ys-bio {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #222;
+  background: #f8f8ff;
+  padding: 8px;
+  border: 1px dashed #6699cc;
+}
+
+.ys-rtc-wrap {
+  margin-top: 12px;
+}
+
+.ys-rtc-feed {
+  max-height: 280px;
+  overflow-y: auto;
+  background: #0d111a;
+  color: #c8e0ff;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  padding: 8px;
+  border: 2px inset #333;
+}
+
+.ys-rtc-row {
+  border-bottom: 1px dotted #334455;
+  padding: 6px 0;
+}
+
+.ys-rtc-author {
+  font-weight: bold;
+  color: #ff99cc;
+  margin-right: 8px;
+}
+
+.ys-rtc-time {
+  color: #6688aa;
+  font-size: 9px;
+}
+
+.ys-rtc-text {
+  margin-top: 4px;
+  color: #e0f0ff;
+  line-height: 1.35;
+}
+
+.ys-rtc-empty {
+  color: #668899;
+  font-style: italic;
+}
+
+.ys-table-scroll {
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 4px;
+}
+
+.ys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+}
+
+.ys-table th {
+  background: #336699;
+  color: #fff;
+  text-align: left;
+  padding: 3px 4px;
+  position: sticky;
+  top: 0;
+}
+
+.ys-table td {
+  border-bottom: 1px solid #ccc;
+  padding: 3px 4px;
+  vertical-align: top;
+}
+
+.ys-td-name {
+  font-weight: bold;
+  color: #003366;
+}
+
+.ys-td-id {
+  font-family: 'Courier New', monospace;
+  color: #666;
+  font-size: 8px;
+}
+
+.ys-td-prof {
+  color: #444;
+}
+
+.ys-brands {
+  margin-top: 16px;
+  padding: 10px;
+  background: #fffef8;
+  border: 2px dashed #cc9900;
+}
+
+.ys-brand {
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+}
+
+.ys-brand summary {
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.ys-sku {
+  margin: 6px 0 0 18px;
+  padding: 0;
+  font-size: 10px;
+  color: #333;
+}
+
+.ys-sku li {
+  margin: 2px 0;
+}
+
+.ys-silhouette {
+  width: 28px;
+  height: 36px;
+  margin: 0 auto;
+  background: radial-gradient(circle at 50% 28%, #2a2a3a 42%, transparent 44%),
+    radial-gradient(ellipse 80% 100% at 50% 100%, #3a3d52 0%, #1e1e2a 72%);
+  border-radius: 6px 6px 4px 4px;
+  border: 1px solid #556;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.ys-silhouette--sm {
+  width: 22px;
+  height: 28px;
+}
+
+.ys-silhouette--lg {
+  width: 72px;
+  height: 92px;
+}
+
+.ys-friend-av {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.ys-friend--click {
+  cursor: pointer;
+}
+
+.ys-tr-profile {
+  cursor: pointer;
+}
+
+.ys-tr-profile:hover td {
+  background: #eef6ff;
+}
+
+.ys-td-av {
+  width: 36px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ys-td-vibe,
+.ys-vibe {
+  font-size: 8px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ys-rtc-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ys-rtc-vbtn {
+  font-size: 9px;
+  font-family: Tahoma, Verdana, sans-serif;
+  padding: 2px 8px;
+  cursor: pointer;
+  background: #1a2332;
+  color: #cde;
+  border: 1px solid #456;
+  border-radius: 2px;
+}
+
+.ys-rtc-vbtn:hover {
+  background: #243044;
+}
+
+.ys-rtc-vbtn-up.is-on {
+  background: #1a3d2a;
+  border-color: #3a8;
+}
+
+.ys-rtc-vbtn-down.is-on {
+  background: #3d1a1a;
+  border-color: #a44;
+}
+
+.ys-profile-miss {
+  padding: 16px;
+}
+
+.ys-btn {
+  font-size: 11px;
+  padding: 4px 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.ys-profile {
+  padding: 8px;
+  background: #fff;
+  border: 2px solid;
+  border-color: #fff #888 #888 #fff;
+}
+
+.ys-profile-head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ys-profile-name {
+  margin: 0;
+  font-size: 18px;
+  color: #006;
+}
+
+.ys-profile-id {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #666;
+}
+
+.ys-profile-vibe {
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.ys-vibe--hot {
+  color: #c06;
+}
+
+.ys-vibe--warm {
+  color: #080;
+}
+
+.ys-vibe--mid {
+  color: #666;
+}
+
+.ys-vibe--cool {
+  color: #06a;
+}
+
+.ys-vibe--cold {
+  color: #333;
+}
+
+.ys-profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.ys-profile-table th {
+  text-align: left;
+  width: 120px;
+  padding: 4px 8px;
+  background: #e8e8f8;
+  border: 1px solid #ccd;
+}
+
+.ys-profile-table td {
+  padding: 4px 8px;
+  border: 1px solid #ccd;
+}

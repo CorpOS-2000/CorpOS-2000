@@ -1,0 +1,31 @@
+{
+  "name": "corpos-2000-content-studio",
+  "version": "0.1.0",
+  "description": "CorpOS 2000 Content Studio — Administrative Terminal",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "net.corpos2000.contentstudio",
+    "productName": "CorpOS2000ContentStudio",
+    "directories": { "output": "dist-out" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "validate-registry.cjs",
+      "content-pack-main.cjs",
+      "renderer/**"
+    ],
+    "asar": true,
+    "win": { "target": ["nsis"], "icon": null },
+    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

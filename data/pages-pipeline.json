@@ -1,0 +1,42 @@
+[
+  {
+    "pageId": "page-mndwhxt0-ztxn",
+    "url": "Fentanila.com",
+    "title": "Fent",
+    "category": "general",
+    "unlockRequirement": "Doga",
+    "aestheticTheme": "year2000-casual",
+    "primaryColor": "#0a246a",
+    "secondaryColor": "#a6b5e7",
+    "backgroundColor": "#ffffff",
+    "layoutTemplate": "portal",
+    "siteName": "fentanilacraze",
+    "siteTagline": "live crazy",
+    "logoText": "",
+    "navLinks": [],
+    "sections": [
+      {
+        "type": "productGrid",
+        "shopId": "",
+        "maxItems": 12,
+        "columns": 3
+      },
+      {
+        "type": "table",
+        "headers": [],
+        "rows": []
+      },
+      {
+        "type": "ad",
+        "slot": "content-break",
+        "placement": "content-break"
+      }
+    ],
+    "footerText": "Nofilters",
+    "hasShop": false,
+    "shopId": null,
+    "loginEnabled": false,
+    "loginConfig": {},
+    "eventTriggers": []
+  }
+]

@@ -1,0 +1,72 @@
+{
+  "posts": [
+    {
+      "id": "buttertoes-viral",
+      "viral": true,
+      "author": "ChunkyMonkey_72",
+      "title": "BUTTERTOES XL — this bar is basically a newborn with caramel ankles",
+      "body": "OK so the clip says it all: my dude is out there doing choreography with a Buttertoes bar so big you could swaddle it. Flavor is stupid good—like butterscotch hugged a peanut and they apologized later. Value? You get MORE FOR YOUR BUCK. Giant more. I'm not saying it's medically advisable to finish one in a sitting; I'm saying it's physically possible and emotionally worth it. Film at eleven.",
+      "stats": { "up": 89420, "down": 412, "views": "2.1M" },
+      "heat": "MELTDOWN",
+      "commentContext": "buttertoes",
+      "commentFlavor": "snack",
+      "media": {
+        "base": "buttertoes_ad",
+        "alt": "Buttertoes advertisement — dancer with oversized candy bar"
+      },
+      "seedComments": [
+        { "author": "snack_lawyer", "text": "I watched this six times. My attorney advises I buy two." },
+        { "author": "ValuMart_Vet", "text": "Finally a bar that respects the concept of quantity. The Fed should study this." },
+        { "author": "dialup_dana", "text": "loads.gif still buffering in my soul. worth it." }
+      ]
+    },
+    {
+      "id": "post-generic-toaster",
+      "viral": false,
+      "author": "toast_test_lab",
+      "title": "Samtek 2-slice toaster — uneven browning",
+      "body": "Center is tan, edges are charcoal. Good if you like surprise. Warranty phone tree is a novella.",
+      "stats": { "up": 34, "down": 21, "views": "890" },
+      "heat": "lukewarm",
+      "commentContext": "generic",
+      "commentFlavor": "generic",
+      "seedComments": []
+    },
+    {
+      "id": "post-soap",
+      "viral": false,
+      "author": "clean_freak2000",
+      "title": "CitrusBrite dish soap — cuts grease, kills hands",
+      "body": "Cleans pans. Smells like a fluorescent lemonade stand. Wear gloves unless you enjoy the texture of parchment.",
+      "stats": { "up": 112, "down": 9, "views": "3.2K" },
+      "heat": "steady",
+      "commentContext": "generic",
+      "commentFlavor": "generic",
+      "seedComments": [{ "author": "mom_of_three", "text": "works. buy lotion in bulk." }]
+    },
+    {
+      "id": "post-headphones",
+      "viral": false,
+      "author": "office_drone_17",
+      "title": "SoundMaster budget headphones — mids are a rumor",
+      "body": "Treble clicks, bass is a polite suggestion. Fine for conference calls where nobody says anything important.",
+      "stats": { "up": 56, "down": 28, "views": "1.4K" },
+      "heat": "fine",
+      "commentContext": "generic",
+      "commentFlavor": "generic",
+      "seedComments": []
+    },
+    {
+      "id": "post-keyboard",
+      "viral": false,
+      "author": "clicky_clacky",
+      "title": "MicroCorp dome keyboard — sounds like popcorn",
+      "body": "Tactile enough to annoy coworkers through cubicle walls. Keys yellow after one summer.",
+      "stats": { "up": 203, "down": 44, "views": "9K" },
+      "heat": "warm",
+      "commentContext": "generic",
+      "commentFlavor": "generic",
+      "seedComments": []
+    }
+  ]
+}

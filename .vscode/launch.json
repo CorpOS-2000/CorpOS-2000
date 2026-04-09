@@ -1,0 +1,79 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Electron: Main (installs deps if needed)",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "game:npm-install",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron.exe"
+      },
+      "osx": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      },
+      "args": ["."],
+      "outputCapture": "std",
+      "console": "integratedTerminal",
+      "env": {
+        "CORPOS_DEVTOOLS": "1"
+      }
+    },
+    {
+      "name": "Electron: Main (skip npm — use after install)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron.exe"
+      },
+      "osx": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      },
+      "args": ["."],
+      "outputCapture": "std",
+      "console": "integratedTerminal",
+      "env": {
+        "CORPOS_DEVTOOLS": "1"
+      }
+    },
+    {
+      "name": "Electron: Main + remote debugging port",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "game:npm-install",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/electron.exe"
+      },
+      "osx": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+      },
+      "args": [".", "--remote-debugging-port=9229"],
+      "outputCapture": "std",
+      "console": "integratedTerminal",
+      "env": {
+        "CORPOS_DEVTOOLS": "1"
+      }
+    },
+    {
+      "name": "Chrome: attach renderer (start Electron + port config first)",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9229,
+      "webRoot": "${workspaceFolder}",
+      "timeout": 120000
+    },
+    {
+      "name": "Chrome: localhost (static server)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

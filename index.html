@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CorpOS 2000</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
+    media="print"
+    onload="this.media='all'"
+  >
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap"
+    >
+  </noscript>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/worldnet-ads.css">
+  <link rel="stylesheet" href="css/worldnet-shop.css">
+  <link rel="stylesheet" href="css/corpos-admin.css">
+  <link rel="stylesheet" href="css/axis.css">
+  <link rel="stylesheet" href="css/review-bomber.css">
+  <link rel="stylesheet" href="css/yourspace.css">
+  <link rel="stylesheet" href="css/mytube.css">
+  <link rel="stylesheet" href="css/moogle.css">
+  <link rel="stylesheet" href="css/media-player.css">
+  <link rel="stylesheet" href="css/explorer.css">
+  <script>
+    (function () {
+      function show(title, detail) {
+        var pre = document.createElement('pre');
+        pre.style.cssText =
+          'position:fixed;inset:0;margin:0;padding:20px;background:#200;color:#f88;font:12px Consolas,monospace;white-space:pre-wrap;z-index:100000;overflow:auto;';
+        pre.textContent = title + (detail ? '\n\n' + detail : '');
+        document.body.appendChild(pre);
+      }
+      window.addEventListener('error', function (e) {
+        show('Runtime error: ' + e.message, e.error && e.error.stack);
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        show('Unhandled rejection: ' + r, r && r.stack);
+      });
+    })();
+  </script>
+</head>
+<body>
+
+<div id="boot-drive-screen" class="boot-drive-screen is-hidden" tabindex="-1" aria-label="Boot device selection">
+  <div class="bds-inner">
+    <div class="bds-title">CORPOS UEFI BOOT MANAGER v1.02</div>
+    <div class="bds-sub">Federal Office of Commercial Systems — insert disc to continue</div>
+    <ul id="boot-drive-list" class="bds-list" role="listbox" aria-label="Boot device"></ul>
+    <div class="bds-hint"><span class="bds-key">Enter</span> Continue &nbsp;·&nbsp; Click the row to continue</div>
+  </div>
+</div>
+
+<div id="bios"><div id="bios-text"></div><span id="bios-cursor"></span></div>
+
+<div id="logo-screen">
+  <!-- Official brand: Wordmark Option A — Dark variant (Part 1) -->
+  <div class="logo-wordmark logo-wordmark--dark" role="img" aria-label="CorpOS 2000">
+    <div class="logo-wm-bar lw-bar" aria-hidden="true"></div>
+    <div class="logo-wm-stack">
+      <div class="logo-wm-corp lw-corp">CORP</div>
+      <div class="logo-wm-os lw-os">OS</div>
+      <div class="logo-wm-year lw-year">2 0 0 0</div>
+      <div class="logo-wm-tag lw-tag">BUILT FOR BUSINESS. DESIGNED FOR OVERSIGHT.</div>
+    </div>
+  </div>
+</div>
+
+<div id="enrollment-screen" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d1a3a;align-items:center;justify-content:center;overflow-y:auto;">
+  <div class="enrollment-inner" style="width:100%;max-width:600px;padding:24px;"></div>
+</div>
+
+<div id="login-screen">
+  <div class="lbox">
+    <div class="ltb">
+      <svg width="14" height="14" viewBox="0 0 140 140" aria-hidden="true"><rect x="4" y="4" width="132" height="132" rx="10" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="4"/><text x="52" y="76" font-family="Orbitron,monospace" font-weight="900" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="108" y="46" font-family="Orbitron,monospace" font-weight="900" font-size="30" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><text x="108" y="100" font-family="Orbitron,monospace" font-weight="900" font-size="30" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">S</text></svg>
+      CorpOS 2000 — Secure Log On
+    </div>
+    <div class="lbody">
+      <div class="lseal">
+        <svg width="64" height="64" viewBox="0 0 140 140" aria-hidden="true"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="1.5"/><rect x="14" y="14" width="112" height="112" rx="4" fill="none" stroke="#a6b5e7" stroke-width=".5" opacity=".25"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="102" y="57" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><line x1="86" y1="72" x2="118" y2="72" stroke="#a6b5e7" stroke-width=".8" opacity=".45"/><text x="102" y="90" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text><line x1="22" y1="108" x2="118" y2="108" stroke="#a6b5e7" stroke-width=".6" opacity=".3"/><text x="70" y="118" font-family="Share Tech Mono,monospace" font-size="7" fill="#445577" text-anchor="middle" letter-spacing="5">CORPOS 2000</text></svg>
+      </div>
+      <div class="ltitle">CorpOS 2000</div>
+      <div class="lsub">Federal Office of Commercial Systems</div>
+      <div id="lform">
+        <div class="lfield"><label>Username:</label><input type="text" id="uname" value=""/></div>
+        <div class="lfield"><label>Password:</label><input type="password" id="upass" value=""/></div>
+        <button class="lbtn" type="button" onclick="doLogin()">Log On</button>
+        <div class="lnotice">This system is for authorized registered business entities only.<br>All access is monitored and recorded pursuant to Federal Mandate 2000-CR7.</div>
+      </div>
+      <div class="lverify" id="lverify">Verifying credentials with Federal Business Registry...<br>Checking compliance status...<br><span id="vdone"></span></div>
+    </div>
+  </div>
+</div>
+
+<div id="shutdown-screen">
+  <div id="sd-msg" style="text-align:center;line-height:2"></div>
+</div>
+
+<div id="desktop">
+
+  <div id="ticker-wrap">
+    <div class="tbadge">◆ BREAKING</div>
+    <div class="ttext" id="ttext"></div>
+  </div>
+
+  <div class="di" style="top:28px;left:20px" ondblclick="openW('herald')"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
+  <div class="di" style="top:108px;left:20px" ondblclick="openW('worldnet')"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
+  <div class="di" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
+  <div class="di" style="top:348px;left:20px" ondblclick="openW('explorer')"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
+  <div class="di" style="top:428px;left:20px" ondblclick="openW('tasks')"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
+  <div class="di" style="top:28px;left:110px" ondblclick="openW('personal')"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
+  <div class="di" style="top:108px;left:110px" ondblclick="openW('corporate')"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
+  <div class="di" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
+  <div class="di" data-app-id="media-player" style="top:268px;left:110px" ondblclick="openW('media-player')"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
+  <div class="di" data-app-id="admin-npc" style="top:348px;left:110px" ondblclick="openW('admin-npc')"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
+  <div class="di" data-app-id="admin-company" style="top:428px;left:110px" ondblclick="openW('admin-company')"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
+  <div class="di" data-app-id="admin-gov" style="top:508px;left:20px" ondblclick="openW('admin-gov')"><div class="ico">⚖️</div><div class="lbl">Gov. System</div></div>
+  <div class="di" data-app-id="admin-web" style="top:508px;left:110px" ondblclick="openW('admin-web')"><div class="ico">📝</div><div class="lbl">Web Editor</div></div>
+  <div class="di" data-app-id="admin-axis" style="top:588px;left:20px" ondblclick="openW('admin-axis')"><div class="ico">📇</div><div class="lbl">Contacts &amp; Relations</div></div>
+  <div class="di" data-app-id="webex-publisher" style="top:588px;left:110px" ondblclick="openW('webex-publisher')"><div class="ico">🌐</div><div class="lbl">WebEx-Publisher</div></div>
+
+  <div class="ww inactive" id="win-personal" style="width:430px;height:500px;top:60px;left:200px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-personal')">
+      <span class="wti">👤</span><span class="wtt">Personal Profile — John Michael Doe</span>
+      <button type="button" class="wcb" onclick="minW('personal')">_</button>
+      <button type="button" class="wcb" onclick="maxW('personal')">□</button>
+      <button type="button" class="wcb" onclick="closeW('personal')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Edit</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:8px;overflow-y:auto;">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:8px;background:#e8ecf8;border:2px solid;border-color:#404040 #fff #fff #404040;">
+        <div style="font-size:42px;">🧔</div>
+        <div>
+          <div id="prof-name" style="font-size:15px;font-weight:bold;color:#0a246a;">John Michael Doe</div>
+          <div id="prof-age-line" style="font-size:10px;color:#666;">Age: 24 &nbsp;|&nbsp; DOB: March 14, 1976</div>
+          <div style="font-size:10px;color:#666;">Entrepreneur &nbsp;|&nbsp; Single</div>
+        </div>
+      </div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin-bottom:4px;border-bottom:1px solid #ccc;padding-bottom:2px;">⚖️ Legal Identity</div>
+      <div class="prow"><span>Full Legal Name</span><span id="prof-legal-name" style="font-weight:bold;">John Michael Doe</span></div>
+      <div class="prow"><span>Social Security No.</span><span id="prof-ssn" style="font-weight:bold;letter-spacing:2px;">XXX-XX-4821</span></div>
+      <div class="prow"><span>Home Address</span><span id="prof-address" style="font-weight:bold;">123 Starter St, Suburbia CA 90210</span></div>
+      <div class="prow"><span>Personal Email</span><span id="prof-email" style="font-weight:bold;">jdoe@wahoo.net</span></div>
+      <div class="prow"><span>Personal Phone</span><span id="prof-phone" style="font-weight:bold;">555-0042</span></div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin:8px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏠 Personal Assets</div>
+      <div class="prow"><span>Residence</span><span id="prof-residence" style="font-weight:bold;">Mom's Garage (Rent-Free)</span></div>
+      <div class="prow"><span>Vehicle</span><span id="prof-vehicle" style="font-weight:bold;">1994 Torota Corunner (Owned)</span></div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin:8px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏦 Bank Accounts (Summary)</div>
+      <div class="prow"><span>First National Corp. Bank</span><span id="prof-bank-fncb" style="font-weight:bold;color:#006600;">$12,500.00</span></div>
+      <div class="prow"><span>Meridian Savings & Trust</span><span id="prof-bank-meridian" style="font-weight:bold;color:#006600;">$0.00</span></div>
+      <div class="prow"><span>Harbor Credit Union</span><span id="prof-bank-harbor" style="font-weight:bold;color:#006600;">$0.00</span></div>
+      <div class="prow"><span>Pacific Rim Financial</span><span id="prof-bank-pacific" style="font-weight:bold;color:#006600;">$0.00</span></div>
+      <div class="prow"><span>First Trust (Onion)</span><span id="prof-bank-darkweb" style="font-weight:bold;color:#006600;">$0.00</span></div>
+      <div class="prow"><span>David &amp; Mitchell Banking</span><span id="prof-bank-dmb" style="font-weight:bold;color:#006600;">$0.00</span></div>
+      <div style="font-size:10px;color:#888;padding:3px 6px;font-style:italic;">Manage accounts in WorldNet Explorer → Banking</div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin:8px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;">📌 Public identity cross-check (banking sim)</div>
+      <div id="prof-registry-hint" style="font-size:10px;color:#444;line-height:1.35;padding:2px 0;">—</div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin:8px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;">📋 Personal Legal Record</div>
+      <div class="prow"><span>Criminal Record</span><span style="font-weight:bold;color:#006600;">Clean</span></div>
+      <div class="prow"><span>Civil Cases</span><span style="font-weight:bold;color:#006600;">None</span></div>
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <button type="button" class="wbtn">✏️ Edit Contact Info</button>
+        <button type="button" class="wbtn">📝 Request Name Change</button>
+        <button type="button" class="wbtn">🏦 Open Bank Account</button>
+      </div>
+    </div>
+    <div class="wsb"><div class="sp">SSN: <span id="prof-ssn-foot">XXX-XX-4821</span></div><div class="sp" style="color:#006600;">Status: Law-Abiding Citizen</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-personal')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-corporate" style="width:460px;height:480px;top:80px;left:230px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-corporate')">
+      <span class="wti">🏛️</span><span class="wtt">Corporate Profile — Business Operator Dashboard</span>
+      <button type="button" class="wcb" onclick="minW('corporate')">_</button>
+      <button type="button" class="wcb" onclick="maxW('corporate')">□</button>
+      <button type="button" class="wcb" onclick="closeW('corporate')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Companies</span><span class="wmi">Reports</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:8px;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 8px;background:#e8ecf8;border:2px solid;border-color:#404040 #fff #fff #404040;">
+        <div><div style="font-weight:bold;color:#0a246a;font-size:12px;">J. DOE — OPERATOR ID: 00-2000-4821</div><div style="font-size:10px;color:#666;">Registered: Jan 01, 2000 &nbsp;|&nbsp; Status: Active</div></div>
+        <div style="text-align:right;"><div style="font-size:10px;color:#666;">Overall Reputation</div><div style="font-size:18px;color:#0a246a;">★★☆☆☆</div></div>
+      </div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin-bottom:4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏢 Company Slot 1 — ACTIVE</div>
+      <div style="padding:6px;background:#f8f8f0;border:1px solid #ddd;margin-bottom:6px;">
+        <div style="font-weight:bold;margin-bottom:4px;"><span id="corp-c1-name">Doe Ventures LLC</span> &nbsp;<span id="corp-c1-reg" style="font-size:9px;color:#666;font-weight:normal;">Registered Jan 14, 2000</span></div>
+        <div class="prow"><span>Industry</span><span id="corp-c1-industry" style="font-weight:bold;">Technology</span></div>
+        <div class="prow"><span>Tier</span><span id="corp-c1-tier" style="font-weight:bold;">Tier 1 — Freelancer</span></div>
+        <div class="prow"><span>Employees</span><span id="corp-c1-employees" style="font-weight:bold;">1 (Sole Operator)</span></div>
+        <div class="prow"><span>Weekly Revenue</span><span id="corp-c1-revenue" style="font-weight:bold;color:#006600;">$0.00</span></div>
+        <div style="margin-top:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;"><span style="color:#666;">Notoriety</span><span id="corp-notoriety-label" style="color:#006600;font-weight:bold;">0% — Exemplary</span></div>
+          <div class="nbar"><div id="corp-notoriety-fill" class="nbar-fill" style="width:0%;"></div></div>
+        </div>
+        <div style="margin-top:4px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px;"><span style="color:#666;">Corporate Exposure</span><span id="corp-exposure-label" style="color:#006600;font-weight:bold;">0% — Under the Radar</span></div>
+          <div class="nbar"><div id="corp-exposure-fill" class="nbar-fill exposure" style="width:0%;"></div></div>
+        </div>
+        <div class="prow" style="margin-top:4px;"><span>Judicial Record</span><span id="corp-judicial" style="font-weight:bold;color:#006600;">Clean — 0 entries</span></div>
+      </div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin-bottom:4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏢 Company Slot 2</div>
+      <div style="padding:8px;background:#f0f0f0;border:1px dashed #bbb;margin-bottom:6px;text-align:center;color:#888;font-size:11px;">
+        Slot available. Cost: $50,000 (2× Adjusted Valuation of Company 1)<br>
+        <button type="button" class="wbtn" style="margin-top:6px;">+ Register New Company</button>
+      </div>
+      <div style="font-weight:bold;font-size:11px;color:#0a246a;margin-bottom:4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏢 Company Slot 3</div>
+      <div style="padding:8px;background:#f0f0f0;border:1px dashed #bbb;margin-bottom:6px;text-align:center;color:#888;font-size:11px;">Locked — Requires Company Slot 2 active first.</div>
+      <div style="font-weight:bold;font-size:11px;color:#666;margin-bottom:4px;border-bottom:1px solid #ccc;padding-bottom:2px;">🏦 Holding Company</div>
+      <div style="padding:8px;background:#f0f0f0;border:1px dashed #999;text-align:center;color:#888;font-size:11px;">Locked — Requires 2+ active companies and valuation threshold.</div>
+    </div>
+    <div class="wsb"><div class="sp" id="corp-slot-count">Companies: 1/3</div><div class="sp" id="corp-net-worth">Net Worth: $12,500</div><div class="sp" style="color:#006600;">Operator: Active</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-corporate')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-tasks" style="width:620px;height:400px;top:120px;left:180px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-tasks')">
+      <span class="wti">🗂️</span><span class="wtt">Task Handler</span>
+      <button type="button" class="wcb" onclick="minW('tasks')">_</button>
+      <button type="button" class="wcb" onclick="maxW('tasks')">□</button>
+      <button type="button" class="wcb" onclick="closeW('tasks')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Applications</span><span class="wmi">Processes</span><span class="wmi">Help</span></div>
+    <div class="wc win-tasks-body" id="tasks-body" style="overflow:auto;">
+      <p class="tasks-empty">Loading…</p>
+    </div>
+    <div class="wsb" id="tasks-foot"><div class="sp">Loading tasks...</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-tasks')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-admin-npc" style="width:720px;height:540px;top:40px;left:80px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-npc')">
+      <span class="wti">👤</span><span class="wtt">NPC Creator — Content Pipeline</span>
+      <button type="button" class="wcb" onclick="minW('admin-npc')">_</button>
+      <button type="button" class="wcb" onclick="maxW('admin-npc')">□</button>
+      <button type="button" class="wcb" onclick="closeW('admin-npc')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Edit</span><span class="wmi">Tools</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="admin-npc-root" class="corpos-admin"></div></div>
+    <div class="wsb"><div class="sp">Federal Mandate 2000-CR7</div><div class="sp">NPC Registry</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-admin-npc')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-admin-company" style="width:720px;height:540px;top:50px;left:100px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-company')">
+      <span class="wti">🏭</span><span class="wtt">Company Creator — Content Pipeline</span>
+      <button type="button" class="wcb" onclick="minW('admin-company')">_</button>
+      <button type="button" class="wcb" onclick="maxW('admin-company')">□</button>
+      <button type="button" class="wcb" onclick="closeW('admin-company')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Edit</span><span class="wmi">Tools</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="admin-company-root" class="corpos-admin"></div></div>
+    <div class="wsb"><div class="sp">Ledger-linked valuations</div><div class="sp">Company Registry</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-admin-company')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-admin-gov" style="width:700px;height:520px;top:60px;left:120px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-gov')">
+      <span class="wti">⚖️</span><span class="wtt">Government Management System</span>
+      <button type="button" class="wcb" onclick="minW('admin-gov')">_</button>
+      <button type="button" class="wcb" onclick="maxW('admin-gov')">□</button>
+      <button type="button" class="wcb" onclick="closeW('admin-gov')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="admin-gov-root" class="corpos-admin"></div></div>
+    <div class="wsb"><div class="sp">Regulatory tuning</div><div class="sp">FRA / FBCE</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-admin-gov')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-admin-web" style="width:760px;height:560px;top:30px;left:90px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-web')">
+      <span class="wti">📝</span><span class="wtt">Website Editor — WorldNet Pages</span>
+      <button type="button" class="wcb" onclick="minW('admin-web')">_</button>
+      <button type="button" class="wcb" onclick="maxW('admin-web')">□</button>
+      <button type="button" class="wcb" onclick="closeW('admin-web')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Insert</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="admin-web-root" class="corpos-admin"></div></div>
+    <div class="wsb"><div class="sp">pages-pipeline.json</div><div class="sp">Live preview</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-admin-web')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-admin-axis" style="width:860px;height:560px;top:34px;left:110px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-axis')">
+      <span class="wti">📇</span><span class="wtt">AXIS — Active Contact &amp; Intelligence System</span>
+      <button type="button" class="wcb" onclick="minW('admin-axis')">_</button>
+      <button type="button" class="wcb" onclick="maxW('admin-axis')">□</button>
+      <button type="button" class="wcb" onclick="closeW('admin-axis')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Contacts</span><span class="wmi">Relations</span><span class="wmi">Intel</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="axis-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">Contacts &amp; Relations</div><div class="sp">ActorDB linked</div><div class="sp">AXIS runtime online</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-admin-axis')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-worldnet" style="width:640px;height:480px;top:50px;left:160px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-worldnet')">
+      <span class="wti">🌐</span><span class="wtt">WorldNet Explorer 5.0</span>
+      <button type="button" class="wcb" onclick="minW('worldnet')">_</button>
+      <button type="button" class="wcb" onclick="maxW('worldnet')">□</button>
+      <button type="button" class="wcb" onclick="closeW('worldnet')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Edit</span><span class="wmi">View</span><span class="wmi">Favorites</span><span class="wmi">Tools</span><span class="wmi">Help</span></div>
+    <div class="wtbar">
+      <button type="button" class="wtbtn" id="wnet-back-btn" onclick="wnetBack()">◀</button>
+      <button type="button" class="wtbtn" id="wnet-forward-btn" onclick="wnetForward()">▶</button>
+      <button type="button" class="wtbtn" onclick="wnetReload()">🔄</button>
+      <button type="button" class="wtbtn" onclick="wnetNav('home')">🏠</button>
+      <button type="button" class="wtbtn" id="wnet-fav-btn">★ Favorites</button>
+      <button type="button" class="wtbtn" id="wnet-add-fav-btn">Add</button>
+      <div class="wtsep"></div>
+      <span style="font-size:11px;margin-right:4px;">Address:</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:2px 4px;border-bottom:1px solid #808080;background:#d4d0c8;">
+      <input id="wnet-addr" type="text" value="http://www.wahoo.net/" style="flex:1;height:20px;border:2px solid;border-color:#404040 #fff #fff #404040;background:white;padding:0 4px;font-size:11px;font-family:Tahoma,Arial,sans-serif;" onkeydown="if(event.key==='Enter')wnetNav('addr')">
+      <button type="button" onclick="wnetNav('addr')" style="height:20px;padding:0 8px;background:#d4d0c8;border:2px solid;border-color:#fff #404040 #404040 #fff;font-size:11px;cursor:pointer;">Go ▶</button>
+    </div>
+    <div id="wnet-fav-panel" class="wnet-fav-panel is-hidden"></div>
+    <div class="wc wb" style="padding:0;overflow:auto;" id="wnet-content"></div>
+    <div class="wsb"><div class="sp" id="wnet-status">Done</div><div class="sp">🔒 CorpOS Secure</div><div class="sp">Internet Zone</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-worldnet')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-media-player" style="width:380px;height:520px;top:90px;left:240px;display:none;flex-direction:column;">
+    <div class="wtb" onmousedown="drag(event,'win-media-player')">
+      <span class="wti">🎵</span><span class="wtt">Media Player — CorpOS 2000</span>
+      <button type="button" class="wcb" onclick="minW('media-player')">_</button>
+      <button type="button" class="wcb" onclick="maxW('media-player')">□</button>
+      <button type="button" class="wcb" onclick="closeW('media-player')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi" id="mp-mi-file">File</span><span class="wmi" id="mp-mi-view">View</span><span class="wmi" id="mp-mi-help">Help</span></div>
+    <div class="wc mp-root" style="padding:0;display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div class="mp-viz-wrap">
+        <canvas class="mp-viz" width="360" height="200" aria-label="Visualizer — right-click to change mode"></canvas>
+        <span class="mp-viz-hint">Right-click: display mode</span>
+      </div>
+      <div class="mp-override-banner">SYSTEM OVERRIDE — PLAYBACK CONTROLLED</div>
+      <div class="mp-now">
+        <div class="mp-title" id="mp-title">—</div>
+        <div class="mp-artist" id="mp-artist"></div>
+        <div class="mp-album" id="mp-album"></div>
+        <div class="mp-seek-wrap">
+          <div class="mp-seek" id="mp-seek"><div class="mp-seek-fill" id="mp-seek-fill"></div></div>
+        </div>
+        <div class="mp-time"><span id="mp-time-l">0:00</span><span id="mp-time-r">0:00</span></div>
+      </div>
+      <div class="mp-controls">
+        <div class="mp-btn-row">
+          <button type="button" class="mp-btn" id="mp-rwd" title="Rewind 10s">◀◀</button>
+          <button type="button" class="mp-btn" id="mp-prev" title="Previous">◀|</button>
+          <button type="button" class="mp-btn mp-btn--play is-pressed" id="mp-play" title="Play/Pause">▶</button>
+          <button type="button" class="mp-btn" id="mp-next" title="Next">|▶</button>
+          <button type="button" class="mp-btn" id="mp-fwd" title="Forward 10s">▶▶</button>
+        </div>
+        <div class="mp-btn-row mp-vol-row">
+          <button type="button" class="mp-btn" id="mp-shuffle" title="Shuffle">⇌</button>
+          <button type="button" class="mp-btn" id="mp-repeat" title="Repeat">↻</button>
+          <span class="mp-repeat-hint" id="mp-repeat-hint">Off</span>
+          <button type="button" class="mp-btn" id="mp-fav" title="Favorite">♥</button>
+          <span style="flex:1"></span>
+          <button type="button" class="mp-btn" id="mp-vol-minus" title="Volume −">−</button>
+          <input type="range" class="mp-vol" id="mp-vol" min="0" max="100" value="80" aria-label="Volume" />
+          <button type="button" class="mp-btn" id="mp-vol-plus" title="Volume +">+</button>
+        </div>
+      </div>
+      <div class="mp-lib-wrap">
+        <div class="mp-tabs">
+          <button type="button" class="mp-tab is-active" id="mp-tab-all">All Tracks</button>
+          <button type="button" class="mp-tab" id="mp-tab-fav">Favorites ♥</button>
+        </div>
+        <div class="mp-lib" id="mp-lib">
+          <div class="mp-lib-head">
+            <span class="mp-col-num" data-sort="idx">#</span>
+            <span class="mp-col-title" data-sort="title">Title</span>
+            <span class="mp-col-artist" data-sort="artist">Artist</span>
+            <span class="mp-col-time" data-sort="time">Time</span>
+            <span class="mp-col-fav" data-sort="fav">♥</span>
+          </div>
+          <div id="mp-lib-body"></div>
+        </div>
+      </div>
+      <div class="mp-sb">
+        <div class="mp-sb-p" id="mp-sb-count">0 tracks in library</div>
+        <div class="mp-sb-p" id="mp-sb-fav">0 favorites</div>
+        <div class="mp-sb-p">Imported tracks are session-only. <button type="button" class="mp-import-btn" id="mp-import-btn">Import Music ▲</button></div>
+      </div>
+      <input type="file" id="mp-file-input" multiple accept=".mp3,.ogg,.wav,.m4a" style="display:none" />
+    </div>
+    <div class="wrz" onmousedown="resz(event,'win-media-player')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-explorer" style="width:520px;height:420px;top:72px;left:140px;display:none;flex-direction:column;">
+    <div class="wtb" onmousedown="drag(event,'win-explorer')">
+      <span class="wti">🖥️</span><span class="wtt" id="fx-win-title">Exploring — My Computer</span>
+      <button type="button" class="wcb" onclick="minW('explorer')">_</button>
+      <button type="button" class="wcb" onclick="maxW('explorer')">□</button>
+      <button type="button" class="wcb" onclick="closeW('explorer')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">Edit</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc fx-body" style="flex:1;min-height:0;">
+      <div class="fx-addr" id="fx-addr"></div>
+      <div class="fx-split">
+        <div class="fx-tree" id="fx-tree"></div>
+        <div class="fx-pane">
+          <div class="fx-list-head"><span>Name</span><span>Type</span><span class="fx-col-size">Size</span></div>
+          <div class="fx-list" id="fx-list" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="fx-sb"><div class="fx-sb-l" id="fx-sb-msg">Ready</div><div class="fx-sb-mid"></div><div class="fx-sb-r">◢</div></div>
+    </div>
+    <div class="wrz" onmousedown="resz(event,'win-explorer')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-webex-publisher" style="width:820px;height:620px;top:48px;left:100px;display:none;flex-direction:column;">
+    <div class="wtb" onmousedown="drag(event,'win-webex-publisher')">
+      <span class="wti">🌐</span><span class="wtt">WebEx-Publisher — CorpOS 2000</span>
+      <button type="button" class="wcb" onclick="minW('webex-publisher')">_</button>
+      <button type="button" class="wcb" onclick="maxW('webex-publisher')">□</button>
+      <button type="button" class="wcb" onclick="closeW('webex-publisher')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi" id="webex-mi-file">File</span><span class="wmi" id="webex-mi-view">View</span><span class="wmi" id="webex-mi-help">Help</span></div>
+    <div class="wc" style="padding:0;display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div id="webex-root" style="display:flex;flex:1;min-height:0;"></div>
+    </div>
+    <div class="wsb"><div class="sp" id="webex-status">Ready</div><div class="sp">WebEx-Publisher v1.0</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-webex-publisher')">◢</div>
+  </div>
+
+  <div id="taskbar">
+    <button type="button" id="start-btn" onclick="toggleStart()">
+      <svg class="scos" viewBox="0 0 140 140" aria-hidden="true"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="2"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="104" y="55" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><text x="104" y="93" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text></svg>
+      <b>Start</b>
+    </button>
+    <div class="tsep"></div>
+    <div id="tb-btns"></div>
+    <div class="tsep"></div>
+    <div id="speed-controls">
+      <button type="button" data-speed="0" title="Pause">||</button>
+      <button type="button" data-speed="1" title="1×">1×</button>
+      <button type="button" data-speed="2" title="2×">2×</button>
+      <button type="button" data-speed="4" title="4×">4×</button>
+      <button type="button" data-speed="8" title="8×">×8</button>
+    </div>
+    <div id="systray">🌐 🔊 <span id="clk">Sat Jan 1, 2000  6:00 AM</span></div>
+  </div>
+
+  <div id="smenu">
+    <div style="position:relative;min-height:300px;">
+      <div class="smbanner">CorpOS</div>
+      <div class="smitems">
+        <div class="smitem" onclick="openW('herald');toggleStart()">📰 Daily Herald</div>
+        <div class="smitem" onclick="openW('worldnet');toggleStart()">🌐 WorldNet Explorer</div>
+        <div class="smitem">🏢 Properties</div>
+        <div class="smitem" onclick="openW('explorer');toggleStart()">🖥️ My Computer</div>
+        <div class="smitem" onclick="openW('personal');toggleStart()">👤 Personal Profile</div>
+        <div class="smitem" onclick="openW('corporate');toggleStart()">🏛️ Corporate Profile</div>
+        <div class="smitem">📊 Corp. Ledger</div>
+        <div class="smitem" data-app-id="media-player" onclick="openW('media-player');toggleStart()">🎵 Media Player</div>
+        <div class="smsep"></div>
+        <div class="smitem" data-app-id="admin-npc" onclick="openW('admin-npc');toggleStart()">👤 NPC Creator</div>
+        <div class="smitem" data-app-id="admin-company" onclick="openW('admin-company');toggleStart()">🏭 Company Creator</div>
+        <div class="smitem" data-app-id="admin-gov" onclick="openW('admin-gov');toggleStart()">⚖️ Gov. Management</div>
+        <div class="smitem" data-app-id="admin-web" onclick="openW('admin-web');toggleStart()">📝 Website Editor</div>
+        <div class="smitem" data-app-id="admin-axis" onclick="openW('admin-axis');toggleStart()">📇 Contacts &amp; Relations</div>
+        <div class="smitem" data-app-id="webex-publisher" onclick="openW('webex-publisher');toggleStart()">🌐 WebEx-Publisher</div>
+        <div class="smsep"></div>
+        <div class="smitem" onclick="fireNews();toggleStart()">⚡ Fire News Ticker</div>
+        <div class="smsep"></div>
+        <div class="smitem" onclick="doShutdown();toggleStart()">🔴 Shut Down...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Black Cherry™ — bottom-right: corner/SMS peek, × only when fully open -->
+  <div id="black-cherry-dock" class="bc-dock" aria-hidden="true">
+    <div id="black-cherry-device" class="bc-device" data-bc-state="hidden">
+      <div class="bc-shell">
+        <div class="bc-top-led"></div>
+        <div class="bc-earpiece"></div>
+        <div class="bc-status-strip">
+          <span class="bc-carrier">CorpOS Net</span>
+          <span id="bc-phone-line">555-0042</span>
+          <span class="bc-signal" aria-hidden="true">▮▮▮▯</span>
+          <span class="bc-batt">🔋</span>
+        </div>
+        <div class="bc-screen">
+          <div class="bc-screen-title" id="bc-screen-heading">Home</div>
+          <div class="bc-screen-body">
+            <!-- Home: icon grid -->
+            <div id="bc-view-home" class="bc-view bc-view--active">
+              <div class="bc-icon-grid" id="bc-icon-grid"></div>
+            </div>
+            <!-- SMS thread list -->
+            <div id="bc-view-messaging" class="bc-view">
+              <div class="bc-sms-chrome">
+                <div class="bc-sms-2000-bar">
+                  <span class="bc-sms-2000-title" id="bc-sms-2000-title">Messages</span>
+                  <span class="bc-sms-blink" aria-hidden="true">●</span>
+                </div>
+              </div>
+              <div class="bc-messages bc-messages--sms2000" id="bc-messages"></div>
+            </div>
+            <!-- SMS thread detail -->
+            <div id="bc-view-thread" class="bc-view">
+              <div class="bc-thread-header" id="bc-thread-header"></div>
+              <div class="bc-thread-messages" id="bc-thread-messages"></div>
+              <div class="bc-sms-compose">
+                <input type="text" id="bc-sms-input" maxlength="160" placeholder="Reply…" autocomplete="off" />
+                <button type="button" id="bc-sms-send" class="bc-sms-send">▶</button>
+              </div>
+            </div>
+            <!-- Contacts list -->
+            <div id="bc-view-contacts" class="bc-view">
+              <div class="bc-contacts" id="bc-contacts"></div>
+            </div>
+            <!-- Dial / contacts & recent calls -->
+            <div id="bc-view-dial" class="bc-view">
+              <div class="bc-dial-search"><input type="text" id="bc-dial-search" placeholder="Search contacts…" autocomplete="off"></div>
+              <div class="bc-dial-list" id="bc-dial-list"></div>
+            </div>
+            <!-- Calling... screen -->
+            <div id="bc-view-calling" class="bc-view">
+              <div class="bc-call-screen">
+                <div class="bc-call-label">CALLING…</div>
+                <div class="bc-call-avatar" id="bc-call-avatar"></div>
+                <div class="bc-call-name" id="bc-call-name"></div>
+                <div class="bc-call-number" id="bc-call-number"></div>
+                <div class="bc-call-dots"><span>●</span><span>●</span><span>●</span></div>
+              </div>
+            </div>
+            <!-- Incoming call screen -->
+            <div id="bc-view-incoming" class="bc-view">
+              <div class="bc-call-screen">
+                <div class="bc-call-label">INCOMING CALL</div>
+                <div class="bc-call-avatar" id="bc-incoming-avatar"></div>
+                <div class="bc-call-name" id="bc-incoming-name"></div>
+                <div class="bc-call-number" id="bc-incoming-number"></div>
+              </div>
+            </div>
+            <!-- Live conversation -->
+            <div id="bc-view-conversation" class="bc-view">
+              <div class="bc-convo-header">
+                <span class="bc-convo-avatar" id="bc-convo-avatar"></span>
+                <span class="bc-convo-name" id="bc-convo-name"></span>
+                <span class="bc-convo-timer" id="bc-convo-timer">0:00</span>
+              </div>
+              <div class="bc-convo-transcript" id="bc-convo-transcript"></div>
+              <div class="bc-convo-options" id="bc-convo-options"></div>
+            </div>
+            <!-- CashUp app -->
+            <div id="bc-view-cashup" class="bc-view">
+              <div class="bc-cashup" id="bc-cashup"></div>
+            </div>
+            <!-- Settings -->
+            <div id="bc-view-settings" class="bc-view">
+              <div class="bc-settings-body">
+                <p style="margin:0 0 6px 0;"><b>Alert tone:</b> Classic pager</p>
+                <p style="margin:0 0 6px 0;"><b>Vibrate:</b> Off (desk cradle)</p>
+                <p style="margin:0 0 6px 0;"><b>Priority:</b> Federal digest on Mandate 2000-CR7</p>
+                <p style="margin:0;"><b>Screen:</b> LCD saver after 2 min</p>
+              </div>
+            </div>
+            <!-- Calendar stub -->
+            <div id="bc-view-calendar" class="bc-view">
+              <div class="bc-settings-body"><p style="margin:0;color:#888;">Calendar — Coming Soon</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Hardware keys (single compact row — no D-pad) -->
+        <div class="bc-hw-keys">
+          <div class="bc-hw-row bc-hw-row--compact">
+            <button type="button" class="key-call key-call--sm" id="bc-key-call" title="Call">📞</button>
+            <button type="button" class="key-end key-end--sm" id="bc-key-end" title="End / Home">🔴</button>
+            <button type="button" class="bc-near-btn" id="bc-key-near" title="Bring phone closer (toggle)" aria-pressed="false">
+              <span class="bc-near-icon" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="bc-nav-btn bc-nav-btn--sm" id="bc-key-menu">Menu</button>
+            <button type="button" class="bc-key-ok" id="bc-key-ok" title="OK / Select">
+              <span class="bc-ok-max-icon" aria-hidden="true"><i></i><i></i></span>
+            </button>
+            <button type="button" class="bc-nav-btn bc-nav-btn--sm" id="bc-key-back">Back</button>
+          </div>
+        </div>
+        <!-- QWERTY keyboard (decorative) -->
+        <div class="bc-keyboard" aria-hidden="true">
+          <div class="bc-kb-row"><kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd></div>
+          <div class="bc-kb-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd></div>
+          <div class="bc-kb-row"><kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd><kbd>B</kbd><kbd>N</kbd><kbd>M</kbd><kbd>,</kbd></div>
+          <div class="bc-kb-row bc-kb-row--bottom"><kbd class="bc-kb-alt">ALT</kbd><kbd class="bc-kb-space">SPACE</kbd><kbd class="bc-kb-enter">⏎</kbd></div>
+        </div>
+        <button type="button" class="bc-close" id="bc-btn-close" title="Close" aria-label="Close Black Cherry">×</button>
+      </div>
+      <button type="button" class="bc-peek-hit" id="bc-peek-hit" aria-label="Open Black Cherry">
+        <span class="bc-peek-logo" aria-hidden="true">
+          <svg class="bc-cherry-svg" viewBox="0 0 48 56" width="24" height="28">
+            <path fill="#0a0a0a" stroke="#2a2a2a" stroke-width="0.8" d="M24 6c-2.5 0-4.8 1.2-6.2 3.1-1.8-1-4-1.1-5.8.2-2.1 1.5-2.8 4.3-1.6 6.6C8.9 18.5 7 22.3 7 26.5 7 34.6 13.4 41 22 42.2 22 48 24 50 24 50s2-2 2-7.8c8.6-1.2 15-6.6 15-14.7 0-4.2-1.9-8-4.4-10.6 1.2-2.3.5-5.1-1.6-6.6-1.8-1.3-4-1.2-5.8-.2C28.8 7.2 26.5 6 24 6z"/>
+            <ellipse cx="17" cy="24" rx="7" ry="8" fill="#121212" stroke="#333" stroke-width="0.6"/>
+            <ellipse cx="31" cy="23" rx="6.5" ry="7.5" fill="#121212" stroke="#333" stroke-width="0.6"/>
+            <path fill="none" stroke="#3d3d3d" stroke-width="1.2" stroke-linecap="round" d="M24 5V2 M21 3h6"/>
+          </svg>
+        </span>
+        <span class="bc-peek-text" id="bc-peek-msg"></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+  <button type="button" id="demo-btn" onclick="fireNews()">⚡ Fire News Ticker Demo</button>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

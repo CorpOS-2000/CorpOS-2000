@@ -1,0 +1,177 @@
+[
+  {
+    "actor_id": "ACT-HW8KZ15W",
+    "relationship_score": 1,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T07:10:58.002Z",
+    "last_contact_date": "2000-01-01T07:10:58.002Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T07:10:58.002Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 1,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-BRA3V8W0",
+    "relationship_score": 1,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T07:26:03.000Z",
+    "last_contact_date": "2000-01-01T07:26:03.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T07:26:03.000Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 1,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-ZDU1MEK0",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T07:38:04.002Z",
+    "last_contact_date": "2000-01-01T08:09:27.996Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T08:09:27.996Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 0,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T07:59:33.000Z",
+        "description": "Hung up without saying goodbye",
+        "delta": -3,
+        "score": -1,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T07:38:04.002Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 2,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-V121Y2UZ",
+    "relationship_score": 4,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T08:15:10.002Z",
+    "last_contact_date": "2000-01-01T14:57:51.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T14:57:51.000Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 4,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T08:26:36.996Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 3,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T08:15:10.002Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 2,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-C9XVBQBB",
+    "relationship_score": 3,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T09:07:39.000Z",
+    "last_contact_date": "2000-01-01T09:23:34.998Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T09:23:34.998Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 3,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T09:07:39.000Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 2,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-RKT05NCS",
+    "relationship_score": 1,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T13:03:48.000Z",
+    "last_contact_date": "2000-01-01T14:02:51.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T14:02:51.000Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 1,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T13:03:48.000Z",
+        "description": "Viewed in contacts.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-LDIMPMQ5",
+    "relationship_score": 3,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T13:25:48.000Z",
+    "last_contact_date": "2000-01-01T13:36:54.996Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T13:36:54.996Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 3,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T13:25:48.000Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 2,
+        "tier": "Neutral"
+      }
+    ]
+  }
+]

@@ -1,0 +1,224 @@
+/* CorpOS Explorer — My Computer (Win2K) */
+
+#win-explorer .wc.fx-body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+#win-explorer .fx-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: #ece9d8;
+  padding: 0;
+  font-family: Tahoma, 'MS Sans Serif', sans-serif;
+  font-size: 11px;
+}
+
+#win-explorer .fx-addr {
+  padding: 4px 6px;
+  background: #d4d0c8;
+  border-bottom: 1px solid #aca899;
+  color: #0a246a;
+  font-weight: bold;
+}
+
+#win-explorer .fx-split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  border-bottom: 1px solid #aca899;
+}
+
+#win-explorer .fx-tree {
+  width: 160px;
+  flex-shrink: 0;
+  overflow: auto;
+  background: #fff;
+  border-right: 1px solid #aca899;
+  padding: 4px 2px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+#win-explorer .fx-tree-row {
+  padding: 1px 2px 1px 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 20px;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+}
+
+#win-explorer .fx-tree-row:hover {
+  background: #c0d0ff;
+}
+
+#win-explorer .fx-tree-row.is-sel {
+  background: #0a246a;
+  color: #fff;
+}
+
+#win-explorer .fx-tree-sub {
+  padding-left: 12px;
+  pointer-events: none;
+}
+
+#win-explorer .fx-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+}
+
+#win-explorer .fx-list-head {
+  display: flex;
+  background: #d4d0c8;
+  border-bottom: 1px solid #808080;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+#win-explorer .fx-list-head span {
+  padding: 3px 6px;
+  border-right: 1px solid #aca899;
+}
+
+#win-explorer .fx-list-head span:first-child {
+  flex: 1;
+}
+
+#win-explorer .fx-list-head span:nth-child(2) {
+  width: 88px;
+  flex-shrink: 0;
+}
+
+#win-explorer .fx-col-size {
+  width: 72px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+#win-explorer .fx-list {
+  flex: 1;
+  overflow: auto;
+  outline: none;
+}
+
+#win-explorer .is-hidden {
+  display: none !important;
+}
+
+#win-explorer .fx-row {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  border-bottom: 1px solid #e8e8e8;
+  cursor: default;
+  user-select: none;
+}
+
+#win-explorer .fx-row:nth-child(odd) {
+  background: #f8f8ff;
+}
+
+#win-explorer .fx-row:hover {
+  background: #dde4f5;
+}
+
+#win-explorer .fx-row.is-sel {
+  background: #0a246a;
+  color: #fff;
+}
+
+#win-explorer .fx-row span {
+  padding: 2px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#win-explorer .fx-row span:first-child {
+  flex: 1;
+}
+
+#win-explorer .fx-row span:nth-child(2) {
+  width: 88px;
+  flex-shrink: 0;
+}
+
+#win-explorer .fx-row span:nth-child(3) {
+  width: 72px;
+  flex-shrink: 0;
+  text-align: right;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+}
+
+#win-explorer .fx-sb {
+  display: flex;
+  height: 22px;
+  border-top: 1px solid #fff;
+  background: #d4d0c8;
+  align-items: center;
+  font-size: 11px;
+}
+
+#win-explorer .fx-sb-l {
+  flex: 1;
+  padding: 0 6px;
+  border-right: 1px solid #aca899;
+}
+
+#win-explorer .fx-sb-mid {
+  width: 80px;
+  border-right: 1px solid #aca899;
+}
+
+#win-explorer .fx-sb-r {
+  width: 22px;
+  text-align: center;
+  color: #666;
+}
+
+#win-explorer .fx-ctx {
+  position: fixed;
+  z-index: 99999;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  min-width: 160px;
+  padding: 2px;
+}
+
+#win-explorer .fx-ctx button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font: 11px Tahoma, sans-serif;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#win-explorer .fx-ctx button:hover:not(:disabled) {
+  background: #0a246a;
+  color: #fff;
+}
+
+#win-explorer .fx-ctx button:disabled {
+  color: #888;
+}
+
+#win-explorer .fx-ctx hr {
+  border: none;
+  border-top: 1px solid #aca899;
+  margin: 2px 0;
+}

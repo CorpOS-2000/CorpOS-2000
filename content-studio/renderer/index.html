@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CorpOS 2000 Content Studio</title>
+  <link rel="stylesheet" href="studio-shell.css">
+</head>
+<body>
+  <div class="studio" id="studio-root">
+    <header class="titlebar">
+      <span>CORPOS</span>
+      <span>CorpOS 2000 — Content Studio | Administrative Terminal | v1.0</span>
+    </header>
+    <nav class="menubar" id="menubar">
+      <button type="button" class="mitem" data-menu="file-data">File</button>
+      <button type="button" class="mitem" data-menu="edit">Edit</button>
+      <button type="button" class="mitem" data-action="refresh">Registry</button>
+      <button type="button" class="mitem" data-action="validate">Validate</button>
+      <button type="button" class="mitem" data-menu="build">Build</button>
+      <button type="button" class="mitem" data-action="help">Help</button>
+    </nav>
+    <div class="main">
+      <aside class="sidebar" id="engine-sidebar"></aside>
+      <div class="content">
+        <div class="subtabs" id="subtabs-row"></div>
+        <div class="panel-area">
+          <div class="left-panel" id="left-panel">
+            <div id="left-panel-inner"></div>
+          </div>
+          <div class="form-panel" id="form-panel"></div>
+          <div class="preview-panel" id="preview-panel">
+            <div class="pp-header" id="preview-header">PREVIEW</div>
+            <div class="pp-scroll" id="preview-body"></div>
+            <div class="pp-actions" id="preview-actions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="statusbar" id="statusbar">
+      <span class="sb-panel" id="sb-app">Content Studio v1.0</span>
+      <span class="sb-panel" id="sb-engine">—</span>
+      <span class="sb-panel ok" id="sb-valid">—</span>
+      <span class="sb-panel" id="sb-counts">—</span>
+      <span class="sb-panel" style="margin-left: auto" id="sb-time">—</span>
+    </footer>
+  </div>
+
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-box">
+      <h3>Studio settings</h3>
+      <div class="field-row"><label>Data directory</label><input type="text" id="set-datadir" style="flex:2"></div>
+      <div class="field-row"><label>content.pack passphrase</label><input type="password" id="set-packkey" style="flex:1"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button type="button" class="pp-btn" id="set-save">Save</button>
+        <button type="button" class="pp-btn" id="set-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-menu">
+    <div class="modal-box" id="modal-menu-body"></div>
+  </div>
+
+  <script src="studio-model.js"></script>
+  <script src="studio-app.js"></script>
+</body>
+</html>

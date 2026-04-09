@@ -1,0 +1,242 @@
+/* Review Bomber — Win2K / CorpOS feed */
+
+.rb-page .rb-loading {
+  font-size: 11px;
+  padding: 8px;
+  border: 2px solid;
+  border-color: #404040 #fff #fff #404040;
+  background: #ffffcc;
+}
+
+.rb-post {
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  background: #f5f5f5;
+  margin-bottom: 12px;
+  padding: 10px 10px 8px;
+}
+
+.rb-post--viral {
+  border-color: #cc6600 #663300 #663300 #cc6600;
+  background: linear-gradient(180deg, #fff8f0, #fffef8);
+  box-shadow: inset 0 0 0 1px #ffcc99;
+}
+
+.rb-post-hd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.rb-post-author {
+  font-weight: bold;
+  color: #0a246a;
+}
+
+.rb-viral-badge {
+  background: #cc0000;
+  color: #fff;
+  font-weight: bold;
+  font-size: 9px;
+  padding: 1px 6px;
+  border: 1px solid #800000;
+}
+
+.rb-heat {
+  background: #0a246a;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+}
+
+.rb-views {
+  margin-left: auto;
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+.rb-post-title {
+  font-size: 13px;
+  color: #222;
+  margin: 0 0 8px;
+  font-weight: bold;
+}
+
+.rb-post-body {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.rb-media-wrap {
+  margin: 8px 0;
+  border: 2px inset #ccc;
+  background: #000;
+  text-align: center;
+  max-width: 100%;
+}
+
+.rb-media {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+video.rb-media {
+  max-height: 320px;
+}
+
+.rb-media-placeholder {
+  font-size: 10px;
+  color: #666;
+  padding: 16px;
+  background: #eee;
+  border: 2px dashed #999;
+}
+
+.rb-code {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+}
+
+.rb-votes {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 6px;
+}
+
+.rb-vbtn {
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  background: #d4d0c8;
+  cursor: pointer;
+}
+
+.rb-vbtn:active {
+  border-color: #404040 #fff #fff #404040;
+}
+
+.rb-vbtn-up .rb-cnt-up,
+.rb-vbtn-down .rb-cnt-down {
+  font-weight: bold;
+}
+
+.rb-comments {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 0;
+  border-top: 1px solid #aaa;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.rb-comment {
+  font-size: 10px;
+  color: #333;
+  padding: 4px 2px;
+  border-bottom: 1px dotted #ccc;
+}
+
+.rb-comment-live {
+  background: #f0fff0;
+}
+
+.rb-comment-empty {
+  color: #888;
+  font-style: italic;
+}
+
+.rb-comment-expired {
+  opacity: 0.45;
+}
+
+.rb-compose-status {
+  font-size: 10px;
+  color: #0a246a;
+  font-style: italic;
+  min-height: 14px;
+  margin: 6px 0 4px;
+}
+
+.rb-composer {
+  margin-top: 6px;
+  padding: 8px;
+  background: #e8e8e8;
+  border: 1px solid #999;
+  border-radius: 0;
+}
+
+.rb-composer--ready {
+  background: #f0f0f0;
+}
+
+.rb-compose-row {
+  margin-bottom: 6px;
+}
+
+.rb-compose-label {
+  font-size: 10px;
+  color: #444;
+  margin-right: 6px;
+}
+
+.rb-personality {
+  font-size: 11px;
+  max-width: 200px;
+}
+
+.rb-compose-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  padding: 4px;
+  border: 2px inset #ccc;
+  background: #fff;
+  resize: vertical;
+  margin-bottom: 6px;
+}
+
+.rb-compose-input:disabled {
+  background: #ddd;
+  color: #666;
+}
+
+.rb-compose-input--locked {
+  background: #f5f5f5;
+  color: #555;
+}
+
+.rb-compose-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rb-ready-label {
+  font-size: 10px;
+  color: #333;
+}
+
+.rb-post-btn {
+  font-size: 11px;
+  padding: 3px 14px;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  background: #d4d0c8;
+  cursor: pointer;
+}
+
+.rb-post-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

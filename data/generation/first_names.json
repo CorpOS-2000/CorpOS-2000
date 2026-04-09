@@ -1,0 +1,12 @@
+[
+  { "value": "John", "weight": 1.0 },
+  { "value": "Margaret", "weight": 0.8 },
+  { "value": "James", "weight": 0.9 },
+  { "value": "Diane", "weight": 0.6 },
+  { "value": "Luis", "weight": 0.7 },
+  { "value": "Angela", "weight": 0.8 },
+  { "value": "Michael", "weight": 1.0 },
+  { "value": "Sarah", "weight": 0.9 },
+  { "value": "Robert", "weight": 0.9 },
+  { "value": "Patricia", "weight": 0.8 }
+]

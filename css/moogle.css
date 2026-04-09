@@ -1,0 +1,415 @@
+/* Moogle — WorldNet parody search (Y2K Google + restrained cow theme). Scoped to .moogle-page. */
+
+.moogle-page {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #000000;
+  background: #ffffff;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.moogle-page *,
+.moogle-page *::before,
+.moogle-page *::after {
+  box-sizing: border-box;
+}
+
+.moogle-page a:link {
+  color: #0000cc;
+}
+.moogle-page a:visited {
+  color: #551a8b;
+}
+.moogle-page a:hover {
+  text-decoration: underline;
+}
+
+.moogle-top-nav {
+  text-align: right;
+  font-size: 11px;
+  padding: 10px 16px 0;
+  line-height: 1.5;
+}
+
+.moogle-spots {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 120px;
+  height: 90px;
+  pointer-events: none;
+  opacity: 0.04;
+}
+
+.moogle-spots svg {
+  width: 100%;
+  height: 100%;
+}
+
+.moogle-home-main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 48px 16px 24px;
+  text-align: center;
+}
+
+.moogle-logo {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 72px;
+  font-weight: bold;
+  letter-spacing: -2px;
+  line-height: 1;
+  text-align: center;
+  margin: 0 auto 8px;
+  white-space: nowrap;
+}
+
+.moogle-logo--sm {
+  font-size: 28px;
+  letter-spacing: -1px;
+  margin: 0;
+  display: inline-block;
+}
+
+.moogle-logo .m-letter,
+.moogle-logo .o-letter-2,
+.moogle-logo .l-letter {
+  color: #111111;
+}
+
+.moogle-logo .o-letter-1,
+.moogle-logo .g-letter,
+.moogle-logo .e-letter {
+  color: #ffffff;
+  -webkit-text-stroke: 2px #222222;
+  paint-order: stroke fill;
+}
+
+.moogle-beta {
+  font-size: 10px;
+  color: #666666;
+  margin: 0 0 28px;
+}
+
+.moogle-tagline {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 6px;
+}
+
+.moogle-subtag {
+  font-size: 11px;
+  color: #666666;
+  margin: 0 0 20px;
+}
+
+.moogle-search-wrap {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  margin: 0 auto;
+}
+
+.moogle-search-wrap--wide {
+  margin-right: 8px;
+}
+
+.moogle-input {
+  width: 384px;
+  height: 28px;
+  border: 1px solid #cccccc;
+  padding: 2px 86px 2px 8px;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.moogle-input--results {
+  width: 440px;
+  padding-right: 8px;
+}
+
+.moogle-input:hover,
+.moogle-input:focus {
+  outline: none;
+  border: 1px solid #4d90fe;
+  box-shadow: 0 0 2px rgba(77, 144, 254, 0.6);
+}
+
+.moogle-input-hint {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  color: #999999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.moogle-btn-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.moogle-btn {
+  background: #f5f5f5;
+  border: 1px solid;
+  border-color: #dddddd #bbbbbb #bbbbbb #dddddd;
+  padding: 4px 16px;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  color: #333333;
+  cursor: pointer;
+}
+
+.moogle-btn:hover {
+  border-color: #aaaaaa;
+  background: #eeeeee;
+}
+
+.moogle-fine-print {
+  font-size: 11px;
+  color: #666666;
+  margin: 18px 0 8px;
+  line-height: 1.5;
+}
+
+.moogle-footer-note {
+  font-size: 10px;
+  color: #999999;
+  margin: 32px 16px 6px;
+  text-align: center;
+}
+
+.moogle-footer {
+  font-size: 10px;
+  color: #999999;
+  text-align: center;
+  padding: 0 16px 24px;
+  line-height: 1.5;
+}
+
+/* Results */
+.moogle-results-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.moogle-results-bar .moogle-logo a {
+  text-decoration: none;
+}
+
+.moogle-tabs {
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 20px 10px;
+}
+
+.moogle-results-body {
+  padding: 12px 20px 32px;
+  max-width: 920px;
+  overflow: hidden;
+}
+
+.moogle-results-body::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+.moogle-results-inner {
+  max-width: 620px;
+  float: left;
+}
+
+.moogle-sponsored {
+  border: 1px solid #cccccc;
+  padding: 8px;
+  font-size: 11px;
+  width: 160px;
+  float: right;
+  margin-left: 16px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.moogle-sponsored-header {
+  color: #999999;
+  font-size: 10px;
+  font-weight: bold;
+  border-bottom: 1px solid #cccccc;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+}
+
+.moogle-count-line {
+  font-size: 13px;
+  color: #666666;
+  margin: 8px 0 14px;
+}
+
+.moogle-did-you-mean {
+  font-size: 13px;
+  font-style: italic;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.moogle-result {
+  margin-bottom: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.moogle-result-title {
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0 0 2px;
+}
+
+.moogle-result-title a {
+  color: #0000cc;
+  text-decoration: none;
+}
+.moogle-result-title a:visited {
+  color: #551a8b;
+}
+.moogle-result-title a:hover {
+  text-decoration: underline;
+}
+
+.moogle-result-desc {
+  font-size: 13px;
+  color: #000000;
+  margin: 0 0 2px;
+  line-height: 1.35;
+  max-height: 2.7em;
+  overflow: hidden;
+}
+
+.moogle-result-url {
+  color: #006600;
+  font-size: 13px;
+  margin: 0 0 3px;
+}
+
+.moogle-result-meta {
+  font-size: 12px;
+}
+
+.moogle-result-meta a {
+  color: #0000cc;
+}
+
+.moogle-pager {
+  clear: both;
+  padding-top: 24px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.moogle-pager-letters {
+  margin-bottom: 6px;
+}
+
+.moogle-pager-letters a {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.moogle-pager-row a {
+  margin: 0 4px;
+}
+
+.moogle-page .moogle-pager-letter {
+  text-decoration: none;
+}
+.moogle-page .moogle-pager-letter.m-letter,
+.moogle-page .moogle-pager-letter.o-letter-2,
+.moogle-page .moogle-pager-letter.l-letter {
+  color: #111111;
+}
+.moogle-page .moogle-pager-letter.o-letter-1,
+.moogle-page .moogle-pager-letter.g-letter,
+.moogle-page .moogle-pager-letter.e-letter {
+  color: #ffffff;
+  -webkit-text-stroke: 2px #222222;
+  paint-order: stroke fill;
+}
+
+/* Stub / inner pages */
+.moogle-stub {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.moogle-stub h1 {
+  font-size: 18px;
+  font-weight: normal;
+  margin: 0 0 16px;
+}
+
+.moogle-dir-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.moogle-dir-list > li {
+  margin-bottom: 14px;
+}
+
+.moogle-dir-sub {
+  font-size: 12px;
+  color: #333;
+  margin: 4px 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.moogle-dir-sub li {
+  margin: 2px 0;
+}
+
+.moogle-about {
+  max-width: 520px;
+  margin: 48px auto;
+  padding: 0 20px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #222;
+}
+
+.moogle-about p {
+  margin: 0 0 12px;
+}
+
+.moogle-groups-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.moogle-groups-table th,
+.moogle-groups-table td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.moogle-groups-table th {
+  background: #f0f0f0;
+}

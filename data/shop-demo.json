@@ -1,0 +1,56 @@
+{
+  "id": "rapidmart",
+  "name": "RapidMart 1999",
+  "tagline": "Always open — dial-up proud since Y2K.",
+  "publicHost": "www.rapidmart1999.net",
+  "freeShippingThreshold": 75,
+  "shippingFee": 5.99,
+  "premiumShippingFee": 12.99,
+  "deliveryHoursBudget": 48,
+  "deliveryHoursPremium": 12,
+  "featuredProductIds": ["rm-modem", "rm-mp3", "rm-java"],
+  "categories": [
+    { "id": "electronics", "name": "Electronics & Office" },
+    { "id": "home", "name": "Home & Desk" }
+  ],
+  "products": [
+    {
+      "id": "rm-modem",
+      "title": "TurboDial 56k USB Modem",
+      "price": 129.99,
+      "salePrice": 89.99,
+      "categoryId": "electronics",
+      "swatch": "linear-gradient(145deg,#dfe8ff,#a8b8e8)",
+      "stockCount": 14,
+      "description": "Carrier-grade handshake tones. Includes 90-day shareware fax suite on CD-ROM."
+    },
+    {
+      "id": "rm-mp3",
+      "title": "DigiClip 32MB Portable Player",
+      "price": 249,
+      "categoryId": "electronics",
+      "swatch": "linear-gradient(145deg,#f0f0f0,#c8ccd4)",
+      "stockCount": 8,
+      "description": "Holds up to 45 minutes of crystal-clear MP3. Requires one AAA per 4 hours (not included)."
+    },
+    {
+      "id": "rm-java",
+      "title": "CorpDesk Java Book — 2nd Ed.",
+      "price": 39.95,
+      "categoryId": "home",
+      "swatch": "linear-gradient(145deg,#fff8e6,#e8dcc8)",
+      "stockCount": 22,
+      "description": "Learn applets while you wait for pages to load. Includes Minesweeper strategy appendix."
+    },
+    {
+      "id": "rm-mouse",
+      "title": "BallMouse Pro (PS/2)",
+      "price": 19.99,
+      "categoryId": "electronics",
+      "swatch": "linear-gradient(145deg,#eaeaea,#b8b8c8)",
+      "stockCount": 30,
+      "description": "Two buttons and a hearty mechanical ball. Compatible with CorpOS 2000 pointing device mandate."
+    }
+  ],
+  "adSlots": ["banner-top", "sidebar-right", "inline-product"]
+}

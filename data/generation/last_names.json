@@ -1,0 +1,12 @@
+[
+  { "value": "Doe", "weight": 0.8 },
+  { "value": "Hayes", "weight": 0.5 },
+  { "value": "Whitfield", "weight": 0.4 },
+  { "value": "Ramirez", "weight": 0.7 },
+  { "value": "Kwok", "weight": 0.4 },
+  { "value": "Miller", "weight": 0.8 },
+  { "value": "Johnson", "weight": 0.8 },
+  { "value": "Davis", "weight": 0.6 },
+  { "value": "Wilson", "weight": 0.6 },
+  { "value": "Turner", "weight": 0.5 }
+]

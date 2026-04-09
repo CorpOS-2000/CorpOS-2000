@@ -1,0 +1,17 @@
+{
+  "name": "whatsapp-cursor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@dannteam/baileys": "^7.1.9",
+    "@whiskeysockets/baileys": "^6.7.19",
+    "axios": "^1.14.0",
+    "qrcode-terminal": "^0.12.0",
+    "ws": "^8.20.0"
+  }
+}

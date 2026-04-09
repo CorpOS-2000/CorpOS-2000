@@ -1,0 +1,110 @@
+/* CorpOS administrative terminals — Win2K */
+.corpos-admin {
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  color: #000;
+  background: #d4d0c8;
+  height: 100%;
+  overflow: auto;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.corpos-admin .ca-fieldset {
+  border: 1px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  margin: 0 0 8px 0;
+  padding: 6px 8px;
+  background: #d4d0c8;
+}
+.corpos-admin .ca-fieldset legend {
+  font-weight: bold;
+  color: #0a246a;
+}
+.corpos-admin .ca-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.corpos-admin .ca-row label {
+  min-width: 110px;
+  color: #333;
+}
+.corpos-admin input[type="text"],
+.corpos-admin input[type="number"],
+.corpos-admin input[type="email"],
+.corpos-admin select,
+.corpos-admin textarea {
+  font: 11px Tahoma, Arial, sans-serif;
+  padding: 2px 4px;
+  border: 1px solid #404040;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  background: #fff;
+  flex: 1;
+  min-width: 120px;
+  max-width: 420px;
+}
+.corpos-admin textarea {
+  min-height: 56px;
+  max-width: 100%;
+}
+.corpos-admin .ca-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px;
+  background: #c0c0c0;
+  border: 1px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+}
+.corpos-admin button {
+  font: 11px Tahoma, Arial, sans-serif;
+  padding: 3px 12px;
+  min-height: 22px;
+  border: 1px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  background: #d4d0c8;
+  cursor: pointer;
+}
+.corpos-admin button:active {
+  border: 1px solid #404040;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+}
+.corpos-admin .ca-preview {
+  border: 2px inset #808080;
+  background: #fff;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 11px;
+  max-height: 160px;
+  overflow: auto;
+}
+.corpos-admin .ca-bar {
+  height: 8px;
+  border: 1px inset #808080;
+  background: repeating-linear-gradient(
+    90deg,
+    #c4d4f4 0px,
+    #c4d4f4 4px,
+    #e8eefc 4px,
+    #e8eefc 8px
+  );
+}
+.corpos-admin .ca-bar > span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #3a6cc4 0px,
+    #3a6cc4 4px,
+    #6a9ae8 4px,
+    #6a9ae8 8px
+  );
+}

@@ -1,0 +1,54 @@
+[
+  {
+    "id": "track_001",
+    "title": "Boot Sequence",
+    "artist": "CorpOS 2000 OST",
+    "album": "Built for Business",
+    "duration": "0:01",
+    "filename": "silence.wav",
+    "type": "ost",
+    "purchasable": false,
+    "unlocked": true,
+    "isOverride": false,
+    "tags": ["ambient", "main"]
+  },
+  {
+    "id": "track_002",
+    "title": "Network Hum",
+    "artist": "CorpOS 2000 OST",
+    "album": "Built for Business",
+    "duration": "0:01",
+    "filename": "silence.wav",
+    "type": "ost",
+    "purchasable": false,
+    "unlocked": true,
+    "isOverride": false,
+    "tags": ["ambient"]
+  },
+  {
+    "id": "track_locked_demo",
+    "title": "Classified Briefing",
+    "artist": "Federal Archives",
+    "album": "Restricted",
+    "duration": "0:01",
+    "filename": "silence.wav",
+    "type": "ost",
+    "purchasable": false,
+    "unlocked": false,
+    "isOverride": false,
+    "tags": []
+  },
+  {
+    "id": "override_investigation",
+    "title": "Priority Directive",
+    "artist": "CorpOS System",
+    "album": "Override",
+    "duration": "0:01",
+    "filename": "silence.wav",
+    "type": "override",
+    "purchasable": false,
+    "unlocked": true,
+    "isOverride": true,
+    "tags": ["override"]
+  }
+]

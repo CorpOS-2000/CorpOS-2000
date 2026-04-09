@@ -1,0 +1,399 @@
+/* WorldNet Ad Engine — Y2K slot chrome, placement modules, and animation library */
+
+/*
+ * Placement modules (set automatically from data-wnet-ad-region or inferred from data-wnet-ad-slot):
+ * below-header | right-rail | left-rail | content-break | paired-half-banners |
+ * above-footer | footer-badges | content-sidebar
+ */
+.wn-ad-module {
+  box-sizing: border-box;
+  font-family: Tahoma, Arial, Helvetica, sans-serif;
+}
+
+.wn-ad-module--below-header {
+  width: 100%;
+  max-width: 100%;
+  margin: 6px 0 10px;
+  padding: 6px 8px 8px;
+  background: linear-gradient(180deg, #f8f4e8 0%, #ebe4d4 45%, #e2dcc8 100%);
+  border: 2px ridge #b8a888;
+  border-top: 1px solid #fff;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), 1px 2px 2px rgba(0, 0, 0, 0.08);
+}
+
+.wn-ad-module--above-footer {
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0 6px;
+  padding: 8px 8px 6px;
+  background: linear-gradient(180deg, #eef2f8 0%, #dde4f0 50%, #cfd8e8 100%);
+  border: 2px groove #8899aa;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.wn-ad-module--right-rail,
+.wn-ad-module--left-rail,
+.wn-ad-module--content-sidebar {
+  width: 100%;
+  max-width: 126px;
+  margin: 0 auto;
+  padding: 4px 4px 6px;
+  background: #fffff5;
+  border: 1px solid #cc9933;
+  box-shadow: 2px 2px 0 #c4b896, inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.wn-ad-module--right-rail .wn-ad-slot-inner,
+.wn-ad-module--left-rail .wn-ad-slot-inner {
+  max-width: 100% !important;
+  min-height: 0;
+}
+
+.wn-ad-module--right-rail .wn-ad-label,
+.wn-ad-module--left-rail .wn-ad-label,
+.wn-ad-module--content-sidebar .wn-ad-label {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #996600;
+}
+
+.wn-ad-module--right-rail .wn-ad-slot-inner,
+.wn-ad-module--left-rail .wn-ad-slot-inner,
+.wn-ad-module--content-sidebar .wn-ad-slot-inner {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wn-ad-module--content-break,
+.wn-ad-module--paired-half-banners {
+  width: 100%;
+  max-width: 492px;
+  margin: 12px auto;
+  padding: 8px 10px;
+  background: #fffef8;
+  border: 2px dashed #999966;
+  border-spacing: 0;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.wn-ad-module--content-break .wn-ad-label,
+.wn-ad-module--paired-half-banners .wn-ad-label {
+  text-align: center;
+}
+
+.wn-ad-module--footer-badges {
+  display: inline-block;
+  margin: 0 2px 2px 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.wn-ad-module--footer-badges .wn-ad-label {
+  display: none;
+}
+
+.wn-ad-module--footer-badges .wn-ad-slot-inner {
+  border-width: 1px;
+}
+
+.wn-ad-host {
+  position: relative;
+  margin: 4px 0;
+}
+
+.wn-ad-host--inline {
+  margin: 8px auto;
+}
+
+.wn-ad-label {
+  display: block;
+  font-size: 9px;
+  color: #888;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+.wn-ad-slot-inner {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 1px;
+  background-clip: padding-box;
+}
+
+.wn-ad-slot-inner .wn-ad-fade {
+  transition: opacity 0.45s ease;
+}
+
+.wn-ad-slot-inner.is-fading .wn-ad-creative {
+  opacity: 0.85;
+}
+
+.wn-ad-creative {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.wn-ad-creative[aria-disabled='true'] {
+  cursor: default;
+  pointer-events: none;
+}
+
+.wn-ad-img,
+.wn-ad-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: contrast(1.05) saturate(0.95);
+}
+
+.wn-ad-video {
+  object-fit: cover;
+  min-height: 48px;
+  background: #111;
+}
+
+.wn-ad-css {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: Tahoma, Arial, sans-serif;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ── CSS animation presets (select via JSON animation name) ── */
+.wn-anim-flash {
+  animation: wnFlash 1.2s step-end infinite;
+}
+@keyframes wnFlash {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.wn-anim-pulse {
+  animation: wnPulse 1.5s ease-in-out infinite;
+}
+@keyframes wnPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.wn-anim-slide-in {
+  animation: wnSlideIn 2.5s ease infinite;
+}
+@keyframes wnSlideIn {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(8%);
+    opacity: 0.9;
+  }
+}
+
+.wn-anim-scroll-text {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.wn-anim-scroll-text span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: wnScrollText 12s linear infinite;
+}
+@keyframes wnScrollText {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.wn-anim-color-cycle {
+  animation: wnColorCycle 4s ease infinite;
+}
+@keyframes wnColorCycle {
+  0% {
+    color: #000080;
+  }
+  33% {
+    color: #800000;
+  }
+  66% {
+    color: #006400;
+  }
+  100% {
+    color: #000080;
+  }
+}
+
+.wn-anim-shake {
+  animation: wnShake 0.5s ease infinite;
+}
+@keyframes wnShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+.wn-anim-typewriter {
+  overflow: hidden;
+  border-right: 2px solid #333;
+  white-space: nowrap;
+  animation:
+    wnTypeNarr 3s steps(24, end) infinite alternate,
+    wnCaret 0.7s step-end infinite;
+}
+@keyframes wnTypeNarr {
+  0% {
+    width: 0;
+  }
+  40% {
+    width: 100%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+@keyframes wnCaret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.wn-anim-fade-loop {
+  animation: wnFadeLoop 2.8s ease-in-out infinite;
+}
+@keyframes wnFadeLoop {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.wn-anim-bounce {
+  animation: wnBounce 1.2s ease infinite;
+}
+@keyframes wnBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Y2K fallback creative (image/video load failure) */
+.wn-ad-y2k-fallback {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  line-height: 1.25;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.wn-ad-y2k-line {
+  display: block;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+
+.wn-ad-y2k-line--rainbow {
+  animation: wnRainbowText 3.2s linear infinite;
+}
+
+@keyframes wnRainbowText {
+  0% {
+    color: #000080;
+  }
+  20% {
+    color: #8b008b;
+  }
+  40% {
+    color: #b22222;
+  }
+  60% {
+    color: #006400;
+  }
+  80% {
+    color: #8b4513;
+  }
+  100% {
+    color: #000080;
+  }
+}
+
+.wn-anim-glitch {
+  animation: wnGlitch 2.5s step-end infinite;
+}
+@keyframes wnGlitch {
+  0% {
+    text-shadow: 1px 0 #f00, -1px 0 #0ff;
+    transform: translate(0);
+  }
+  20% {
+    text-shadow: -2px 0 #f00, 2px 0 #0ff;
+    transform: translate(-1px, 1px);
+  }
+  40% {
+    text-shadow: 2px 1px #f00, -2px -1px #0ff;
+    transform: translate(1px, -1px);
+  }
+  60% {
+    text-shadow: none;
+    transform: translate(0);
+  }
+  100% {
+    text-shadow: none;
+    transform: translate(0);
+  }
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "taglet_id": "tech_enthusiast",
+    "category": "interest",
+    "compatible_with": ["forum_regular", "corporate_loyalist"],
+    "conflicts_with": ["anti_tech"],
+    "weight": 1,
+    "platform_behavior": {
+      "forum": "active_poster",
+      "social": "opinionated",
+      "news": "subject_interest",
+      "email": "brief"
+    },
+    "content_tendency": "posts about technology, hardware, software, internet culture",
+    "tone_modifier": "enthusiastic, early-adopter energy",
+    "opinion_modifiers": { "corpos": 10, "government": -5 }
+  },
+  {
+    "taglet_id": "forum_regular",
+    "category": "behavior",
+    "compatible_with": ["tech_enthusiast", "civic_minded"],
+    "conflicts_with": [],
+    "weight": 0.9,
+    "platform_behavior": {
+      "forum": "active_poster",
+      "social": "low",
+      "news": "low",
+      "email": "low"
+    },
+    "content_tendency": "participates in ongoing discussions and threads",
+    "tone_modifier": "casual forum voice",
+    "opinion_modifiers": { "corpos": -2, "government": -2 }
+  },
+  {
+    "taglet_id": "civic_minded",
+    "category": "values",
+    "compatible_with": ["forum_regular", "family_oriented"],
+    "conflicts_with": ["anti_gov_extreme"],
+    "weight": 0.7,
+    "platform_behavior": {
+      "forum": "measured",
+      "social": "community_focused",
+      "news": "policy_interest",
+      "email": "formal"
+    },
+    "content_tendency": "comments on policy, local issues, and institutions",
+    "tone_modifier": "measured and civic",
+    "opinion_modifiers": { "government": 8, "corpos": -1 }
+  },
+  {
+    "taglet_id": "family_oriented",
+    "category": "lifestyle",
+    "compatible_with": ["civic_minded"],
+    "conflicts_with": [],
+    "weight": 0.8,
+    "platform_behavior": {
+      "forum": "low",
+      "social": "photo_sharing",
+      "news": "low",
+      "email": "regular"
+    },
+    "content_tendency": "shares family and routine daily life updates",
+    "tone_modifier": "warm and protective",
+    "opinion_modifiers": { "player": 0, "government": 2 }
+  }
+]

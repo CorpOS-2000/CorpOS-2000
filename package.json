@@ -1,0 +1,16 @@
+{
+  "name": "corpos-2000",
+  "version": "0.1.0",
+  "description": "CorpOS 2000 — business simulation shell",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:data": "node data/build-pages.mjs",
+    "build:brands": "node data/build-parody-brands.mjs",
+    "build:mytube": "node data/build-mytube-videos.mjs",
+    "build:maps": "node scripts/generate_addresses.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}
