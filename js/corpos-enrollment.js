@@ -3,8 +3,13 @@
  * compliance lockout, and license termination.
  */
 import { getState, patchState } from './gameState.js';
+import { generatePlayerAndMomAfterEnrollment } from './world-generation.js';
 
 const COS_SEAL_SVG = `<svg viewBox="0 0 140 140" width="64" height="64" style="vertical-align:middle;"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="1.5"/><rect x="14" y="14" width="112" height="112" rx="4" fill="none" stroke="#a6b5e7" stroke-width=".5" opacity=".25"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="102" y="57" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><line x1="86" y1="72" x2="118" y2="72" stroke="#a6b5e7" stroke-width=".8" opacity=".45"/><text x="102" y="90" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text><line x1="22" y1="108" x2="118" y2="108" stroke="#a6b5e7" stroke-width=".6" opacity=".3"/><text x="70" y="118" font-family="Share Tech Mono,monospace" font-size="7" fill="#445577" text-anchor="middle" letter-spacing="5">CORPOS 2000</text></svg>`;
+
+/* ──── DEV-ONLY: Set to true to show a "fill test data" button on Step 1. ──── */
+const CORPOS_DEV_ENROLLMENT_AUTOFILL = true;
+/* ──────────────────────────────────────────────────────────────────────────── */
 
 const SEX_OPTIONS = ['Male', 'Female'];
 const RACE_OPTIONS = [
@@ -207,8 +212,47 @@ function inchOptions() {
   return h;
 }
 
+/* ──── DEV autofill helper (gated by CORPOS_DEV_ENROLLMENT_AUTOFILL) ──── */
+const DEV_FIRST_NAMES = ['James','Mary','Robert','Patricia','John','Jennifer','Michael','Linda','David','Barbara','William','Elizabeth','Richard','Susan','Joseph','Jessica','Thomas','Sarah','Charles','Karen'];
+const DEV_LAST_NAMES = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin'];
+
+function randomValidIdentityFields() {
+  const firstName = DEV_FIRST_NAMES[Math.floor(Math.random() * DEV_FIRST_NAMES.length)];
+  const lastName = DEV_LAST_NAMES[Math.floor(Math.random() * DEV_LAST_NAMES.length)];
+  const sex = SEX_OPTIONS[Math.floor(Math.random() * SEX_OPTIONS.length)];
+  const race = RACE_OPTIONS[Math.floor(Math.random() * RACE_OPTIONS.length)];
+  const birthYear = 1940 + Math.floor(Math.random() * 42); // 1940–1981 → age 19–60 on Jan 1, 2000
+  const birthMonth = 1 + Math.floor(Math.random() * 12);
+  const maxDay = new Date(birthYear, birthMonth, 0).getDate();
+  const birthDay = 1 + Math.floor(Math.random() * maxDay);
+  const age = Math.floor((Date.UTC(2000, 0, 1) - Date.UTC(birthYear, birthMonth - 1, birthDay)) / (365.25 * 86400000));
+  const totalInches = 54 + Math.floor(Math.random() * 31); // 54–84
+  const htFt = Math.floor(totalInches / 12);
+  const htIn = totalInches % 12;
+  return { firstName, lastName, birthMonth, birthDay, birthYear, age, sex, race, htFt, htIn };
+}
+
+function devFillStep1() {
+  const f = randomValidIdentityFields();
+  const el = (id) => document.getElementById(id);
+  if (el('enr-fname')) el('enr-fname').value = f.firstName;
+  if (el('enr-lname')) el('enr-lname').value = f.lastName;
+  if (el('enr-dob-month')) el('enr-dob-month').value = String(f.birthMonth);
+  if (el('enr-dob-day')) el('enr-dob-day').value = String(f.birthDay);
+  if (el('enr-dob-year')) el('enr-dob-year').value = String(f.birthYear);
+  if (el('enr-age')) el('enr-age').value = String(f.age);
+  if (el('enr-sex')) el('enr-sex').value = f.sex;
+  if (el('enr-race')) el('enr-race').value = f.race;
+  if (el('enr-ht-ft')) el('enr-ht-ft').value = String(f.htFt);
+  if (el('enr-ht-in')) el('enr-ht-in').value = String(f.htIn);
+}
+/* ─────────────────────────────────────────────────────────────────────── */
+
 function renderStep1(screen) {
   const inner = screen.querySelector('.enrollment-inner') || screen;
+  const devBtn = CORPOS_DEV_ENROLLMENT_AUTOFILL
+    ? `<button type="button" id="enr-dev-fill" style="padding:3px 10px;font-size:9px;background:#333;color:#888;border:1px solid #555;cursor:pointer;margin-right:8px;">Dev: fill test data</button>`
+    : '';
   inner.innerHTML = `
 ${mandateHeader()}
 <div style="max-width:440px;margin:0 auto;">
@@ -231,10 +275,13 @@ ${mandateHeader()}
     </td></tr>
   </table>
   <div style="margin-top:12px;text-align:right;">
-    <button type="button" id="enr-step1-next" style="padding:6px 24px;font-size:12px;font-weight:bold;background:#0a246a;color:#fff;border:2px outset #4466aa;cursor:pointer;">Continue</button>
+    ${devBtn}<button type="button" id="enr-step1-next" style="padding:6px 24px;font-size:12px;font-weight:bold;background:#0a246a;color:#fff;border:2px outset #4466aa;cursor:pointer;">Continue</button>
   </div>
 </div>`;
   inner.querySelector('#enr-step1-next').addEventListener('click', () => handleStep1(screen));
+  if (CORPOS_DEV_ENROLLMENT_AUTOFILL) {
+    inner.querySelector('#enr-dev-fill')?.addEventListener('click', devFillStep1);
+  }
 }
 
 function handleStep1(screen) {
@@ -448,6 +495,7 @@ function handleRegistration(screen) {
   });
 
   screen.style.display = 'none';
+  generatePlayerAndMomAfterEnrollment();
   if (_enrollmentResolve) { _enrollmentResolve(); _enrollmentResolve = null; }
 }
 

@@ -1,6 +1,7 @@
 {
-  "format": "555-XXX-XXXX",
-  "area_codes": ["555"],
-  "exchange_min": 100,
+  "format": "(559) XXX-XXXX",
+  "area_codes": ["559"],
+  "fallback_area_codes": ["209"],
+  "exchange_min": 200,
   "exchange_max": 999
 }

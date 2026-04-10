@@ -25,7 +25,9 @@ export const TOAST_KEYS = Object.freeze({
   COMPANY_REGISTERED: 'company_registered',
   NPC_UNLOCKED: 'npc_unlocked',
   GENERIC: 'generic',
-  TRACK_IMPORTED: 'track_imported'
+  TRACK_IMPORTED: 'track_imported',
+  FEDERAL_AUDIT_RESULT: 'federal_audit_result',
+  DEV_LOTTERY_DEPOSIT: 'dev_lottery_deposit'
 });
 
 const WEASEL_BADGE = '≽ᴥ≼';

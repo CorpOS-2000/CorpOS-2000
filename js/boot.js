@@ -1,8 +1,8 @@
 import { pause, unpause } from './clock.js';
 import { TOAST_KEYS, toast } from './toast.js';
-import { smsToPlayer } from './black-cherry.js';
 import { getState } from './gameState.js';
 import { showEnrollment, verifyOsLogin, triggerLicenseTermination } from './corpos-enrollment.js';
+import { triggerKyleCall } from './kyle-call.js';
 import {
   loadFirstPlayableAudio,
   getPowerOnCandidates,
@@ -11,6 +11,8 @@ import {
   getCorpBootCandidates,
   safeDurationMs
 } from './boot-audio.js';
+import { generateWorldNpcsDuringBios, fireQueuedSmsEvents } from './world-generation.js';
+import { SaveManager } from '../engine/SaveManager.js';
 
 /** Per-line delay from bios.json (`d` ms); 0 in data = short beat (50ms) before next line. */
 const BIOS_MS_MULT = 1.55;
@@ -29,6 +31,13 @@ let biosInitAudioInstance = null;
 let biosExecAudioInstance = null;
 
 let corpBootAudioInstance = null;
+
+/** Default markup for #lverify (must include #vdone). Failed login replaces innerHTML and drops vdone — reset each attempt. */
+const LOGIN_VERIFY_PENDING_HTML =
+  'Verifying credentials with Federal Business Registry...<br>Checking compliance status...<br><span id="vdone"></span>';
+
+/** Restores login form after Access Denied; cleared when a new doLogin() runs. */
+let loginFailUiTimer = null;
 
 /** Single pre-BIOS step: insert disc (cosmetic; Enter continues to POST). */
 export const BOOT_DEVICES = [
@@ -117,6 +126,10 @@ function hideBios() {
 
 let biosIdx = 0;
 let biosEl = null;
+/** Resolves when all BIOS lines have been rendered (before hideBios). */
+let _biosLinesResolve = null;
+/** Promise that resolves once NPC generation finishes (runs in parallel with BIOS). */
+let _npcGenPromise = null;
 /** True after first non-empty POST line (AMI header) — later non-empty lines use BiosExecute. */
 let biosInitPlayed = false;
 /** Index of "Mouse.........Detected" line; stutter execute runs only after this when phases are known. */
@@ -209,7 +222,9 @@ function nextBiosLine() {
   if (!biosEl) return;
   if (biosIdx >= biosLines.length) {
     const tailMs = Math.max(100, Math.round(950 * biosDelayScale));
-    setTimeout(() => hideBios(), tailMs);
+    setTimeout(() => {
+      if (_biosLinesResolve) { _biosLinesResolve(); _biosLinesResolve = null; }
+    }, tailMs);
     return;
   }
   const line = biosLines[biosIdx++];
@@ -298,11 +313,22 @@ async function runBiosWithAudio() {
 
   biosDelayScale = 1;
 
+  const biosLinesPromise = new Promise((resolve) => {
+    _biosLinesResolve = resolve;
+  });
+
+  _npcGenPromise = generateWorldNpcsDuringBios().catch((err) => {
+    console.error('[WorldGen] NPC generation error during BIOS:', err);
+  });
+
   biosIdx = 0;
   biosInitPlayed = false;
   biosPostBeepScheduled = false;
   refreshBiosAudioPhases();
   nextBiosLine();
+
+  await Promise.all([biosLinesPromise, _npcGenPromise]);
+  hideBios();
 }
 
 async function playPowerOnThenBios() {
@@ -492,6 +518,17 @@ export function showLogin() {
   if (unameEl && p.username) unameEl.value = p.username;
   const ls = document.getElementById('login-screen');
   ls?.classList.add('show');
+  const vEl = document.getElementById('lverify');
+  const fEl = document.getElementById('lform');
+  if (loginFailUiTimer) {
+    clearTimeout(loginFailUiTimer);
+    loginFailUiTimer = null;
+  }
+  if (vEl) {
+    vEl.innerHTML = LOGIN_VERIFY_PENDING_HTML;
+    vEl.style.display = 'none';
+  }
+  if (fEl) fEl.style.display = 'block';
 }
 
 export function doLogin() {
@@ -563,47 +600,171 @@ function bootDesktop() {
     toast({
       key: TOAST_KEYS.SYSTEM_LOAD,
       title: 'CorpOS 2000',
+      message: 'System loaded.',
+      icon: '◆',
+      autoDismiss: 4000
+    });
+  }, 200);
+  setTimeout(() => {
+    toast({
+      key: TOAST_KEYS.SYSTEM_LOAD,
+      title: 'CorpOS 2000',
       message: 'Federal Mandate 2000-CR7 compliance mode active.',
       icon: '◆',
       autoDismiss: 5000
     });
-  }, 1400);
+  }, 1000);
   setTimeout(() => {
     const u = document.getElementById('uname')?.value || 'OPERATOR';
-    smsToPlayer(`Welcome, ${u.toUpperCase()}. You have 1 new message in Black Cherry.`);
-  }, 3200);
+    toast({
+      key: TOAST_KEYS.SYSTEM_LOAD,
+      title: 'Welcome',
+      message: `Welcome, ${u.toUpperCase()}. You have new messages.`,
+      icon: '👤',
+      autoDismiss: 4000
+    });
+  }, 2400);
+  setTimeout(() => fireQueuedSmsEvents(), 3000);
+  setTimeout(() => triggerKyleCall(), 10000);
 }
 
 export function doShutdown() {
   pause('shutdown');
-  const sd = document.getElementById('shutdown-screen');
-  if (!sd) return;
-  sd.classList.add('show');
-  const msg = document.getElementById('sd-msg');
-  if (!msg) return;
+  const saveResult = SaveManager.save();
+
+  const screen = document.getElementById('shutdown-screen');
+  if (!screen) return;
+  screen.innerHTML = '';
+  screen.classList.add('show');
+
   const lines = [
-    'Saving session data...',
-    'Closing active connections...',
-    'Flushing audit log buffer...',
-    'Synchronizing with Federal Business Registry...',
-    'Committing compliance records...',
-    'Terminating CorpOS services...',
-    '',
-    'It is now safe to turn off your computer.',
-    '',
-    '<span style="font-size:11px;color:#555;">All activity has been logged per Federal Mandate 2000-CR7.</span>'
+    { text: 'CorpOS 2000 — System Shutdown Initiated', color: '#ffffff', delay: 0 },
+    { text: '', delay: 300 },
+    { text: 'Saving operator session...', delay: 500 },
+    {
+      text: saveResult.success
+        ? `  Session saved.  [ ${String(saveResult.savedAt || '').slice(11, 19) || 'OK'} ]`
+        : '  WARNING: Session save may have failed.',
+      color: saveResult.success ? '#00cc00' : '#ffcc00',
+      delay: 1100
+    },
+    { text: '', delay: 1400 },
+    { text: 'Closing WorldNet connections...', delay: 1600 },
+    { text: '  Connection pool flushed.                   [ OK ]', color: '#00cc00', delay: 2200 },
+    { text: 'Flushing audit log buffer...', delay: 2400 },
+    { text: '  1,847 log entries committed.               [ OK ]', color: '#00cc00', delay: 3000 },
+    { text: 'Synchronizing with Federal Business Registry...', delay: 3200 },
+    { text: '  Registry sync complete.                    [ OK ]', color: '#00cc00', delay: 4000 },
+    { text: 'Committing compliance records...', delay: 4200 },
+    { text: '  All compliance records written.            [ OK ]', color: '#00cc00', delay: 4900 },
+    { text: 'Terminating CorpOS services...', delay: 5100 },
+    { text: '  All services stopped.                      [ OK ]', color: '#00cc00', delay: 5700 },
+    { text: '', delay: 6000 },
+    {
+      text: 'All activity has been logged per Federal Mandate 2000-CR7.',
+      color: '#666666',
+      delay: 6200
+    },
+    { text: '', delay: 6800 },
+    { text: 'It is now safe to turn off your computer.', color: '#ffffff', delay: 7000 }
   ];
-  let i = 0;
-  function nextLine() {
-    if (i >= lines.length) return;
-    msg.innerHTML += lines[i] + '<br>';
-    i++;
-    setTimeout(nextLine, i < 7 ? 600 : 1200);
+
+  let accumulated = 0;
+  lines.forEach((line) => {
+    accumulated = Math.max(accumulated, line.delay);
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.style.color = line.color || '#aaaaaa';
+      el.style.minHeight = '1.8em';
+      el.textContent = line.text;
+      screen.appendChild(el);
+      screen.scrollTop = screen.scrollHeight;
+    }, line.delay);
+  });
+
+  setTimeout(() => {
+    if (window.corpOS?.quit) {
+      window.corpOS.quit();
+    } else if (typeof window.require === 'function') {
+      try {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('app-quit');
+      } catch {
+        /* browser dev — stay on screen */
+      }
+    }
+  }, accumulated + 2000);
+}
+
+export function doLogOff() {
+  const result = SaveManager.save();
+  const screen = document.getElementById('logoff-screen');
+  const container = document.getElementById('logoff-lines');
+  if (!screen || !container) return;
+
+  container.innerHTML = '';
+  const desktop = document.getElementById('desktop');
+  if (desktop) {
+    desktop.classList.remove('show');
+    desktop.style.opacity = '0';
   }
-  nextLine();
+
+  screen.classList.add('show');
+
+  const lines = [
+    { text: 'Saving session data...', delay: 0 },
+    {
+      text: result.success
+        ? '✓ Session saved successfully.'
+        : '⚠ Save warning — data may not have persisted.',
+      delay: 500
+    },
+    { text: 'Closing active connections...', delay: 900 },
+    { text: 'Flushing audit log buffer...', delay: 1300 },
+    { text: 'Committing compliance records to registry...', delay: 1700 },
+    { text: '', delay: 2100 },
+    { text: 'Session terminated.', delay: 2300 },
+    { text: 'Returning to login screen...', delay: 2700 }
+  ];
+
+  let acc = 0;
+  lines.forEach((line) => {
+    acc += line.delay;
+    setTimeout(() => {
+      if (line.text) {
+        const el = document.createElement('div');
+        el.className = 'logoff-line';
+        el.textContent = line.text;
+        container.appendChild(el);
+      }
+    }, acc);
+  });
+
+  setTimeout(() => {
+    screen.classList.remove('show');
+    container.innerHTML = '';
+    if (loginFailUiTimer) {
+      clearTimeout(loginFailUiTimer);
+      loginFailUiTimer = null;
+    }
+    const loginScreen = document.getElementById('login-screen');
+    if (loginScreen) {
+      loginScreen.style.display = 'flex';
+      loginScreen.style.opacity = '1';
+      loginScreen.classList.add('show');
+    }
+    const f = document.getElementById('lform');
+    const v = document.getElementById('lverify');
+    if (v) {
+      v.innerHTML = LOGIN_VERIFY_PENDING_HTML;
+      v.style.display = 'none';
+    }
+    if (f) f.style.display = 'block';
+  }, acc + 1200);
 }
 
 export function exposeGlobals() {
   window.doLogin = doLogin;
   window.doShutdown = doShutdown;
+  window.doLogOff = doLogOff;
 }

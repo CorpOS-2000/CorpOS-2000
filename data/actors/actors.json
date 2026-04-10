@@ -52575,5 +52575,1351 @@
       "intimidation_check": 14,
       "trust_check": 15
     }
+  },
+  {
+    "actor_id": "PLAYER_PRIMARY",
+    "full_legal_name": "John Johnson",
+    "first_name": "John",
+    "last_name": "Johnson",
+    "aliases": [
+      "johnjohnson"
+    ],
+    "ssn": "513-86-4652",
+    "phone_numbers": [
+      "(559) 751-5125"
+    ],
+    "emails": [
+      "john.johnson@jeemail.net",
+      "karen.gonzalez@jeemail.net"
+    ],
+    "home_address": {
+      "street": "1195 Redwood Drive, Hargrove, CA 94527",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "93720"
+    },
+    "hargrove_address_id": null,
+    "dob": "June 29, 1980",
+    "age": 45,
+    "household_id": "HH_PLAYER",
+    "employer_id": null,
+    "profession": "Entrepreneur",
+    "lifestyle_tier": "low",
+    "taglets": [
+      "business_builder",
+      "ambitious",
+      "casual_speaker"
+    ],
+    "social_weight": 5,
+    "opinion_profile": {
+      "player": 0,
+      "government": 0,
+      "corpos": 0,
+      "rapidemart": -5,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "ACT-MOM-2W5ADYQ5",
+        "type": "family",
+        "subtype": "mother",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "working",
+      "mood": "determined",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [
+        "jeemail",
+        "worldnet"
+      ],
+      "peak_hours": [
+        8,
+        22
+      ],
+      "frequency": "medium"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "John Johnson",
+      "bio": "Entrepreneur.",
+      "occupation": "Business Operator",
+      "avatar_description": "Young professional"
+    },
+    "private_profile": {
+      "notes": "Player character",
+      "risk_flags": []
+    },
+    "role": "player",
+    "investigator_tier": null,
+    "is_player": true,
+    "is_key_character": true,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "dcProfile": {
+      "affinity_check": 10,
+      "gossip_check": 12,
+      "info_check": 13,
+      "favor_check": 14,
+      "bribe_check": 14,
+      "intimidation_check": 14,
+      "trust_check": 15
+    }
+  },
+  {
+    "actor_id": "ACT-MOM-1QTKP8SU",
+    "full_legal_name": "Betty Leonne",
+    "first_name": "Betty",
+    "last_name": "Leonne",
+    "maiden_name": "Hayes",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "855-52-1730",
+    "phone_numbers": [
+      "(559) 488-2737"
+    ],
+    "emails": [
+      "betty.leonne729@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "4727 Birch Court",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94527"
+    },
+    "hargrove_address_id": "addr_01449",
+    "dob": "1941-10-11",
+    "age": 84,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Homemaker",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [
+      {
+        "event": "conversation_option",
+        "optionId": "generic_chat",
+        "usedAtSimMs": 10967027.999999186,
+        "useCount": 1
+      },
+      {
+        "event": "conversation_option",
+        "optionId": "ask_info",
+        "usedAtSimMs": 11511029.999999024,
+        "useCount": 1
+      }
+    ],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Betty Leonne",
+      "bio": "",
+      "occupation": "Homemaker",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Kai! It's Mom. How's everything going? I'm thinking of you on your first day. Be smart, be safe. Love Mom",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-KYLE-HARGROVE",
+    "full_legal_name": "Kyle Hargrove",
+    "first_name": "Kyle",
+    "last_name": "Hargrove",
+    "aliases": [
+      "KyleH"
+    ],
+    "ssn": "738-92-3262",
+    "phone_numbers": [
+      "(559) 375-9727"
+    ],
+    "emails": [
+      "k.hargrove@corpossales.gov.net"
+    ],
+    "home_address": {
+      "street": "440 Federal Plaza",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "93720"
+    },
+    "hargrove_address_id": null,
+    "dob": "1971-06-14",
+    "age": 28,
+    "household_id": null,
+    "employer_id": "CORPOS_SALES_DIVISION",
+    "profession": "Account Manager",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "corporate_climber",
+      "vocal",
+      "formal_speaker",
+      "transactional",
+      "pro_government"
+    ],
+    "social_weight": 18,
+    "opinion_profile": {
+      "player": 40,
+      "government": 60,
+      "corpos": 55,
+      "rapidemart": -5
+    },
+    "relationships": [],
+    "current_state": {
+      "location": "office",
+      "activity": "working",
+      "mood": "upbeat",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [
+        "jeemail"
+      ],
+      "peak_hours": [
+        8,
+        18
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "none",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Kyle Hargrove",
+      "bio": "CorpOS Sales Division — Account Manager",
+      "occupation": "Account Manager",
+      "avatar_description": "Young professional in a suit"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 10,
+      "gossip_check": 16,
+      "info_check": 14,
+      "favor_check": 14,
+      "bribe_check": 14,
+      "intimidation_check": 14,
+      "trust_check": 14
+    },
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": true,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Kyle Hargrove",
+    "relationToPlayer": "CorpOS Account Manager"
+  },
+  {
+    "actor_id": "ACT-MOM-MGTXXH3G",
+    "full_legal_name": "Carol Martinez",
+    "first_name": "Carol",
+    "last_name": "Martinez",
+    "maiden_name": "Wilson",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "874-88-3701",
+    "phone_numbers": [
+      "(559) 834-3838"
+    ],
+    "emails": [
+      "carol.martinez860@jeemail.net"
+    ],
+    "home_address": {
+      "street": "635 Chestnut Avenue",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94524"
+    },
+    "hargrove_address_id": "addr_01446",
+    "dob": "1950-12-16",
+    "age": 75,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "School Secretary",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Carol Martinez",
+      "bio": "",
+      "occupation": "School Secretary",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Hi honey! Just checking in on your first day. I made your favorite last night - there's some in the freezer if you want it. Good luck today. Love, Mom",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-DEV-INTERNAL",
+    "full_legal_name": "System Administrator",
+    "first_name": "Dev",
+    "last_name": "Console",
+    "aliases": [
+      "The Developer"
+    ],
+    "ssn": "900-00-0001",
+    "phone_numbers": [
+      "(320) 460-0561"
+    ],
+    "emails": [
+      "dev.internal@corpos.sys"
+    ],
+    "home_address": {
+      "street": "0 Internal Ln",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "00000"
+    },
+    "dob": "1970-01-01",
+    "age": 30,
+    "household_id": null,
+    "employer_id": null,
+    "profession": "System Administrator",
+    "lifestyle_tier": "elite",
+    "taglets": [],
+    "social_weight": 0,
+    "opinion_profile": {},
+    "relationships": [],
+    "current_state": {
+      "location": "system",
+      "activity": "online",
+      "mood": "neutral",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "private",
+      "forum": "private",
+      "news": "private",
+      "email": "private",
+      "corporate": "private",
+      "anonymous": "private",
+      "banking": "private",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Internal",
+      "bio": "",
+      "occupation": "System Administrator",
+      "avatar_description": "default portrait"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "role": "system",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T00:00:00.000Z",
+    "active": true,
+    "dcProfile": {
+      "affinity_check": 10,
+      "gossip_check": 12,
+      "info_check": 13,
+      "favor_check": 14,
+      "bribe_check": 14,
+      "intimidation_check": 14,
+      "trust_check": 15
+    }
+  },
+  {
+    "actor_id": "ACT-MOM-LSSFI4OQ",
+    "full_legal_name": "Ruth Williams",
+    "first_name": "Ruth",
+    "last_name": "Williams",
+    "maiden_name": "Wilson",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "523-18-3508",
+    "phone_numbers": [
+      "(559) 931-1555"
+    ],
+    "emails": [
+      "ruth.williams122@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "1607 Alder Road",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_04342",
+    "dob": "1937-08-19",
+    "age": 88,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Homemaker",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Ruth Williams",
+      "bio": "",
+      "occupation": "Homemaker",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Hi sweetheart. Big day! I know you're going to do great. The garage is all yours for as long as you need it. Call me. Love you.",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-U1CHTXS3",
+    "full_legal_name": "Karen Moore",
+    "first_name": "Karen",
+    "last_name": "Moore",
+    "maiden_name": "Miller",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "644-16-2932",
+    "phone_numbers": [
+      "(559) 761-1962"
+    ],
+    "emails": [
+      "karen.moore219@wahoo.net"
+    ],
+    "home_address": {
+      "street": "865 Chestnut Avenue",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_04126",
+    "dob": "1945-07-16",
+    "age": 80,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Teacher",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Karen Moore",
+      "bio": "",
+      "occupation": "Retired Teacher",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Linda it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-AEGOLPQW",
+    "full_legal_name": "Peggy Martinez",
+    "first_name": "Peggy",
+    "last_name": "Martinez",
+    "maiden_name": "Wilson",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "557-77-3103",
+    "phone_numbers": [
+      "(559) 971-3495"
+    ],
+    "emails": [
+      "peggy.martinez810@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "9688 Magnolia Court",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94523"
+    },
+    "hargrove_address_id": "addr_03257",
+    "dob": "1942-09-21",
+    "age": 83,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Teacher",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Peggy Martinez",
+      "bio": "",
+      "occupation": "Retired Teacher",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Hi honey! Just checking in on your first day. I made your favorite last night - there's some in the freezer if you want it. Good luck today. Love, Mom",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-RC4XRDLU",
+    "full_legal_name": "Barbara Hernandez",
+    "first_name": "Barbara",
+    "last_name": "Hernandez",
+    "maiden_name": "Davis",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "402-50-7865",
+    "phone_numbers": [
+      "(559) 839-9910"
+    ],
+    "emails": [
+      "barbara.hernandez922@wahoo.net"
+    ],
+    "home_address": {
+      "street": "6379 Alder Road",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_04462",
+    "dob": "1938-05-07",
+    "age": 87,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Nurse",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Barbara Hernandez",
+      "bio": "",
+      "occupation": "Retired Nurse",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Michael, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-YV2L6I41",
+    "full_legal_name": "Shirley Jones",
+    "first_name": "Shirley",
+    "last_name": "Jones",
+    "maiden_name": "Ramirez",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "392-71-6618",
+    "phone_numbers": [
+      "(559) 993-8038"
+    ],
+    "emails": [
+      "shirley.jones642@wahoo.net"
+    ],
+    "home_address": {
+      "street": "3508 Hickory Road",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_02096",
+    "dob": "1950-03-25",
+    "age": 76,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Teacher",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Shirley Jones",
+      "bio": "",
+      "occupation": "Retired Teacher",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Michael! It's Mom. How's everything going? I'm thinking of you on your first day. Be smart, be safe. Love Mom",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-VAZ8PRMV",
+    "full_legal_name": "Patricia Jones",
+    "first_name": "Patricia",
+    "last_name": "Jones",
+    "maiden_name": "Davis",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "835-52-7328",
+    "phone_numbers": [
+      "(559) 998-1917"
+    ],
+    "emails": [
+      "patricia.jones905@corpnet.local"
+    ],
+    "home_address": {
+      "street": "5017 Cypress Lane",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_02620",
+    "dob": "1947-05-11",
+    "age": 78,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Homemaker",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Patricia Jones",
+      "bio": "",
+      "occupation": "Homemaker",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Michael it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-2W5ADYQ5",
+    "full_legal_name": "Carolyn Johnson",
+    "first_name": "Carolyn",
+    "last_name": "Johnson",
+    "maiden_name": "Ramirez",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "674-87-5501",
+    "phone_numbers": [
+      "(559) 959-4687"
+    ],
+    "emails": [
+      "carolyn.johnson578@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "400 Central Avenue",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94523"
+    },
+    "hargrove_address_id": "addr_00055",
+    "dob": "1951-08-06",
+    "age": 74,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Teacher",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Carolyn Johnson",
+      "bio": "",
+      "occupation": "Retired Teacher",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "John, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-ZGJHZNFS",
+    "full_legal_name": "Carolyn Johnson",
+    "first_name": "Carolyn",
+    "last_name": "Johnson",
+    "maiden_name": "Turner",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "645-46-2774",
+    "phone_numbers": [
+      "(559) 394-1754"
+    ],
+    "emails": [
+      "carolyn.johnson223@wahoo.net"
+    ],
+    "home_address": {
+      "street": "1109 Alder Road",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_01562",
+    "dob": "1935-03-14",
+    "age": 91,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Church Volunteer Coordinator",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Carolyn Johnson",
+      "bio": "",
+      "occupation": "Church Volunteer Coordinator",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "John it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
   }
 ]

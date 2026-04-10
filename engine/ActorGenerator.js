@@ -207,15 +207,20 @@ export const ActorGenerator = {
     throw new Error('Failed to generate unique SSN');
   },
 
-  generatePhone() {
+  generatePhone(excludePhones = []) {
     const rules = this._ctx.pools.phone_rules || {};
-    const area = (rules.area_codes || ['555'])[0];
+    const area = (rules.area_codes || ['559'])[0];
+    const fallback = (rules.fallback_area_codes || ['209'])[0];
+    const exMin = Number(rules.exchange_min || 200);
+    const exMax = Number(rules.exchange_max || 999);
     let attempts = 0;
-    while (attempts < 1000) {
+    while (attempts < 2000) {
       attempts += 1;
-      const exchange = rand(Number(rules.exchange_min || 100), Number(rules.exchange_max || 999));
+      const ac = attempts > 1000 ? fallback : area;
+      const exchange = rand(exMin, exMax);
       const line = rand(1000, 9999);
-      const phone = `${area}-${exchange}-${line}`;
+      const phone = `(${ac}) ${exchange}-${line}`;
+      if (excludePhones.includes(phone)) continue;
       if (this._ctx.isUnique('phone', phone)) return phone;
     }
     throw new Error('Failed to generate unique phone');
@@ -277,6 +282,212 @@ export const ActorGenerator = {
   generateHousehold(actorIds) {
     const householdId = `HH-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
     return { household_id: householdId, members: Array.isArray(actorIds) ? actorIds : [] };
+  },
+
+  async generateAsync(count, options = {}, { batchSize = 50, onBatch } = {}) {
+    const records = [];
+    for (let i = 0; i < count; i += batchSize) {
+      const n = Math.min(batchSize, count - i);
+      for (let j = 0; j < n; j++) {
+        const rec = this.generateOne({
+          role: this._pickRole(options.roles),
+          ageRange: options.age_range,
+          lifestyleDistribution: options.lifestyle_distribution
+        });
+        records.push(rec);
+        if (typeof onBatch === 'function') onBatch(rec);
+      }
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    return records;
+  },
+
+  generatePlayer(playerConfig = {}) {
+    const firstName = playerConfig.firstName || pickWeighted(this._ctx.pools.first_names);
+    const lastName = playerConfig.lastName || pickWeighted(this._ctx.pools.last_names);
+    const phone = this.generatePhone();
+    const ssn = playerConfig.ssnFull || this.generateSSN();
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@jeemail.net`;
+    const dob = playerConfig.dob || `${2000 - rand(22, 35)}-${String(rand(1, 12)).padStart(2, '0')}-${String(rand(1, 28)).padStart(2, '0')}`;
+    const age = calcAgeFromDob(dob);
+    const address = playerConfig.address || null;
+    const hargroveAddressId = playerConfig.hargroveAddressId || null;
+    const homeAddress = address && typeof address === 'object'
+      ? address
+      : { street: String(address || ''), city: 'Hargrove', state: 'CA', zip: '93720' };
+
+    return {
+      actor_id: 'PLAYER_PRIMARY',
+      full_legal_name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      aliases: [`${firstName.toLowerCase()}${lastName.toLowerCase()}`],
+      ssn,
+      phone_numbers: [phone],
+      emails: [email],
+      home_address: homeAddress,
+      hargrove_address_id: hargroveAddressId,
+      dob,
+      age,
+      household_id: 'HH_PLAYER',
+      employer_id: null,
+      profession: 'Entrepreneur',
+      lifestyle_tier: 'low',
+      taglets: ['business_builder', 'ambitious', 'casual_speaker'],
+      social_weight: 5,
+      opinion_profile: { player: 0, government: 0, corpos: 0, rapidemart: -5, corporations_general: 0 },
+      relationships: [],
+      current_state: { location: 'home', activity: 'working', mood: 'determined', last_event: null },
+      memory: [],
+      activity_schedule: { platforms: ['jeemail', 'worldnet'], peak_hours: [8, 22], frequency: 'medium' },
+      site_visibility: { social: 'public', forum: 'alias', banking: 'legal', government: 'legal' },
+      public_profile: { display_name: `${firstName} ${lastName}`, bio: 'Entrepreneur.', occupation: 'Business Operator', avatar_description: 'Young professional' },
+      private_profile: { notes: 'Player character', risk_flags: [] },
+      role: 'player',
+      investigator_tier: null,
+      is_player: true,
+      is_key_character: true,
+      created_at: '2000-01-01T06:00:00',
+      active: true,
+      dcProfile: { affinity_check: 10, gossip_check: 12, info_check: 13, favor_check: 14, bribe_check: 14, intimidation_check: 14, trust_check: 15 }
+    };
+  },
+
+  generateMom(playerActor) {
+    const lastName = playerActor.last_name;
+    const pools = this._ctx.pools;
+    const momPool = pools.first_names_1940s_female;
+    const firstName = (Array.isArray(momPool) && momPool.length) ? pickWeighted(momPool) : 'Linda';
+    const maidenName = pickWeighted(pools.last_names) || 'Johnson';
+    const phone = this.generatePhone([...(playerActor.phone_numbers || [])]);
+    const ssn = this.generateSSN();
+    const email = this.generateEmail(firstName, lastName);
+    const dob = `${2000 - rand(48, 65)}-${String(rand(1, 12)).padStart(2, '0')}-${String(rand(1, 28)).padStart(2, '0')}`;
+
+    const hargroveAddrs = (typeof window !== 'undefined' && window.MoogleMaps?.getAllAddresses?.()) || [];
+    let homeAddress, hargrove_address_id = null;
+    if (hargroveAddrs.length) {
+      const ha = hargroveAddrs.filter(a => a.type === 'residential' || a.type === 'mixed');
+      const pick = ha[rand(0, ha.length - 1)] || hargroveAddrs[rand(0, hargroveAddrs.length - 1)];
+      homeAddress = { street: `${pick.number} ${pick.street}`, city: pick.city, state: pick.state, zip: pick.zip };
+      hargrove_address_id = pick.id;
+    } else {
+      homeAddress = { street: `${rand(100, 999)} Oak Lane`, city: 'Hargrove', state: 'CA', zip: '93720' };
+    }
+
+    const playerFirstName = playerActor.first_name;
+    const welcomeMessages = [
+      `${playerFirstName}, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.`,
+      `Hi honey! Just checking in on your first day. I made your favorite last night - there's some in the freezer if you want it. Good luck today. Love, Mom`,
+      `${playerFirstName} it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo`,
+      `Hi sweetheart. Big day! I know you're going to do great. The garage is all yours for as long as you need it. Call me. Love you.`,
+      `${playerFirstName}! It's Mom. How's everything going? I'm thinking of you on your first day. Be smart, be safe. Love Mom`,
+    ];
+    const welcomeMessage = welcomeMessages[rand(0, welcomeMessages.length - 1)];
+
+    const profession = ['Homemaker', 'Retired Teacher', 'School Secretary', 'Retired Nurse', 'Part-time Librarian', 'Church Volunteer Coordinator'][rand(0, 5)];
+
+    const momRecord = {
+      actor_id: `ACT-MOM-${randomId().slice(4)}`,
+      full_legal_name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      maiden_name: maidenName,
+      aliases: ['Mom'],
+      ssn,
+      phone_numbers: [phone],
+      emails: [email],
+      home_address: homeAddress,
+      hargrove_address_id,
+      dob,
+      age: calcAgeFromDob(dob),
+      household_id: 'HH_MOM',
+      employer_id: null,
+      profession,
+      lifestyle_tier: 'middle',
+      taglets: ['pro_government', 'status_quo', 'vocal', 'optimistic_voice', 'community_first', 'casual_speaker'],
+      social_weight: 12,
+      opinion_profile: { player: 95, government: 20, corpos: 5, rapidemart: -10, corporations_general: 0 },
+      relationships: [{ actor_id: 'PLAYER_PRIMARY', type: 'family', subtype: 'child', strength: 10 }],
+      current_state: { location: 'home', activity: 'household', mood: 'warm', last_event: null },
+      memory: [],
+      activity_schedule: { platforms: [], peak_hours: [9, 20], frequency: 'low' },
+      site_visibility: { social: 'public', forum: 'alias', banking: 'legal', government: 'legal' },
+      public_profile: { display_name: `${firstName} ${lastName}`, bio: '', occupation: profession, avatar_description: 'Warm middle-aged woman' },
+      private_profile: { notes: '', risk_flags: [] },
+      dcProfile: {
+        affinity_check: 6,
+        gossip_check: 12,
+        info_check: 14,
+        favor_check: 10,
+        bribe_check: 18,
+        intimidation_check: 20,
+        trust_check: 4,
+      },
+      welcomeMessage,
+      moneyGivenCount: 0,
+      rudeness_count: 0,
+      rudeness_sms_sent: 0,
+      role: 'contact',
+      investigator_tier: null,
+      is_player: false,
+      is_key_character: false,
+      created_at: '2000-01-01T06:00:00',
+      active: true,
+      contactDisplayName: 'Mom',
+      relationToPlayer: 'Mother',
+    };
+    return momRecord;
+  },
+
+  generateKyleHargrove(existingPhones = []) {
+    const phone = this.generatePhone(existingPhones);
+    const ssn = this.generateSSN();
+    return {
+      actor_id: 'ACT-KYLE-HARGROVE',
+      full_legal_name: 'Kyle Hargrove',
+      first_name: 'Kyle',
+      last_name: 'Hargrove',
+      aliases: ['KyleH'],
+      ssn,
+      phone_numbers: [phone],
+      emails: ['k.hargrove@corpossales.gov.net'],
+      home_address: { street: '440 Federal Plaza', city: 'Hargrove', state: 'CA', zip: '93720' },
+      hargrove_address_id: null,
+      dob: '1971-06-14',
+      age: 28,
+      household_id: null,
+      employer_id: 'CORPOS_SALES_DIVISION',
+      profession: 'Account Manager',
+      lifestyle_tier: 'middle',
+      taglets: ['corporate_climber', 'vocal', 'formal_speaker', 'transactional', 'pro_government'],
+      social_weight: 18,
+      opinion_profile: { player: 40, government: 60, corpos: 55, rapidemart: -5 },
+      relationships: [],
+      current_state: { location: 'office', activity: 'working', mood: 'upbeat', last_event: null },
+      memory: [],
+      activity_schedule: { platforms: ['jeemail'], peak_hours: [8, 18], frequency: 'low' },
+      site_visibility: { social: 'public', forum: 'none', banking: 'legal', government: 'legal' },
+      public_profile: { display_name: 'Kyle Hargrove', bio: 'CorpOS Sales Division — Account Manager', occupation: 'Account Manager', avatar_description: 'Young professional in a suit' },
+      private_profile: { notes: '', risk_flags: [] },
+      dcProfile: {
+        affinity_check: 10,
+        gossip_check: 16,
+        info_check: 14,
+        favor_check: 14,
+        bribe_check: 14,
+        intimidation_check: 14,
+        trust_check: 14,
+      },
+      role: 'contact',
+      investigator_tier: null,
+      is_player: false,
+      is_key_character: true,
+      created_at: '2000-01-01T06:00:00',
+      active: true,
+      contactDisplayName: 'Kyle Hargrove',
+      relationToPlayer: 'CorpOS Account Manager',
+    };
   }
 };
 

@@ -31,6 +31,9 @@ function tickSim(realDt) {
   const prevDate = new Date(getGameEpochMs() + prevElapsed);
   const nextDate = new Date(getGameEpochMs() + nextElapsed);
   emit('tick', { elapsedMs: nextElapsed, gameDate: nextDate });
+  if (prevDate.getUTCHours() !== nextDate.getUTCHours()) {
+    emit('hour', { gameDate: nextDate, hour: nextDate.getUTCHours() });
+  }
   if (
     prevDate.getUTCDate() !== nextDate.getUTCDate() ||
     prevDate.getUTCMonth() !== nextDate.getUTCMonth() ||

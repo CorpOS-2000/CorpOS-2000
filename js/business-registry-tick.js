@@ -243,6 +243,14 @@ function provisionApprovedBusiness(app) {
     return draft;
   });
 
+  if (window.SaveManager?.save) {
+    try {
+      window.SaveManager.save();
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (window.WorldNet?.companies?.create) {
     try {
       window.WorldNet.companies.create({

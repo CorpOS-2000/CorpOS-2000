@@ -5,6 +5,7 @@
 import { getSessionState, patchSession } from './sessionState.js';
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
 import { toast } from './toast.js';
+import { PeekManager } from './peek-manager.js';
 import { SMS, GOVERNMENT_SENDERS } from './bc-sms.js';
 import { startConversation, selectConversationOption, endConversation, getConversationState } from './bc-conversation.js';
 
@@ -34,6 +35,31 @@ let convoTimerInterval = null;
 let convoSeconds = 0;
 let currentCallActorId = null;
 let activeThreadSenderId = null;
+let _dialBuffer = '';
+let _outgoingCallTimer = null;
+let _transcriptCompleteCallback = null;
+/** Bumped when a transcript session ends or a new one starts; async steps must bail if mismatched. */
+let _transcriptSessionId = 0;
+let _transcriptTypingInterval = null;
+let _transcriptLineTimeout = null;
+let transcriptTimerInterval = null;
+let transcriptSeconds = 0;
+
+function abortTranscriptAsyncWork() {
+  _transcriptSessionId++;
+  if (transcriptTimerInterval) {
+    clearInterval(transcriptTimerInterval);
+    transcriptTimerInterval = null;
+  }
+  if (_transcriptTypingInterval) {
+    clearInterval(_transcriptTypingInterval);
+    _transcriptTypingInterval = null;
+  }
+  if (_transcriptLineTimeout) {
+    clearTimeout(_transcriptLineTimeout);
+    _transcriptLineTimeout = null;
+  }
+}
 /** When true and phone is open, dock sits top-right and handset is scaled up (“bring to face”). */
 let nearFaceActive = false;
 
@@ -125,6 +151,12 @@ function typingOrBrowserFocus() {
 
 function desktopIsVisible() { return $('desktop')?.classList.contains('show') ?? false; }
 
+/** When true, digit row / numpad keys feed the manual dial buffer (not during calls / SMS reply, etc.). */
+function dialHardwareInputActive() {
+  if (typingOrBrowserFocus()) return false;
+  return ['home', 'contacts', 'dial', 'dialpad', 'settings', 'calendar', 'cashup', 'messaging'].includes(currentView);
+}
+
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, ' '); }
 
 function updatePhoneLine() {
@@ -136,8 +168,9 @@ function updatePhoneLine() {
 function setScreenHeading(text) { const h = $('bc-screen-heading'); if (h) h.textContent = text; }
 
 /* ── View navigation ── */
-function showView(view) {
-  const allViews = ['home','messaging','thread','contacts','dial','calling','incoming','conversation','cashup','settings','calendar'];
+/** @param {string} view @param {{ preserveDialBuffer?: boolean }} [opts] */
+function showView(view, opts = {}) {
+  const allViews = ['home','messaging','thread','contacts','dialpad','dial','calling','incoming','conversation','transcript','cashup','settings','calendar'];
   const activeId = `bc-view-${view}`;
   for (const v of allViews) {
     $(`bc-view-${v}`)?.classList.toggle('bc-view--active', `bc-view-${v}` === activeId);
@@ -147,18 +180,42 @@ function showView(view) {
   else if (view === 'messaging') { setScreenHeading('Messages'); renderThreadList(); }
   else if (view === 'thread') { setScreenHeading('Thread'); renderThreadDetail(); }
   else if (view === 'contacts') { setScreenHeading('Contacts'); renderContacts(); }
+  else if (view === 'dialpad') {
+    setScreenHeading('Dial');
+    renderDialPadScreen({ resetBuffer: opts.preserveDialBuffer !== true });
+  }
   else if (view === 'dial') { setScreenHeading('Contacts & Dial'); renderDialList(); }
   else if (view === 'calling') { setScreenHeading(''); }
   else if (view === 'incoming') { setScreenHeading(''); }
   else if (view === 'conversation') { setScreenHeading(''); }
+  else if (view === 'transcript') { setScreenHeading(''); }
   else if (view === 'cashup') { setScreenHeading('CashUp'); renderCashUp(); }
   else if (view === 'settings') { setScreenHeading('Settings'); }
   else if (view === 'calendar') { setScreenHeading('Calendar'); }
+  syncBcKeyboardDialpadMode();
+  updateDialHud();
 }
 
-function pushView(view) {
+function syncBcKeyboardDialpadMode() {
+  const numpad = $('bc-keyboard-numpad');
+  if (!numpad) return;
+  const show = viewState === 'open';
+  numpad.hidden = !show;
+  if (show) renderDialHardwareKeys();
+}
+
+/** Keycap rows above QWERTY whenever the handset is open (not only on Dial screen). */
+function renderDialHardwareKeys() {
+  const hw = $('bc-keyboard-numpad');
+  if (!hw) return;
+  if (hw.querySelector('.bc-kb-row--dialaux')) return;
+  hw.innerHTML = buildDialPadKeyRowsHtml();
+}
+
+/** @param {string} view @param {{ preserveDialBuffer?: boolean }} [opts] */
+function pushView(view, opts = {}) {
   if (currentView !== view) viewHistory.push(currentView);
-  showView(view);
+  showView(view, opts);
 }
 
 function popView() {
@@ -222,16 +279,19 @@ function renderThreadList() {
   }
   box.innerHTML = inbox.map(t => {
     const isOfficial = t.official;
+    const isGov = SMS.isGovernmentSender?.(t.senderId) || false;
+    const displayName = SMS.getDisplayName?.(t.senderId) || t.senderName || t.senderId;
     const badge = isOfficial ? '<span class="bc-official-badge">⛨</span>' : '';
     const avatarBg = t.avatarColor || (isOfficial ? '#0a246a' : '#5a8a5a');
-    const initials = esc(t.avatarLabel || (t.senderName || '?')[0]);
+    const initials = esc(t.avatarLabel || (displayName || '?')[0]);
     const unread = t.unreadCount > 0 ? `<span class="bc-thread-unread">${t.unreadCount}</span>` : '';
     const snippet = esc((t.lastMessage || '').slice(0, 40));
     const time = t.lastTime ? formatSimTime(t.lastTime) : '';
-    return `<div class="bc-thread-row" data-thread-id="${esc(t.senderId)}">
+    const rowGov = isGov ? ' bc-thread-row--gov' : '';
+    return `<div class="bc-thread-row${rowGov}" data-thread-id="${esc(t.senderId)}">
       <div class="bc-thread-avatar" style="background:${avatarBg}">${initials}</div>
       <div class="bc-thread-info">
-        <div class="bc-thread-name">${badge}${esc(t.senderName || t.senderId)}</div>
+        <div class="bc-thread-name">${badge}${esc(displayName)}</div>
         <div class="bc-thread-snippet">${snippet}</div>
       </div>
       <div class="bc-thread-meta">
@@ -263,7 +323,8 @@ function renderThreadDetail() {
   if (header) {
     const isOfficial = thread.official;
     const badge = isOfficial ? '<span class="bc-official-badge">⛨</span>' : '';
-    header.innerHTML = `${badge}${esc(thread.senderName || thread.senderId)}`;
+    const displayName = SMS.getDisplayName?.(activeThreadSenderId) || thread.senderName || thread.senderId;
+    header.innerHTML = `${badge}${esc(displayName)}`;
   }
 
   const msgBox = $('bc-thread-messages');
@@ -287,20 +348,84 @@ function openThread(senderId) {
 }
 
 /* ── Contacts ── */
+
+const CONTACT_AVATAR_COLORS = {
+  Self: '#0a246a',
+  Mother: '#006600', Family: '#006600',
+  Friend: '#555555', 'Former Coworker': '#555555', 'Old Classmate': '#555555', Neighbor: '#555555',
+  Contact: '#330066', 'Business Contact': '#330066', 'Online Contact': '#330066',
+  Investigator: '#cc6600', 'Intel Source': '#cc6600',
+  'Public Figure': '#003366', Introduction: '#555555',
+};
+
+function contactAvatarColor(relation) {
+  return CONTACT_AVATAR_COLORS[relation] || '#888888';
+}
+
+function contactInitials(name) {
+  const parts = String(name || '?').split(/[\s-]+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0] || '?')[0].toUpperCase();
+}
+
+let _contactSearchQuery = '';
+
 function renderContacts() {
   const box = $('bc-contacts');
   if (!box) return;
   const contacts = getPlayerContacts();
+  const toolbar = `<div class="bc-contact-toolbar">
+    <div class="bc-contact-search-wrap"><input class="bc-contact-search" type="text" placeholder="Search contacts..." value="${esc(_contactSearchQuery)}" /></div>
+  </div>`;
   if (!contacts.length) {
-    box.innerHTML = '<div class="bc-msg--empty">No contacts.</div>';
+    box.innerHTML = `${toolbar}<div class="bc-msg--empty">No contacts.</div>`;
+    const searchInput = box.querySelector('.bc-contact-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        _contactSearchQuery = e.target.value || '';
+        renderContacts();
+      });
+    }
     return;
   }
-  box.innerHTML = contacts.map(c => {
-    return `<div class="bc-contact-row" data-bc-actor-id="${esc(c.actorId)}">
-      <div class="bc-contact-name">${esc(c.name)}</div>
-      <div class="bc-contact-num">${esc(c.phone)}</div>
+
+  const q = _contactSearchQuery.toLowerCase().trim();
+  const pinned = contacts.filter((c) => c.isPlayer || c.relationToPlayer === 'Mother');
+  const rest = contacts.filter((c) => !c.isPlayer && c.relationToPlayer !== 'Mother');
+  const filtered = q
+    ? rest.filter((c) =>
+        [c.displayName, c.officialName, c.jobTitle].some((f) => String(f || '').toLowerCase().includes(q))
+      )
+    : rest;
+  const ordered = [...pinned, ...filtered];
+
+  let html = toolbar;
+  html += ordered.map((c) => {
+    const bgColor = contactAvatarColor(c.relationToPlayer || 'Contact');
+    const initials = contactInitials(c.displayName);
+    const metaLine = c.isPlayer
+      ? 'Self'
+      : [c.relationToPlayer, c.jobTitle, c.company].filter(Boolean).join(' \u00B7 ');
+
+    return `<div class="bc-contact-row bc-contact-row--rich" data-bc-actor-id="${esc(c.actorId)}" data-bc-phone="${esc(c.phone)}">
+      <div class="bc-contact-avatar" style="background:${bgColor};">${initials}</div>
+      <div class="bc-contact-body">
+        <div class="bc-contact-display">${esc(c.displayName)}</div>
+        <div class="bc-contact-official">${esc(c.officialName || '')}</div>
+        <div class="bc-contact-meta">${esc(metaLine)}</div>
+      </div>
     </div>`;
   }).join('');
+
+  box.innerHTML = html;
+
+  const searchInput = box.querySelector('.bc-contact-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      _contactSearchQuery = e.target.value || '';
+      renderContacts();
+    });
+  }
 }
 
 function getPlayerContacts() {
@@ -308,18 +433,35 @@ function getPlayerContacts() {
   const state = getState();
   const bcContacts = state.player?.blackCherryContacts || [];
   for (const c of bcContacts) {
-    contacts.push({ actorId: c.actorId, name: c.displayName || c.actorId, phone: c.phone || '—' });
+    contacts.push({
+      actorId: c.actorId,
+      displayName: c.displayName || c.actorId,
+      officialName: c.officialName || '',
+      relationToPlayer: c.relationToPlayer || 'Contact',
+      jobTitle: c.jobTitle || '',
+      company: c.company || null,
+      phone: c.phone || '—',
+      isPlayer: !!c.isPlayer,
+      sortOrder: c.sortOrder ?? 999,
+    });
   }
   if (!contacts.length && window.ActorDB?.query) {
     const rows = window.ActorDB.query('email', { limit: 20 });
     for (const a of rows) {
       contacts.push({
         actorId: a.actor_id || '',
-        name: a.public_profile?.display_name || a.full_legal_name || 'Unknown',
-        phone: a.phone_numbers?.[0] || '—'
+        displayName: a.public_profile?.display_name || a.full_legal_name || 'Unknown',
+        officialName: a.full_legal_name || '',
+        relationToPlayer: 'Contact',
+        jobTitle: a.profession || '',
+        company: null,
+        phone: a.phone_numbers?.[0] || '—',
+        isPlayer: false,
+        sortOrder: 999,
       });
     }
   }
+  contacts.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
   return contacts;
 }
 
@@ -331,10 +473,11 @@ function renderDialList() {
   const recentCalls = getSessionState().blackCherry?.recentCalls || [];
   let html = '<div style="font-size:8px;color:#2a5a2a;font-weight:bold;padding:2px 0;">Saved Contacts:</div>';
   for (const c of contacts) {
-    const init = (c.name || '?')[0].toUpperCase();
+    if (c.isPlayer) continue;
+    const init = contactInitials(c.displayName || c.name || '?');
     html += `<div class="bc-dial-row" data-call-actor="${esc(c.actorId)}">
       <div class="bc-dial-avatar">${init}</div>
-      <div class="bc-dial-info"><div class="bc-dial-name">${esc(c.name)}</div><div class="bc-dial-num">${esc(c.phone)}</div></div>
+      <div class="bc-dial-info"><div class="bc-dial-name">${esc(c.displayName || c.name)}</div><div class="bc-dial-num">${esc(c.phone)}</div></div>
     </div>`;
   }
   if (recentCalls.length) {
@@ -347,6 +490,253 @@ function renderDialList() {
     }
   }
   list.innerHTML = html;
+}
+
+/* ── Manual dial pad (secret dev number) ── */
+function formatPhoneInput(digits) {
+  const d = String(digits || '').replace(/\D/g, '').slice(0, 10);
+  if (!d.length) return '';
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+}
+
+/** Dial rows above QWERTY — * # ⌫ CLR on top, then 1–0; hardware 📞 places the call. */
+function buildDialPadKeyRowsHtml() {
+  const nums = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  const numRow = nums.map((k) => `<button type="button" class="bc-kb-key" data-dial-key="${esc(k)}">${esc(k)}</button>`).join('');
+  return `
+<div class="bc-kb-row bc-kb-row--dialaux">
+  <button type="button" class="bc-kb-key" data-dial-key="*">*</button>
+  <button type="button" class="bc-kb-key" data-dial-key="#">#</button>
+  <button type="button" class="bc-kb-key bc-kb-key--aux" id="bc-dial-backspace">⌫</button>
+  <button type="button" class="bc-kb-key bc-kb-key--aux" id="bc-dial-clear">CLR</button>
+</div>
+<div class="bc-kb-row bc-kb-row--dialnums">${numRow}</div>`;
+}
+
+/** @param {{ resetBuffer?: boolean }} [options] resetBuffer default true (fresh dial); false when switching from another screen while typing */
+function renderDialPadScreen(options = {}) {
+  const resetBuffer = options.resetBuffer !== false;
+  const dialpad = $('bc-dialpad');
+  if (!dialpad) return;
+  if (resetBuffer) _dialBuffer = '';
+  dialpad.innerHTML = `
+<div class="bc-dialpad-display">
+  <div id="bc-dial-number" class="bc-dial-number">_</div>
+  <div class="bc-dialpad-hint">Type on the keypad — press 📞 to call</div>
+</div>`;
+  const hw = $('bc-keyboard-numpad');
+  if (hw) {
+    hw.innerHTML = '';
+    renderDialHardwareKeys();
+  }
+  const numEl = $('bc-dial-number');
+  if (numEl) numEl.textContent = _dialBuffer || '_';
+  updateDialHud();
+}
+
+function updateDialHud() {
+  const hud = $('bc-dial-hud');
+  const numEl = $('bc-dial-hud-number');
+  if (!hud || !numEl) return;
+  if (viewState !== 'open' || currentView === 'dialpad') {
+    hud.hidden = true;
+    numEl.textContent = '';
+    return;
+  }
+  const digits = _dialBuffer.replace(/\D/g, '');
+  if (!digits.length) {
+    hud.hidden = true;
+    numEl.textContent = '';
+    return;
+  }
+  hud.hidden = false;
+  numEl.textContent = formatPhoneInput(digits);
+}
+
+function dialKeyPressInternal(key) {
+  if (viewState === 'open' && currentView !== 'dialpad') {
+    pushView('dialpad', { preserveDialBuffer: true });
+  }
+  if (_dialBuffer.replace(/\D/g, '').length >= 10 && /^\d$/.test(key)) return;
+  const raw = _dialBuffer.replace(/\D/g, '') + (key === '*' || key === '#' ? '' : key);
+  const digitsOnly = raw.replace(/\D/g, '').slice(0, 10);
+  _dialBuffer = formatPhoneInput(digitsOnly);
+  const display = $('bc-dial-number');
+  if (display) {
+    display.textContent = _dialBuffer || '_';
+    display.classList.add('bc-dial-pulse');
+    setTimeout(() => display.classList.remove('bc-dial-pulse'), 80);
+  }
+  updateDialHud();
+}
+
+function dialBackspaceInternal() {
+  const digits = _dialBuffer.replace(/\D/g, '').slice(0, -1);
+  _dialBuffer = formatPhoneInput(digits);
+  const display = $('bc-dial-number');
+  if (display) display.textContent = _dialBuffer || '_';
+  updateDialHud();
+}
+
+function dialClearInternal() {
+  _dialBuffer = '';
+  const display = $('bc-dial-number');
+  if (display) display.textContent = '_';
+  updateDialHud();
+}
+
+function showCallFailedDial(formatted) {
+  toast(`Number not in service — ${formatted || 'unknown'}`);
+}
+
+function dialCallInternal() {
+  const digits = _dialBuffer.replace(/\D/g, '');
+  if (digits.length < 10) {
+    const display = $('bc-dial-number');
+    if (display) {
+      display.style.color = '#cc0000';
+      setTimeout(() => { display.style.color = ''; }, 600);
+    }
+    return;
+  }
+  const formatted = formatPhoneInput(digits);
+  dialClearInternal();
+  const SECRET_DEV_NUMBER = '3204600561';
+  if (digits === SECRET_DEV_NUMBER) {
+    window.DevConsole?.triggerCall?.();
+    return;
+  }
+  const actor = window.ActorDB?.getByPhone?.(formatted);
+  if (actor?.actor_id) {
+    initiateCall(actor.actor_id);
+  } else {
+    showCallFailedDial(formatted);
+  }
+}
+
+export function showDialPad() {
+  if (viewState !== 'open') openBlackCherryDock();
+  pushView('dialpad');
+}
+
+/**
+ * Outgoing call animation then invoke onConnect (e.g. live transcript).
+ */
+export function showOutgoingCall({ actorId, displayName, subLabel, onConnect }) {
+  if (viewState !== 'open') openBlackCherryDock();
+  currentCallActorId = actorId || null;
+  const avatarEl = $('bc-call-avatar');
+  if (avatarEl) avatarEl.textContent = (displayName || '?')[0].toUpperCase();
+  const labelEl = document.querySelector('#bc-view-calling .bc-call-label');
+  if (labelEl) labelEl.textContent = 'CALLING…';
+  const nameEl = $('bc-call-name');
+  if (nameEl) nameEl.textContent = displayName || '—';
+  const numEl = $('bc-call-number');
+  if (numEl) numEl.textContent = subLabel || '';
+  pushView('calling');
+  if (_outgoingCallTimer) clearTimeout(_outgoingCallTimer);
+  _outgoingCallTimer = setTimeout(() => {
+    _outgoingCallTimer = null;
+    if (onConnect) onConnect();
+  }, 1500);
+}
+
+export function onOutgoingCallConnected(actorId) {
+  /* Reserved for flows that need explicit connect; transcript UIs replace the calling screen. */
+  if (actorId) currentCallActorId = actorId;
+}
+
+function typeTextLine(element, text, speed, onDone, sessionId) {
+  if (_transcriptTypingInterval) {
+    clearInterval(_transcriptTypingInterval);
+    _transcriptTypingInterval = null;
+  }
+  let i = 0;
+  _transcriptTypingInterval = setInterval(() => {
+    if (sessionId !== _transcriptSessionId) {
+      clearInterval(_transcriptTypingInterval);
+      _transcriptTypingInterval = null;
+      return;
+    }
+    element.textContent = text.substring(0, i + 1);
+    i++;
+    if (i >= text.length) {
+      clearInterval(_transcriptTypingInterval);
+      _transcriptTypingInterval = null;
+      if (onDone) onDone();
+    }
+  }, speed);
+}
+
+/**
+ * Append scripted lines to the current transcript view (after showLiveTranscript started it).
+ */
+export function appendToTranscript(actorId, lines) {
+  const container = $('bc-transcript-body');
+  if (!container) return;
+  const sessionId = _transcriptSessionId;
+  let idx = 0;
+  function next() {
+    if (sessionId !== _transcriptSessionId) return;
+    if (idx >= lines.length) return;
+    const line = lines[idx++];
+    const bubble = document.createElement('div');
+    bubble.className = line.speaker === 'player'
+      ? 'transcript-bubble transcript-outgoing'
+      : 'transcript-bubble transcript-incoming';
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+    if (line.speaker !== 'player' && !line.isEnd) {
+      typeTextLine(bubble, line.text, 28, () => {
+        if (sessionId !== _transcriptSessionId) return;
+        if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
+        _transcriptLineTimeout = setTimeout(() => {
+          _transcriptLineTimeout = null;
+          next();
+        }, line.delay || 400);
+      }, sessionId);
+    } else {
+      bubble.textContent = line.text;
+      if (line.speaker === 'player') bubble.style.opacity = '0.85';
+      if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
+      _transcriptLineTimeout = setTimeout(() => {
+        _transcriptLineTimeout = null;
+        next();
+      }, line.delay || 400);
+    }
+  }
+  next();
+}
+
+export function clearTranscriptOptions() {
+  const el = $('bc-transcript-options');
+  if (el) el.innerHTML = '';
+}
+
+/**
+ * @param {Array<{label:string, action: () => void}>} opts
+ */
+export function showTranscriptOptions(opts) {
+  const el = $('bc-transcript-options');
+  if (!el) return;
+  el.innerHTML = (opts || []).map((o, i) =>
+    `<button type="button" class="bc-transcript-opt-btn" data-topt-idx="${i}">${esc(o.label)}</button>`
+  ).join('');
+  el.querySelectorAll('[data-topt-idx]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.toptIdx);
+      if (opts[i]?.action) opts[i].action();
+    });
+  });
+}
+
+export function endTranscriptSession() {
+  abortTranscriptAsyncWork();
+  clearTranscriptOptions();
+  currentCallActorId = null;
+  goHome();
 }
 
 function initiateCall(actorId) {
@@ -451,6 +841,7 @@ async function handleConvoOptionSelect(idx) {
 
 function endCurrentCall(graceful = false) {
   if (callTimer) { clearTimeout(callTimer); callTimer = null; }
+  if (_outgoingCallTimer) { clearTimeout(_outgoingCallTimer); _outgoingCallTimer = null; }
   if (convoTimerInterval) { clearInterval(convoTimerInterval); convoTimerInterval = null; }
 
   const actorId = currentCallActorId;
@@ -534,9 +925,19 @@ function renderCashUp() {
 }
 
 /* ── Incoming call ── */
-export function triggerIncomingCall(actorId) {
+let _incomingOnAnswer = null;
+let _incomingOnDecline = null;
+
+/**
+ * @param {string} actorId
+ * @param {{ onAnswer?: () => void, onDecline?: () => void }} [callbacks]
+ */
+export function triggerIncomingCall(actorId, callbacks) {
   if (currentView === 'conversation' || currentView === 'calling') return;
   currentCallActorId = actorId;
+  _incomingOnAnswer = callbacks?.onAnswer || null;
+  _incomingOnDecline = callbacks?.onDecline || null;
+
   const actor = window.ActorDB?.getRaw?.(actorId);
   const name = actor?.public_profile?.display_name || actor?.full_legal_name || 'Unknown';
   const phone = actor?.phone_numbers?.[0] || '—';
@@ -550,12 +951,7 @@ export function triggerIncomingCall(actorId) {
   if (numEl) numEl.textContent = phone;
 
   if (viewState !== 'open') {
-    const peekEl = $('bc-peek-msg');
-    if (peekEl) peekEl.textContent = `Incoming: ${name}`;
-    viewState = 'peek';
-    peekTrigger = 'sms';
-    syncTransform();
-    dockRoot()?.removeAttribute('aria-hidden');
+    openBlackCherryDock();
   }
 
   pushView('incoming');
@@ -563,28 +959,46 @@ export function triggerIncomingCall(actorId) {
 
 function answerIncomingCall() {
   if (currentView !== 'incoming' || !currentCallActorId) return;
-  startLiveConversation(currentCallActorId);
+  if (_incomingOnAnswer) {
+    const cb = _incomingOnAnswer;
+    _incomingOnAnswer = null;
+    _incomingOnDecline = null;
+    cb();
+  } else {
+    startLiveConversation(currentCallActorId);
+  }
 }
 
 function declineIncomingCall() {
   if (currentView !== 'incoming' || !currentCallActorId) return;
-  const actorId = currentCallActorId;
-  const actor = window.ActorDB?.getRaw?.(actorId);
-  const name = actor?.public_profile?.display_name || actor?.full_legal_name || 'Unknown';
-  SMS.receive(actorId, `${name} declined your call.`, getState().sim?.elapsedMs || 0);
-  currentCallActorId = null;
-  goHome();
+  if (_incomingOnDecline) {
+    const cb = _incomingOnDecline;
+    _incomingOnAnswer = null;
+    _incomingOnDecline = null;
+    currentCallActorId = null;
+    goHome();
+    cb();
+  } else {
+    const actorId = currentCallActorId;
+    const actor = window.ActorDB?.getRaw?.(actorId);
+    const name = actor?.public_profile?.display_name || actor?.full_legal_name || 'Unknown';
+    SMS.receive(actorId, `${name} declined your call.`, getState().sim?.elapsedMs || 0);
+    currentCallActorId = null;
+    goHome();
+  }
 }
 
 /* ── Key handlers ── */
 function onKeyCall() {
   if (currentView === 'incoming') { answerIncomingCall(); return; }
   if (currentView === 'conversation' || currentView === 'calling') return;
+  if (currentView === 'dialpad') { dialCallInternal(); return; }
   pushView('dial');
 }
 
 function onKeyEnd() {
   if (currentView === 'incoming') { declineIncomingCall(); return; }
+  if (currentView === 'transcript') { endTranscriptSession(); return; }
   if (currentView === 'conversation' || currentView === 'calling') { endCurrentCall(false); return; }
   goHome();
 }
@@ -648,38 +1062,38 @@ export function closeBlackCherryDock() {
   viewState = 'hidden';
   nearFaceActive = false;
   clearPeekText();
+  abortTranscriptAsyncWork();
   endCurrentCall(true);
+  _dialBuffer = '';
   syncTransform();
   dockRoot()?.setAttribute('aria-hidden', 'true');
+  syncBcKeyboardDialpadMode();
+  updateDialHud();
 }
 
 export function smsToPlayer(text, actorId = '') {
   const simMs = getState().sim?.elapsedMs || 0;
+  const senderId = actorId || 'CORPOS_SYSTEM';
   if (actorId) {
     SMS.receive(actorId, text, simMs);
   } else {
     SMS.send({ from: 'CORPOS_SYSTEM', message: text, gameTime: simMs });
   }
-  triggerSmsPeek(text);
-}
-
-function triggerSmsPeek(text) {
-  const raw = String(text);
-  const short = raw.length > 60 ? `New: ${raw.slice(0, 55)}…` : `New: ${raw}`;
-  const peekEl = $('bc-peek-msg');
-  if (peekEl) peekEl.textContent = short;
 
   if (viewState === 'open') {
     if (currentView === 'messaging') renderThreadList();
     renderIconGrid();
-    return;
   }
 
-  viewState = 'peek';
-  peekTrigger = 'sms';
-  syncTransform();
-  dockRoot()?.removeAttribute('aria-hidden');
-  schedulePeekHide(PEEK_SMS_HIDE_MS, 'sms');
+  const actor = actorId ? window.ActorDB?.getRaw?.(actorId) : null;
+  const senderName = actor?.contactDisplayName || actor?.first_name || 'CorpOS System';
+  PeekManager.show({
+    sender: senderName,
+    preview: String(text).slice(0, 55),
+    type: 'sms',
+    targetId: senderId,
+    icon: '💬',
+  });
 }
 
 export function tickBlackCherryRudeness() {
@@ -691,13 +1105,121 @@ export function tickBlackCherryRudeness() {
 
   for (const ev of due) {
     SMS.receive(ev.actorId, `You just hung up on me without saying goodbye. That was really rude.`, simMs);
-    triggerSmsPeek(`${ev.name}: You hung up on me!`);
+    PeekManager.show({
+      sender: ev.name,
+      preview: 'You hung up on me!',
+      type: 'sms',
+      targetId: ev.actorId,
+      icon: '💬',
+    });
   }
 
   patchSession(s => {
     if (!s.blackCherry?.pendingRudenessEvents) return;
     s.blackCherry.pendingRudenessEvents = s.blackCherry.pendingRudenessEvents.filter(e => simMs < e.dueSimMs);
   });
+}
+
+/* ── Live transcript (scripted calls like Kyle) ── */
+
+function typeText(element, text, speed, onDone, sessionId) {
+  if (_transcriptTypingInterval) {
+    clearInterval(_transcriptTypingInterval);
+    _transcriptTypingInterval = null;
+  }
+  let i = 0;
+  _transcriptTypingInterval = setInterval(() => {
+    if (sessionId !== _transcriptSessionId) {
+      clearInterval(_transcriptTypingInterval);
+      _transcriptTypingInterval = null;
+      return;
+    }
+    element.textContent = text.substring(0, i + 1);
+    i++;
+    if (i >= text.length) {
+      clearInterval(_transcriptTypingInterval);
+      _transcriptTypingInterval = null;
+      if (onDone) onDone();
+    }
+  }, speed);
+}
+
+/**
+ * Show a scripted live-transcript call on the Black Cherry.
+ * @param {{actorId:string, displayName:string, transcript:Array<{speaker:string,text:string,delay:number,isEnd?:boolean}>, onComplete:()=>void}} opts
+ */
+export function showLiveTranscript({ actorId, displayName, transcript, onComplete }) {
+  if (viewState !== 'open') openBlackCherryDock();
+  abortTranscriptAsyncWork();
+  const sessionId = _transcriptSessionId;
+  pushView('transcript');
+  clearTranscriptOptions();
+
+  const avatarEl = $('bc-transcript-avatar');
+  const nameEl = $('bc-transcript-name');
+  const timerEl = $('bc-transcript-timer');
+  const container = $('bc-transcript-body');
+  if (avatarEl) avatarEl.textContent = (displayName || '?')[0].toUpperCase();
+  if (nameEl) nameEl.textContent = displayName;
+  if (container) container.innerHTML = '';
+
+  transcriptSeconds = 0;
+  if (timerEl) timerEl.textContent = '0:00';
+  transcriptTimerInterval = setInterval(() => {
+    if (sessionId !== _transcriptSessionId) return;
+    transcriptSeconds++;
+    const m = Math.floor(transcriptSeconds / 60);
+    const s = transcriptSeconds % 60;
+    if (timerEl) timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+  }, 1000);
+
+  let lineIndex = 0;
+
+  function renderNextLine() {
+    if (sessionId !== _transcriptSessionId) return;
+    if (lineIndex >= transcript.length) {
+      clearInterval(transcriptTimerInterval);
+      transcriptTimerInterval = null;
+      if (sessionId === _transcriptSessionId && onComplete) onComplete();
+      return;
+    }
+
+    const line = transcript[lineIndex++];
+    const bubble = document.createElement('div');
+    bubble.className = line.speaker === 'player'
+      ? 'transcript-bubble transcript-outgoing'
+      : 'transcript-bubble transcript-incoming';
+
+    if (container) {
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    if (line.speaker !== 'player' && !line.isEnd) {
+      typeText(bubble, line.text, 28, () => {
+        if (sessionId !== _transcriptSessionId) return;
+        if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
+        _transcriptLineTimeout = setTimeout(() => {
+          _transcriptLineTimeout = null;
+          renderNextLine();
+        }, line.delay);
+      }, sessionId);
+    } else {
+      bubble.textContent = line.text;
+      if (line.speaker === 'player') bubble.style.opacity = '0.5';
+      if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
+      _transcriptLineTimeout = setTimeout(() => {
+        _transcriptLineTimeout = null;
+        renderNextLine();
+      }, line.delay);
+    }
+  }
+
+  if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
+  _transcriptLineTimeout = setTimeout(() => {
+    _transcriptLineTimeout = null;
+    renderNextLine();
+  }, 600);
 }
 
 /* ── Init ── */
@@ -802,6 +1324,19 @@ export function initBlackCherry() {
     if (actorId) initiateCall(actorId);
   });
 
+  deviceEl()?.addEventListener('click', (e) => {
+    if (viewState !== 'open') return;
+    const keyBtn = e.target.closest('[data-dial-key]');
+    const dk = keyBtn?.getAttribute('data-dial-key');
+    if (dk) {
+      e.preventDefault();
+      dialKeyPressInternal(dk);
+      return;
+    }
+    if (e.target.closest('#bc-dial-backspace')) { e.preventDefault(); dialBackspaceInternal(); return; }
+    if (e.target.closest('#bc-dial-clear')) { e.preventDefault(); dialClearInternal(); return; }
+  });
+
   // Conversation option clicks
   $('bc-convo-options')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-opt-idx]');
@@ -809,13 +1344,42 @@ export function initBlackCherry() {
     handleConvoOptionSelect(Number(btn.dataset.optIdx));
   });
 
-  // Contact row clicks
+  // Contact row clicks — expand to show phone + actions
   $('bc-contacts')?.addEventListener('click', e => {
+    if (e.target.closest('.bc-contact-search')) return;
+    if (e.target.closest('.bc-contact-action-call')) {
+      const actorId = e.target.closest('[data-bc-actor-id]')?.dataset.bcActorId;
+      if (actorId && actorId !== 'PLAYER_PRIMARY') initiateCall(actorId);
+      return;
+    }
+    if (e.target.closest('.bc-contact-action-sms')) {
+      const actorId = e.target.closest('[data-bc-actor-id]')?.dataset.bcActorId;
+      if (actorId && actorId !== 'PLAYER_PRIMARY') openThread(actorId);
+      return;
+    }
     const row = e.target.closest('[data-bc-actor-id]');
     if (!row) return;
     const actorId = row.dataset.bcActorId;
-    if (actorId) {
-      window.WorldNet?.axis?.discover?.(actorId, { source: 'black_cherry', note: 'Viewed in contacts.' });
+    const phone = row.dataset.bcPhone || '—';
+    const isPlayer = actorId === 'PLAYER_PRIMARY';
+    const existing = row.querySelector('.bc-contact-expand');
+    if (existing) { existing.remove(); return; }
+
+    $('bc-contacts')?.querySelectorAll('.bc-contact-expand').forEach((el) => el.remove());
+
+    const expand = document.createElement('div');
+    expand.className = 'bc-contact-expand';
+    if (isPlayer) {
+      expand.innerHTML = `<div class="bc-contact-expand-phone">${esc(phone)}</div><div class="bc-contact-expand-label">This is you</div>`;
+    } else {
+      expand.innerHTML = `<div class="bc-contact-expand-phone">${esc(phone)}</div>
+        <button class="bc-contact-action-call">Call</button>
+        <button class="bc-contact-action-sms">SMS</button>`;
+    }
+    row.appendChild(expand);
+
+    if (actorId && !isPlayer) {
+      window.AXIS?.discover?.(actorId, { source: 'black_cherry', note: 'Viewed in contacts.' });
     }
   });
 
@@ -831,10 +1395,48 @@ export function initBlackCherry() {
           onDpad(map[e.key]);
         }
       }
-      if (!typingOrBrowserFocus() && (e.key === 'Enter' || e.key === ' ')) {
+      if (!typingOrBrowserFocus() && e.key === 'Enter') {
+        const digits = _dialBuffer.replace(/\D/g, '');
+        if (digits.length >= 10 && dialHardwareInputActive()) {
+          e.preventDefault();
+          dialCallInternal();
+          return;
+        }
         if (currentView === 'home' || currentView === 'conversation') {
           e.preventDefault();
           onKeyOk();
+          return;
+        }
+      }
+      if (!typingOrBrowserFocus() && e.key === ' ') {
+        if (currentView === 'home' || currentView === 'conversation') {
+          e.preventDefault();
+          onKeyOk();
+          return;
+        }
+      }
+      if (dialHardwareInputActive()) {
+        const np = /^Numpad(\d)$/.exec(e.code || '');
+        if (np) {
+          e.preventDefault();
+          dialKeyPressInternal(np[1]);
+          return;
+        }
+        const k = e.key;
+        if (k.length === 1 && k >= '0' && k <= '9') {
+          e.preventDefault();
+          dialKeyPressInternal(k);
+          return;
+        }
+        if (k === '*' || k === '#') {
+          e.preventDefault();
+          dialKeyPressInternal(k);
+          return;
+        }
+        if (k === 'Backspace') {
+          e.preventDefault();
+          dialBackspaceInternal();
+          return;
         }
       }
       return;
@@ -861,4 +1463,26 @@ export function initBlackCherry() {
   window.addEventListener('resize', scheduleDockAlign);
   scheduleDockAlign();
   requestAnimationFrame(scheduleDockAlign);
+
+  window.BlackCherry = {
+    openToThread(senderId) {
+      openBlackCherryDock();
+      activeThreadSenderId = senderId;
+      pushView('thread');
+    },
+    openToDialer() {
+      openBlackCherryDock();
+      pushView('dial');
+    },
+    openToCashUp() {
+      openBlackCherryDock();
+      pushView('cashup');
+    },
+    showDialPad,
+    dialKeyPress: dialKeyPressInternal,
+    dialBackspace: dialBackspaceInternal,
+    dialClear: dialClearInternal,
+    dialCall: dialCallInternal,
+    formatPhoneInput
+  };
 }

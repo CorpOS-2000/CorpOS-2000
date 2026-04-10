@@ -446,6 +446,17 @@ body {
 /* Screen */
 .bc-screen { background: linear-gradient(180deg, #c5d0c8 0%, #aeb8a8 100%); border: 3px solid #1a1a1a; border-radius: 2px; min-height: 160px; max-height: 240px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 2px 4px rgba(255,255,255,0.35); }
 .bc-screen-title { font-size: 10px; font-weight: bold; color: #1a2a1a; padding: 3px 6px; border-bottom: 1px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.25); flex-shrink: 0; }
+.bc-dial-hud {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-family: Consolas, 'Courier New', monospace;
+  color: #0a246a;
+  padding: 2px 6px 3px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
 .bc-screen-body { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
 
 .bc-view { display: none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
@@ -463,8 +474,23 @@ body {
 
 /* Contacts */
 .bc-contacts { flex: 1; overflow-y: auto; padding: 4px 5px; font-size: 9px; line-height: 1.35; color: #0d180d; }
+.bc-contact-search-wrap { padding: 3px 0 4px; }
+.bc-contact-search { width: 100%; box-sizing: border-box; padding: 3px 5px; font-size: 9px; font-family: Tahoma, sans-serif; border: 1px solid #4a8a4a; border-radius: 2px; background: #eaffea; color: #0d180d; }
 .bc-contact-row { padding: 4px 0; border-bottom: 1px dashed rgba(0,0,0,0.1); cursor: pointer; }
 .bc-contact-row:hover { background: rgba(255,255,255,0.3); }
+.bc-contact-row--rich { display: flex; gap: 5px; align-items: flex-start; padding: 5px 2px; }
+.bc-contact-avatar { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.bc-contact-body { flex: 1; min-width: 0; }
+.bc-contact-display { font-weight: bold; font-size: 11px; color: #0d180d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-contact-official { font-size: 9px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-contact-meta { font-size: 9px; color: #666; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bc-contact-toolbar { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.bc-contact-toolbar .bc-contact-search-wrap { flex: 1; min-width: 0; }
+.bc-contact-expand { padding: 4px 0 2px 29px; }
+.bc-contact-expand-phone { font-family: Consolas, monospace; font-size: 10px; color: #2a4a2a; margin-bottom: 3px; }
+.bc-contact-expand-label { font-size: 9px; color: #888; font-style: italic; }
+.bc-contact-action-call, .bc-contact-action-sms { font-size: 9px; padding: 2px 8px; margin-right: 4px; border: 1px solid #4a8a4a; border-radius: 2px; background: #e0ffe0; color: #0d300d; cursor: pointer; font-family: Tahoma, sans-serif; }
+.bc-contact-action-call:hover, .bc-contact-action-sms:hover { background: #c0ffc0; }
 .bc-contact-name { font-weight: bold; }
 .bc-contact-num { color: #2a4a2a; font-family: Consolas, monospace; }
 .bc-settings-body { flex: 1; overflow-y: auto; padding: 5px 6px; font-size: 9px; line-height: 1.45; color: #0d180d; }
@@ -530,6 +556,7 @@ body {
 .bc-messages { flex: 1; overflow-y: auto; padding: 2px 4px; font-size: 9px; color: #0d180d; }
 .bc-thread-row { display: flex; align-items: center; gap: 4px; padding: 4px 2px; border-bottom: 1px solid rgba(0,0,0,0.08); cursor: pointer; }
 .bc-thread-row:hover { background: rgba(255,255,255,0.35); }
+.bc-thread-row--gov { background: rgba(255, 255, 200, 0.12); border-left: 2px solid #ccaa00; }
 .bc-thread-avatar { width: 20px; height: 20px; border-radius: 50%; font-size: 8px; font-weight: bold; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .bc-thread-info { flex: 1; min-width: 0; }
 .bc-thread-name { font-weight: bold; font-size: 9px; display: flex; align-items: center; gap: 3px; }
@@ -646,13 +673,69 @@ body {
 .bc-nav-btn:active { border-color: #111 #666 #666 #111; background: #1a1a1a; }
 .bc-nav-btn--sm { padding: 2px 5px; font-size: 7px; min-width: 0; line-height: 1.1; }
 
-/* Keyboard */
-.bc-keyboard { margin-top: 3px; padding: 3px 2px 2px; background: #222; border-radius: 0 0 6px 6px; }
+/* Keyboard — dial numpad (when active) stacks above QWERTY */
+.bc-keyboard { margin-top: 3px; padding: 3px 2px 2px; background: #222; border-radius: 0 0 6px 6px; display: flex; flex-direction: column; }
 .bc-kb-row { display: flex; justify-content: center; gap: 2px; margin-bottom: 2px; }
 .bc-keyboard kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 14px; font-size: 7px; font-family: inherit; background: linear-gradient(180deg, #3a3a3a 0%, #222 100%); border: 1px solid #111; border-radius: 2px; color: #ccc; box-shadow: 0 1px 0 #000; padding: 0 1px; }
 .bc-kb-row--bottom { gap: 3px; }
 .bc-kb-alt, .bc-kb-enter { min-width: 24px; font-size: 6px; }
 .bc-kb-space { min-width: 60px; }
+
+/* Clickable keycaps — match decorative <kbd> (BlackBerry-style); used for dial row */
+.bc-keyboard .bc-kb-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  min-height: 14px;
+  height: 14px;
+  font-size: 7px;
+  font-family: inherit;
+  font-weight: bold;
+  color: #ccc;
+  background: linear-gradient(180deg, #3a3a3a 0%, #222 100%);
+  border: 1px solid #111;
+  border-radius: 2px;
+  box-shadow: 0 1px 0 #000;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.bc-keyboard .bc-kb-key:hover {
+  background: linear-gradient(180deg, #484848 0%, #2a2a2a 100%);
+  color: #fff;
+}
+.bc-keyboard .bc-kb-key:active {
+  border-color: #111 #666 #666 #111;
+  background: #1a1a1a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.bc-kb-row--dialnums {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.bc-kb-row--dialnums .bc-kb-key {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.bc-kb-row--dialaux {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.bc-kb-row--dialaux .bc-kb-key {
+  flex: 1 1 0;
+  min-width: 14px;
+}
+.bc-kb-row--dialaux .bc-kb-key--aux {
+  font-size: 6px;
+  flex: 1.15;
+}
 
 /* Close button */
 .bc-close { position: absolute; top: 4px; right: 4px; width: 22px; height: 20px; padding: 0; font-size: 14px; line-height: 1; color: #ccc; background: #333; border: 1px solid #111; border-radius: 2px; cursor: pointer; z-index: 2; }
@@ -1560,6 +1643,177 @@ body {
   }
 }
 
+/* ── Peek notification stack ── */
+#peek-stack {
+  position: fixed;
+  bottom: 36px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  z-index: 9995;
+  pointer-events: none;
+}
+
+.peek-notification {
+  background: #0d1a2e;
+  border: 1px solid #1a3a8f;
+  border-left: 3px solid #0a246a;
+  width: 280px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  pointer-events: all;
+  transform: translateX(300px);
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.5);
+}
+.peek-notification.peek-visible {
+  transform: translateX(0);
+}
+.peek-notification.peek-exiting {
+  transform: translateX(300px);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.peek-notification:hover {
+  background: #1a2a4a;
+  border-left-color: #a6b5e7;
+}
+
+.peek-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+.peek-sender {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.peek-preview {
+  color: #a6b5e7;
+  font-size: 10px;
+  font-family: Tahoma, Arial, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  margin-top: 2px;
+}
+
+.peek-notification[data-type="sms"]            .peek-sender { color: #88ff88; }
+.peek-notification[data-type="call_incoming"]   .peek-sender { color: #44cc44; }
+.peek-notification[data-type="email"]           .peek-sender { color: #a6b5e7; }
+.peek-notification[data-type="compliance"]      .peek-sender { color: #ffcc00; }
+.peek-notification[data-type="cashpass"]        .peek-sender { color: #00ccff; }
+
+/* ── Live transcript bubbles (Kyle call / scripted calls) ── */
+#bc-view-transcript {
+  flex-direction: column;
+  min-height: 0;
+}
+#bc-transcript-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.transcript-bubble {
+  max-width: 85%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: Tahoma, Arial, sans-serif;
+  line-height: 1.35;
+  word-wrap: break-word;
+}
+.transcript-incoming {
+  align-self: flex-start;
+  background: #1a1a2e;
+  color: #c8c8c8;
+  border: 1px solid #333;
+}
+.transcript-outgoing {
+  align-self: flex-end;
+  background: #0a3a0a;
+  color: #aaffaa;
+  border: 1px solid #1a5a1a;
+}
+
+.bc-transcript-options {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 6px 6px;
+  border-top: 1px solid rgba(0,0,0,0.15);
+  background: rgba(10, 20, 40, 0.35);
+  max-height: 100px;
+  overflow-y: auto;
+}
+.bc-transcript-opt-btn {
+  font-size: 8px;
+  padding: 4px 6px;
+  text-align: left;
+  cursor: pointer;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid #1a3a5a;
+  color: #c8d8f0;
+  font-family: Tahoma, Arial, sans-serif;
+  border-radius: 2px;
+}
+.bc-transcript-opt-btn:hover { background: rgba(10, 36, 106, 0.35); color: #fff; }
+
+/* Manual dial pad — LCD shows number; keys render in #bc-keyboard-numpad above QWERTY */
+.bc-dialpad-root { flex: 1; display: flex; flex-direction: column; min-height: 0; background: #0a1520; overflow-y: auto; }
+#bc-view-dialpad.bc-view { overflow-y: auto; }
+.bc-dialpad-display {
+  padding: 10px 8px 8px;
+  text-align: center;
+  border-bottom: 1px solid #1a3a5a;
+  min-height: 36px;
+  flex: 1;
+}
+.bc-dialpad-hint {
+  font-size: 7px;
+  color: #445577;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+.bc-dial-number {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 22px;
+  color: #a6b5e7;
+  letter-spacing: 2px;
+  transition: color 0.1s;
+}
+.bc-dial-number.bc-dial-pulse { color: #ffffff; }
+
+/* Dial rows sit inside .bc-keyboard — same #222 chassis as QWERTY (no separate “LCD dial” look) */
+.bc-keyboard-numpad {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 2px 1px 1px;
+  border-bottom: 1px solid #1a1a1a;
+  background: transparent;
+}
+
+@keyframes fad-pulse {
+  0%   { opacity: 1;   transform: scale(1);    }
+  50%  { opacity: 0.4; transform: scale(1.04); }
+  100% { opacity: 1;   transform: scale(1);    }
+}
+
 /* ── DEMO BTN ── */
 #demo-btn {
   position: fixed;
@@ -1582,24 +1836,57 @@ body {
   border-color: #040d2a #a6b5e7 #a6b5e7 #040d2a;
 }
 
-/* ── SHUTDOWN ── */
-#shutdown-screen {
+/* ── LOG OFF (session end → login) ── */
+#logoff-screen {
   display: none;
   position: fixed;
   inset: 0;
   background: #000;
-  z-index: 99999;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  font-family: Consolas, 'Courier New', monospace;
-  color: #ccc;
+  z-index: 99998;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
   font-size: 13px;
+  color: #cccccc;
+  padding: 24px;
+  line-height: 1.8;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: auto;
+}
+
+#logoff-screen.show {
+  display: flex;
+}
+
+.logoff-line {
+  animation: logoff-fadein 0.2s ease forwards;
+}
+
+@keyframes logoff-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── SHUTDOWN (BIOS-style terminal; save runs before sequence) ── */
+#shutdown-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  z-index: 99999;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 13px;
+  color: #aaaaaa;
+  padding: 24px 28px;
+  line-height: 1.8;
+  overflow-y: auto;
 }
 
 #shutdown-screen.show {
-  display: flex;
+  display: block;
 }
 
 /* ── CONTEXT MENUS / WALLPAPER DIALOG ── */

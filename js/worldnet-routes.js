@@ -19,6 +19,7 @@ export const ROOT_URL_BY_PAGE = {
   jeemail_sent: 'http://mail.jeemail.net/sent',
   jeemail_trash: 'http://mail.jeemail.net/trash',
   jeemail_compose: 'http://mail.jeemail.net/compose',
+  jeemail_read: 'http://mail.jeemail.net/read',
   bank: 'http://www.firstnationalcorp.com/',
   bank_meridian: 'http://www.meridiansavings.com/',
   bank_harbor: 'http://www.harborcu.org/',
@@ -45,6 +46,8 @@ export const ROOT_URL_BY_PAGE = {
   moogle_maps: 'http://maps.moogle.com/',
   warehouse: 'http://www.whereallthingsgo.net/',
   market_pulse: 'http://www.marketpulse.net/',
+  focs_mandate: 'http://www.focs.gov.net/mandate/2000-cr7',
+  corpos_portal: 'http://www.corpos.gov.net/operators',
   /** Fallback when no shop host is resolved; real bar URL comes from store JSON. */
   wn_shop: 'http://www.rapidmart1999.net/'
 };
@@ -176,7 +179,11 @@ const HOST_ALIASES = [
   ['whereallthingsgo.net', 'warehouse'],
   ['www.whereallthingsgo.net', 'warehouse'],
   ['marketpulse.net', 'market_pulse'],
-  ['www.marketpulse.net', 'market_pulse']
+  ['www.marketpulse.net', 'market_pulse'],
+  ['focs.gov.net', 'focs_mandate'],
+  ['www.focs.gov.net', 'focs_mandate'],
+  ['corpos.gov.net', 'corpos_portal'],
+  ['www.corpos.gov.net', 'corpos_portal']
 ];
 
 const HOST_TO_PAGE = Object.fromEntries(HOST_ALIASES);
@@ -198,7 +205,9 @@ const EXTRA_PAGE_TITLES = {
   mytube: 'MyTube — Broadcast Yourself',
   moogle_maps: 'Moogle Maps — Hargrove, CA',
   warehouse: 'WhereAllThingsGo.net — Self-Storage & Liquidation',
-  market_pulse: 'Market Pulse — Hargrove Analytics'
+  market_pulse: 'Market Pulse — Hargrove Analytics',
+  focs_mandate: 'FOCS.GOV.NET — Federal Mandate 2000-CR7',
+  corpos_portal: 'CorpOS.GOV.NET — Operator Portal'
 };
 
 /** Display title for any registered WorldNet page key (directory, registry, etc.). */
@@ -219,6 +228,7 @@ export function titleForWorldNetPage(key) {
     jeemail_sent: 'JeeMail — Sent',
     jeemail_trash: 'JeeMail — Trash',
     jeemail_compose: 'JeeMail — Compose',
+    jeemail_read: 'JeeMail — Message',
     jeemail_confirm: 'JeeMail — Message sent'
   };
   if (jeemailPages[key]) return jeemailPages[key];
@@ -362,6 +372,10 @@ export function resolveLocationFromAddress(raw) {
   if (low.includes('hiring') || low.includes('staffing')) return { pageKey: 'hiring', subPath: '' };
   if (low.includes('ssa') || low.includes('social')) return { pageKey: 'ssa', subPath: '' };
   if (low.includes('fra') || (low.includes('federal') && low.includes('revenue'))) return { pageKey: 'fra', subPath: '' };
+  if (low.includes('focs.gov') || low.includes('mandate') || low.includes('2000-cr7'))
+    return { pageKey: 'focs_mandate', subPath: '' };
+  if (low.includes('corpos.gov') && low.includes('operator'))
+    return { pageKey: 'corpos_portal', subPath: '' };
   if (low.includes('davidmitchell') || low.includes('david') && low.includes('mitchell'))
     return { pageKey: 'dmb', subPath: '' };
   if (low.includes('99669')) return { pageKey: 'net99669', subPath: '' };

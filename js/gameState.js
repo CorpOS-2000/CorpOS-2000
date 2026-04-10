@@ -71,6 +71,15 @@ export function appendBankingTransaction(st, entry) {
     complianceFlag: !!entry.complianceFlag,
     description: entry.description ?? ''
   });
+  if (typeof window !== 'undefined' && window.SaveManager?.save) {
+    queueMicrotask(() => {
+      try {
+        window.SaveManager.save();
+      } catch {
+        /* ignore */
+      }
+    });
+  }
 }
 
 export function findAccountByFullNumber(st, raw) {
@@ -159,6 +168,7 @@ function createInitialStateInternal() {
       webExProjects: [],
       webExStockroom: [],
       webExDomainSubscriptions: [],
+      pendingSmsEvents: [],
     },
     registry: JSON.parse(JSON.stringify(DEFAULT_REGISTRY)),
     regulatory: {
@@ -611,6 +621,10 @@ export function migrateStateIfNeeded(st) {
       if (!p.slotModuleData || typeof p.slotModuleData !== 'object') p.slotModuleData = {};
       if (p.lastPublishedHost == null) p.lastPublishedHost = null;
     }
+  }
+  if ((st.meta.version || 0) < 15) {
+    st.meta.version = 15;
+    if (!Array.isArray(st.player.pendingSmsEvents)) st.player.pendingSmsEvents = [];
   }
   if (!st.smsThreads || typeof st.smsThreads !== 'object') st.smsThreads = {};
   if (!Array.isArray(st.player.cashUpTransactions)) st.player.cashUpTransactions = [];

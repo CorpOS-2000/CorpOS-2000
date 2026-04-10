@@ -33,7 +33,9 @@ import {
   exposeGlobals as exposeWin
 } from './windows.js';
 import { initBlackCherry, openBlackCherryDock, closeBlackCherryDock, smsToPlayer, tickBlackCherryRudeness } from './black-cherry.js';
+import { DevConsole } from './dev-console.js';
 import { ensureMomExists } from './mom-actor.js';
+import { fireQueuedSmsEvents, generatePlayerAndMomAfterEnrollment } from './world-generation.js';
 import { SMS } from './bc-sms.js';
 import { initTaskHandlerPanel, renderActiveTasksPanel } from './active-tasks.js';
 import { on } from './events.js';
@@ -48,7 +50,8 @@ import {
 import { getInstallStatus, processSoftwareInstallsIfNeeded } from './gameState.js';
 import { getInstallableApp } from './installable-apps.js';
 import { getMouseClickCandidates, loadFirstPlayableAudio } from './boot-audio.js';
-import { initAxis } from './axis.js';
+import { initAxis, hydrateAxisFromSave } from './axis.js';
+import { SaveManager } from '../engine/SaveManager.js';
 import { initSocialComments } from './social-comments.js';
 import { initYourspaceFeed, tickYourspaceRtc } from './yourspace-feed.js';
 import { tickReviewBomberNpc, warmReviewBomberPosts } from './review-bomber-feed.js';
@@ -350,31 +353,21 @@ async function main() {
       }
     }
   });
-  // ActorDB: bootstrap generates a fresh population of 500 only when the registry is empty (partial saves are untouched).
-  const bootReport = await ActorDB.bootstrapPopulationIfEmpty();
-  if (!bootReport.valid) {
-    const critical = (bootReport.errors || []).filter(
-      (e) => e.includes('duplicate ssn') || e.includes('missing required field')
-    );
-    if (critical.length > 0) {
-      throw new Error(`ActorDB critical validation failed: ${critical.slice(0, 6).join('; ')}`);
-    }
-    if ((bootReport.errors || []).length) {
-      console.warn('[ActorDB] non-critical validation errors', bootReport.errors);
-    }
-    if ((bootReport.warnings || []).length) {
-      console.warn('[ActorDB] warnings', bootReport.warnings);
-    }
-  }
-  if ((bootReport?.generated || 0) > 0) {
-    queueContentSummary('actors', Number(bootReport.generated), STARTUP_LOAD_TOAST_DELAY_MS);
-  }
+  // NPC population is now generated during the BIOS sequence (world-generation.js).
+  // ActorDB.init loads any existing actors from disk; BIOS parallel gen fills if empty.
   ActorEngine.init();
   await initContentPipeline(loadJsonFile);
   await initMoogleMaps(loadJsonFile);
+  // Expose getState for ActorDB.getCompanyName cross-reference
+  window.__gameState = getState;
   await initWorldNet(loadJsonText);
   await Promise.all([warmReviewBomberPosts(), warmMytubeCatalog()]);
   await initAxis(loadJsonFile);
+  const bootSave = SaveManager.loadAndHydrateState();
+  if (bootSave.axisRelationships?.length) {
+    hydrateAxisFromSave(bootSave.axisRelationships);
+  }
+  window.SaveManager = SaveManager;
   await initSocialComments(loadJsonFile);
   await initPlayerReplies(loadJsonFile);
   wireReplyDeps({ smsReceive: SMS.receive, patchState });
@@ -410,7 +403,9 @@ async function main() {
   initWindowChrome();
   initDesktopSystem();
   initBlackCherry();
+  DevConsole.init();
   ensureMomExists();
+  generatePlayerAndMomAfterEnrollment();
   initContextMenus();
   initTaskHandlerPanel();
   wireSpeedControls();
@@ -482,6 +477,17 @@ async function main() {
   updateClockDisplay();
   renderActiveTasksPanel();
   startClock();
+
+  let lastAutosaveKey = '';
+  on('hour', ({ gameDate }) => {
+    const h = gameDate.getUTCHours();
+    if (h % 6 !== 0) return;
+    const key = `${gameDate.getUTCFullYear()}-${gameDate.getUTCMonth()}-${gameDate.getUTCDate()}-${h}`;
+    if (key === lastAutosaveKey) return;
+    lastAutosaveKey = key;
+    SaveManager.save();
+    console.log('[AutoSave] Hourly save triggered (every 6 in-game hours).');
+  });
 }
 
 function getStateTimeHours() {

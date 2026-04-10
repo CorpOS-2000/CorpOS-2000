@@ -4,7 +4,10 @@ import { TOAST_KEYS, toast } from './toast.js';
 import { worldnetPages } from './worldnet-pages.js';
 import { BANK_META } from './bank-pages.js';
 import { bankHtmlForPageKey, bindBankRoot, installBankWindowGlobals } from './bank-ui.js';
-import { getGameEpochMs, getState } from './gameState.js';
+import {
+  getGameEpochMs, getState, patchState,
+  cancelSoftwareInstall, getInstallStatus, queueSoftwareInstall
+} from './gameState.js';
 import { smsToPlayer } from './black-cherry.js';
 import { getSessionState, patchSession } from './sessionState.js';
 import {
@@ -34,7 +37,6 @@ import {
   getSoftwarePurchasePriceUsd,
   listInstallableApps
 } from './installable-apps.js';
-import { cancelSoftwareInstall, getInstallStatus, queueSoftwareInstall } from './gameState.js';
 import { mountReviewBomberFeed, teardownReviewBomberFeed } from './review-bomber-feed.js';
 import { mountYourspace, teardownYourspace } from './yourspace-feed.js';
 import { mountMytube, teardownMytube } from './mytube-feed.js';
@@ -55,6 +57,8 @@ import { renderMoogleMapsPage, mountMoogleMaps, teardownMoogleMaps } from './moo
 import { mountWarehousePage } from './warehouse-tick.js';
 import { mountMarketPulsePage } from './market-pulse-page.js';
 import { CORPOS_GATED_PAGE_KEYS, renderGateInterstitial } from './corpos-enrollment.js';
+import { simpleHash, deliverCorpOSWelcomePacket } from './jeemail-corpos.js';
+import { renderFocsMandateHtml, renderCorposPortalHtml } from './worldnet-gov-pages.js';
 
 let pages = { ...worldnetPages };
 let historyEntries = [];
@@ -114,7 +118,9 @@ function isKnownAddress(raw) {
       low.includes('rapidmart') ||
       low.includes('yourspace') ||
       low.includes('mytube') ||
-      low.includes('moogle')
+      low.includes('moogle') ||
+      low.includes('focs') ||
+      low.includes('corpos')
     );
   }
 }
@@ -603,12 +609,30 @@ function renderJeeMailRegister() {
   return `<div class="iebody">
 <div data-wnet-ad-slot="below-header" data-wnet-ad-region="below-header" style="margin-bottom:6px;"></div>
 <h1 style="font-size:22px;color:#003399;">Create your JeeMail account</h1>
-<table style="width:100%;max-width:520px;">
-<tr><td style="width:180px;">Username</td><td><input id="jeemail-user" type="text" style="width:100%" placeholder="name@jeemail.net"></td></tr>
-<tr><td>Password</td><td><input id="jeemail-pass" type="password" style="width:100%"></td></tr>
-</table>
+<div id="jeemail-reg-form">
+  <div style="margin-bottom:6px;">
+    <label style="font-size:11px;">Choose a username</label>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <input type="text" id="jeemail-reg-username" autocomplete="off" maxlength="30" style="width:200px;">
+      <span style="font-size:11px;color:#666;">@jeemail.net</span>
+    </div>
+  </div>
+  <div style="margin-bottom:6px;">
+    <label style="font-size:11px;">Password</label>
+    <input type="password" id="jeemail-reg-password" maxlength="50" style="width:200px;">
+  </div>
+  <div style="margin-bottom:6px;">
+    <label style="font-size:11px;">Confirm password</label>
+    <input type="password" id="jeemail-reg-confirm" maxlength="50" style="width:200px;">
+  </div>
+  <div id="jeemail-reg-error" style="display:none;color:#cc0000;font-size:10px;margin-top:4px;"></div>
+  <div style="margin-top:10px;"><button type="button" data-action="jeemail-register">Create Account</button></div>
+  <div style="margin-top:6px;font-size:9px;color:#666;">
+    By registering, you acknowledge that all communications sent through JeeMail
+    are subject to monitoring per Federal Mandate 2000-CR7.
+  </div>
+</div>
 <div data-wnet-ad-slot="above-footer" data-wnet-ad-region="above-footer" style="margin-top:6px;"></div>
-<div style="margin-top:10px;"><button type="button" data-action="jeemail-register">Create Account</button></div>
 <div style="margin-top:8px;"><a data-nav="jeemail_login">Already have an account? Sign in</a></div>
 </div>`;
 }
@@ -668,6 +692,32 @@ function renderJeeMailConfirm() {
   return `<div class="iebody"><div data-wnet-ad-slot="below-header" data-wnet-ad-region="below-header" style="margin-bottom:8px;"></div><h2>Message Sent</h2><p>Your message has been queued for WorldNet delivery.</p><a data-nav="jeemail_inbox">Return to Inbox</a></div>`;
 }
 
+function renderJeeMailRead() {
+  const acc = jeemailCurrentAccount();
+  if (!acc) return renderJeeMailLogin();
+  const om = getSessionState().jeemail.openMessage;
+  if (!om) return renderJeeMailInbox();
+  const box = acc[om.box];
+  const msg = box?.[om.index];
+  if (!msg) return renderJeeMailInbox();
+  const bodyContent = msg.bodyHtml
+    ? `<div class="jm-html-body" style="padding:8px;background:#fff;border:1px solid #ccc;">${msg.bodyHtml}</div>`
+    : `<pre style="white-space:pre-wrap;font-family:inherit;margin:0;">${escapeHtml(msg.body || '')}</pre>`;
+  return `<div class="iebody">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+  <h2 style="margin:0;">JeeMail (${acc.email})</h2>
+  <div><a data-nav="jeemail_inbox">Inbox</a> | <a data-nav="jeemail_sent">Sent</a> | <a data-nav="jeemail_trash">Trash</a> | <a data-action="jeemail-logout">Log out</a></div>
+</div>
+<div style="background:#eef;padding:6px 8px;border:1px solid #99c;margin-bottom:8px;">
+  <div style="font-size:12px;font-weight:bold;">${escapeHtml(msg.subject || '(no subject)')}</div>
+  <div style="font-size:10px;color:#555;margin-top:2px;">From: ${escapeHtml(msg.fromName || msg.from || 'Unknown')} &lt;${escapeHtml(msg.from || '')}&gt;</div>
+  <div style="font-size:10px;color:#555;">Date: ${escapeHtml(msg.date || '')}</div>
+</div>
+${bodyContent}
+<div style="margin-top:10px;"><a data-nav="jeemail_inbox">&laquo; Back to Inbox</a></div>
+</div>`;
+}
+
 function renderWahooSearchResults(query) {
   const q = query || '';
   const resultDefs = [
@@ -713,6 +763,63 @@ ${rows}
 <p style="font-size:9px;color:#888;margin-top:4px;"><a data-nav="bizreg" href="#" style="color:#000080;">Register a new business</a></p>`;
 }
 
+let _peopleDirectoryPage = 0;
+const PEOPLE_PAGE_SIZE = 50;
+
+function renderPeopleDirectoryPanel() {
+  const db = window.ActorDB;
+  if (!db || !db.count || db.count() === 0) {
+    return '<p style="font-size:10px;color:#777;line-height:1.45;">Directory loading... check back after system initialization.</p>';
+  }
+  const actors = db.getAll('social')
+    .filter((a) => a.public_profile?.display_name)
+    .sort((a, b) => (a.full_legal_name || '').localeCompare(b.full_legal_name || ''));
+
+  if (!actors.length) {
+    return '<p style="font-size:10px;color:#777;">No public citizen records found.</p>';
+  }
+
+  const totalPages = Math.ceil(actors.length / PEOPLE_PAGE_SIZE);
+  _peopleDirectoryPage = Math.max(0, Math.min(_peopleDirectoryPage, totalPages - 1));
+  const start = _peopleDirectoryPage * PEOPLE_PAGE_SIZE;
+  const page = actors.slice(start, start + PEOPLE_PAGE_SIZE);
+
+  const rows = page.map((a, i) => {
+    const bg = i % 2 ? '#f3eaff' : '#fff';
+    const name = escapeHtml(a.public_profile?.display_name || a.full_legal_name || 'Unknown');
+    const prof = escapeHtml(a.public_profile?.occupation || a.profession || '—');
+    const city = a.home_address?.city ? escapeHtml(a.home_address.city) : 'Hargrove';
+    const role = a.is_player ? ' <span style="color:#0a246a;font-weight:bold;font-size:9px;">(You)</span>' : '';
+    return `<tr style="background:${bg};">
+<td style="padding:4px 8px;font-size:11px;">${name}${role}</td>
+<td style="padding:4px 8px;font-size:10px;">${prof}</td>
+<td style="padding:4px 8px;font-size:10px;">${city}, CA</td>
+</tr>`;
+  }).join('');
+
+  const prevDisabled = _peopleDirectoryPage <= 0;
+  const nextDisabled = _peopleDirectoryPage >= totalPages - 1;
+  const pager = totalPages > 1
+    ? `<div style="margin-top:6px;display:flex;align-items:center;gap:8px;font-size:10px;">
+        <button data-action="people-dir-prev" style="padding:2px 8px;font-size:10px;cursor:${prevDisabled ? 'default' : 'pointer'};${prevDisabled ? 'opacity:.4;' : ''}" ${prevDisabled ? 'disabled' : ''}>&laquo; Prev</button>
+        <span>Page ${_peopleDirectoryPage + 1} of ${totalPages} &nbsp;(${actors.length} citizens)</span>
+        <button data-action="people-dir-next" style="padding:2px 8px;font-size:10px;cursor:${nextDisabled ? 'default' : 'pointer'};${nextDisabled ? 'opacity:.4;' : ''}" ${nextDisabled ? 'disabled' : ''}>Next &raquo;</button>
+       </div>`
+    : '';
+
+  return `<p style="font-size:10px;color:#666;margin-bottom:6px;line-height:1.4;">Registered citizens (public records). Showing ${start + 1}–${start + page.length} of ${actors.length} profiles.</p>
+<table style="width:100%;border-collapse:collapse;border:1px solid #999;background:#fff;">
+<tr style="background:#990099;color:#fff;font-size:10px;">
+<th style="text-align:left;padding:4px 8px;">Name</th>
+<th style="text-align:left;padding:4px 8px;">Occupation</th>
+<th style="text-align:left;padding:4px 8px;">City</th>
+</tr>
+${rows}
+</table>
+${pager}
+<p style="font-size:9px;color:#888;margin-top:4px;">Cross-linked with CorpOS identity records. Updated on registry refresh.</p>`;
+}
+
 function renderPortal99669() {
   const rows = getWorldNetSiteDirectoryLinks();
   const siteRows = rows
@@ -749,9 +856,9 @@ function renderPortal99669() {
 </tr>
 ${siteRows}
 </table>
-<div style="margin-top:18px;padding:10px;border:2px dashed #aaa;background:#f9f9f9;">
+<div style="margin-top:18px;padding:10px;border:2px solid #990099;background:#f9f9f9;">
   <h3 style="font-size:13px;color:#333;margin-bottom:6px;">👤 People directory</h3>
-  <p style="font-size:10px;color:#777;line-height:1.45;">Coming soon — searchable citizens, NPCs, and CorpOS profile cross-links.</p>
+  ${renderPeopleDirectoryPanel()}
 </div>
 <div style="margin-top:10px;padding:10px;border:2px solid #990099;background:#faf5ff;">
   <h3 style="font-size:13px;color:#333;margin-bottom:6px;">🏢 Businesses directory</h3>
@@ -790,9 +897,12 @@ function renderPage(key, sub = '') {
   if (key === 'jeemail_trash') return renderJeeMailTrash();
   if (key === 'jeemail_compose') return renderJeeMailCompose();
   if (key === 'jeemail_confirm') return renderJeeMailConfirm();
+  if (key === 'jeemail_read') return renderJeeMailRead();
   if (key === 'dmb') return renderDmbPage(sub || '');
   if (key === 'net99669') return renderPortal99669();
   if (key === 'fra') return renderFraPage();
+  if (key === 'focs_mandate') return renderFocsMandateHtml();
+  if (key === 'corpos_portal') return renderCorposPortalHtml();
   if (key === 'warehouse') return pages.warehouse || defaultNotFoundHtml();
   if (key === 'market_pulse') return pages.market_pulse || defaultNotFoundHtml();
   if (key === 'devtools') return renderDevtoolsPage();
@@ -849,6 +959,7 @@ function setHistoryButtons() {
 function entryTitleForKey(key) {
   if (key === 'home') return 'Wahoo!';
   if (key === 'jeemail_inbox') return 'JeeMail Inbox';
+  if (key === 'jeemail_read') return 'JeeMail — Message';
   if (key === 'wahoo_account') return 'My Account';
   if (key === 'wn_shop') return shopBrowserTitle(currentSubPath || '');
   if (key === 'not_found') return 'Page Not Found';
@@ -865,6 +976,8 @@ function entryTitleForKey(key) {
   if (key === 'moogle_home') return 'Moogle';
   if (key === 'moogle_maps') return 'Moogle Maps';
   if (key === 'fra') return 'Federal Revenue Authority';
+  if (key === 'focs_mandate') return 'Federal Mandate 2000-CR7';
+  if (key === 'corpos_portal') return 'CorpOS Operator Portal';
   if (key === 'moogle_results') return 'Moogle Search';
   if (key === 'moogle_images') return 'Moogle Images';
   if (key === 'moogle_groups') return 'Moogle Groups';
@@ -1280,58 +1393,89 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     return true;
   }
   if (action === 'jeemail-register') {
-    let user = (document.getElementById('jeemail-user')?.value || '').trim().toLowerCase();
-    const pass = document.getElementById('jeemail-pass')?.value || '';
-    if (!user || !pass) {
-      toast('Enter username and password.');
-      return true;
+    const usernameEl = document.getElementById('jeemail-reg-username');
+    const passwordEl = document.getElementById('jeemail-reg-password');
+    const confirmEl = document.getElementById('jeemail-reg-confirm');
+    const errEl = document.getElementById('jeemail-reg-error');
+    function showRegErr(msg) {
+      if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+      else toast(msg);
     }
-    if (!user.includes('@')) user = `${user}@jeemail.net`;
-    if (!user.endsWith('@jeemail.net')) {
-      toast('JeeMail usernames must end in @jeemail.net');
-      return true;
-    }
-    const isFirst = Object.keys(getSessionState().jeemail?.accounts || {}).length === 0;
+    if (!usernameEl || !passwordEl) { toast('Registration form not found.'); return true; }
+
+    const localPart = (usernameEl.value || '').trim().toLowerCase();
+    const pass = (passwordEl.value || '').trim();
+    const confirm = confirmEl ? (confirmEl.value || '').trim() : pass;
+
+    const errors = [];
+    if (!localPart || localPart.length < 3) errors.push('Username must be at least 3 characters.');
+    if (!/^[a-z0-9._-]+$/.test(localPart)) errors.push('Username may only contain letters, numbers, dots, hyphens, and underscores.');
+    if (!pass || pass.length < 4) errors.push('Password must be at least 4 characters.');
+    if (pass !== confirm) errors.push('Passwords do not match.');
+
+    const fullEmail = `${localPart}@jeemail.net`;
+    const accounts = getSessionState().jeemail?.accounts || {};
+    if (accounts[fullEmail]) errors.push('That username is already registered.');
+
+    if (errors.length) { showRegErr(errors.join(' ')); return true; }
+
+    const isFirst = Object.keys(accounts).length === 0;
+    const hashed = simpleHash(pass);
+
     patchSession((s) => {
-      s.jeemail.accounts[user] = {
-        email: user,
+      if (!s.jeemail) s.jeemail = { accounts: {}, currentUser: null };
+      if (!s.jeemail.accounts) s.jeemail.accounts = {};
+      s.jeemail.accounts[fullEmail] = {
+        email: fullEmail,
         password: pass,
-        inbox: seedJeeMailInbox(user),
+        passwordHash: hashed,
+        inbox: seedJeeMailInbox(fullEmail),
         sent: [],
         trash: []
       };
-      s.jeemail.currentUser = user;
+      s.jeemail.currentUser = fullEmail;
     });
+
     if (isFirst) {
-      const pl = getState().player;
-      const ssnTail = pl.ssnFull ? `\u2026${String(pl.ssnFull).slice(-4)}` : 'N/A';
       patchState(s => {
-        s.player.firstJeemailAccount = user;
-        s.player.email = user;
+        s.player.firstJeemailAccount = fullEmail;
+        s.player.email = fullEmail;
         return s;
       });
+      const raw = ActorDB.getRaw('PLAYER_PRIMARY');
+      if (raw && !raw.emails.includes(fullEmail)) {
+        try { ActorDB.update('PLAYER_PRIMARY', { emails: [...raw.emails, fullEmail] }); } catch { /* ok */ }
+      }
+    }
+
+    setTimeout(() => deliverCorpOSWelcomePacket(fullEmail, localPart), 800);
+    navigate('jeemail_inbox', '', { pushHistory: true });
+    return true;
+  }
+  if (action === 'jeemail-open-msg') {
+    const idx = Number(sourceEl?.dataset?.msgIndex ?? -1);
+    const box = sourceEl?.dataset?.msgBox || 'inbox';
+    if (idx < 0) return true;
+    patchSession((s) => {
+      s.jeemail.openMessage = { box, index: idx };
+    });
+    const acc = jeemailCurrentAccount();
+    const msg = acc?.[box]?.[idx];
+    if (msg && !msg.isRead) {
       patchSession((s) => {
-        const acc = s.jeemail.accounts[user];
-        if (acc) {
-          acc.inbox.unshift({
-            date: 'Jan 1, 2000',
-            from: 'corpos-registration@corpos.gov.net',
-            subject: 'CorpOS Registration Confirmation — Action Required',
-            body: `Dear ${escapeHtml(pl.displayName || 'Citizen')},\n\nThis message confirms your CorpOS 2000 registration.\n\nRegistration Details:\n  Name: ${escapeHtml(pl.displayName)}\n  SSN (last 4): ${escapeHtml(ssnTail)}\n  Username: ${escapeHtml(pl.username)}\n  Email: ${escapeHtml(user)}\n\n` +
-              `IMPORTANT NOTICE — Federal Revenue Authority Registration Required:\nPursuant to Federal Mandate 2000-CR7, Section 12, all citizens intending to operate a business within CorpOS jurisdiction must register with the Federal Revenue Authority (FRA) and obtain an Employer Identification Number (EIN) BEFORE filing for business incorporation.\n\nVisit: http://www.fra.gov.net/\n\nFailure to register with the FRA prior to business formation may result in penalties and delayed processing.\n\n` +
-              `This is an automated message from the Federal Office of Commercial Systems.\nDo not reply to this message.`
-          });
-        }
+        const a = s.jeemail.accounts[s.jeemail.currentUser];
+        if (a?.[box]?.[idx]) a[box][idx].isRead = true;
       });
     }
-    navigate('jeemail_inbox', '', { pushHistory: true });
+    navigate('jeemail_read', '', { pushHistory: true });
     return true;
   }
   if (action === 'jeemail-login') {
     const user = (document.getElementById('jeemail-login-user')?.value || '').trim().toLowerCase();
     const pass = document.getElementById('jeemail-login-pass')?.value || '';
     const acc = getSessionState().jeemail.accounts[user];
-    if (!acc || acc.password !== pass) {
+    const passMatch = acc && (acc.password === pass || acc.passwordHash === simpleHash(pass));
+    if (!acc || !passMatch) {
       toast('Invalid JeeMail credentials.');
       return true;
     }
@@ -1428,6 +1572,16 @@ function dispatchAction(action, rootEl, sourceEl = null) {
   }
   if (action === 'stub') {
     navigate('not_found', '', { pushHistory: true });
+    return true;
+  }
+  if (action === 'people-dir-prev') {
+    _peopleDirectoryPage = Math.max(0, _peopleDirectoryPage - 1);
+    navigate('net99669', '', { pushHistory: false });
+    return true;
+  }
+  if (action === 'people-dir-next') {
+    _peopleDirectoryPage += 1;
+    navigate('net99669', '', { pushHistory: false });
     return true;
   }
   return false;

@@ -100,9 +100,11 @@
   </div>
 </div>
 
-<div id="shutdown-screen">
-  <div id="sd-msg" style="text-align:center;line-height:2"></div>
+<div id="logoff-screen" aria-live="polite">
+  <div id="logoff-lines"></div>
 </div>
+
+<div id="shutdown-screen" aria-live="polite"></div>
 
 <div id="desktop">
 
@@ -473,6 +475,8 @@
         <div class="smsep"></div>
         <div class="smitem" onclick="fireNews();toggleStart()">⚡ Fire News Ticker</div>
         <div class="smsep"></div>
+        <div class="smitem" onclick="doLogOff();toggleStart()">🔓 Log Off…</div>
+        <div class="smsep"></div>
         <div class="smitem" onclick="doShutdown();toggleStart()">🔴 Shut Down...</div>
       </div>
     </div>
@@ -492,6 +496,7 @@
         </div>
         <div class="bc-screen">
           <div class="bc-screen-title" id="bc-screen-heading">Home</div>
+          <div class="bc-dial-hud" id="bc-dial-hud" hidden><span id="bc-dial-hud-number"></span></div>
           <div class="bc-screen-body">
             <!-- Home: icon grid -->
             <div id="bc-view-home" class="bc-view bc-view--active">
@@ -519,6 +524,10 @@
             <!-- Contacts list -->
             <div id="bc-view-contacts" class="bc-view">
               <div class="bc-contacts" id="bc-contacts"></div>
+            </div>
+            <!-- Manual dial pad -->
+            <div id="bc-view-dialpad" class="bc-view">
+              <div id="bc-dialpad" class="bc-dialpad-root"></div>
             </div>
             <!-- Dial / contacts & recent calls -->
             <div id="bc-view-dial" class="bc-view">
@@ -567,6 +576,16 @@
                 <p style="margin:0;"><b>Screen:</b> LCD saver after 2 min</p>
               </div>
             </div>
+            <!-- Live transcript (scripted calls) -->
+            <div id="bc-view-transcript" class="bc-view">
+              <div class="bc-convo-header">
+                <span class="bc-convo-avatar" id="bc-transcript-avatar"></span>
+                <span class="bc-convo-name" id="bc-transcript-name"></span>
+                <span class="bc-convo-timer" id="bc-transcript-timer">0:00</span>
+              </div>
+              <div id="bc-transcript-body"></div>
+              <div id="bc-transcript-options" class="bc-transcript-options"></div>
+            </div>
             <!-- Calendar stub -->
             <div id="bc-view-calendar" class="bc-view">
               <div class="bc-settings-body"><p style="margin:0;color:#888;">Calendar — Coming Soon</p></div>
@@ -588,12 +607,15 @@
             <button type="button" class="bc-nav-btn bc-nav-btn--sm" id="bc-key-back">Back</button>
           </div>
         </div>
-        <!-- QWERTY keyboard (decorative) -->
+        <!-- Dial digits stack on top of QWERTY when Dial view is active; hardware 📞 places the call -->
         <div class="bc-keyboard" aria-hidden="true">
-          <div class="bc-kb-row"><kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd></div>
-          <div class="bc-kb-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd></div>
-          <div class="bc-kb-row"><kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd><kbd>B</kbd><kbd>N</kbd><kbd>M</kbd><kbd>,</kbd></div>
-          <div class="bc-kb-row bc-kb-row--bottom"><kbd class="bc-kb-alt">ALT</kbd><kbd class="bc-kb-space">SPACE</kbd><kbd class="bc-kb-enter">⏎</kbd></div>
+          <div id="bc-keyboard-numpad" class="bc-keyboard-numpad" hidden></div>
+          <div id="bc-keyboard-alpha">
+            <div class="bc-kb-row"><kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd></div>
+            <div class="bc-kb-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd></div>
+            <div class="bc-kb-row"><kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd><kbd>B</kbd><kbd>N</kbd><kbd>M</kbd><kbd>,</kbd></div>
+            <div class="bc-kb-row bc-kb-row--bottom"><kbd class="bc-kb-alt">ALT</kbd><kbd class="bc-kb-space">SPACE</kbd><kbd class="bc-kb-enter">⏎</kbd></div>
+          </div>
         </div>
         <button type="button" class="bc-close" id="bc-btn-close" title="Close" aria-label="Close Black Cherry">×</button>
       </div>
@@ -611,6 +633,7 @@
     </div>
   </div>
 
+  <div id="peek-stack"></div>
   <div id="toasts"></div>
   <button type="button" id="demo-btn" onclick="fireNews()">⚡ Fire News Ticker Demo</button>
 </div>

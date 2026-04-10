@@ -1,4 +1,5 @@
-import { getGameEpochMs, getState } from './gameState.js';
+import { getGameEpochMs, getState, patchState } from './gameState.js';
+import { saveAfterMutation } from '../engine/SaveManager.js';
 import { toast } from './toast.js';
 
 export const RELATIONSHIP_TIERS = Object.freeze([
@@ -469,6 +470,16 @@ function bindAxisUi() {
   });
 }
 
+const DISCOVERY_RELATION_MAP = {
+  black_cherry: 'Contact',
+  herald: 'Public Figure',
+  worldnet: 'Online Contact',
+  espionage: 'Intel Source',
+  introduction: 'Introduction',
+  contract: 'Business Contact',
+  family: 'Family',
+};
+
 function discover(actorId, discoveryContext = {}) {
   const existing = getEntry(actorId);
   if (existing) return existing;
@@ -481,6 +492,9 @@ function discover(actorId, discoveryContext = {}) {
     0
   );
   queuePersist();
+
+  addToBlackCherryContacts(actorId, discoveryContext);
+
   toast({
     key: 'contact_discovered',
     title: 'New Contact',
@@ -489,7 +503,37 @@ function discover(actorId, discoveryContext = {}) {
     autoDismiss: 5000
   });
   renderAxisUi();
+  saveAfterMutation();
   return entry;
+}
+
+function addToBlackCherryContacts(actorId, discoveryContext = {}) {
+  const actor = window.ActorDB?.getRaw?.(actorId);
+  if (!actor) return;
+  const st = getState();
+  const bcContacts = st.player?.blackCherryContacts || [];
+  if (bcContacts.some((c) => c.actorId === actorId)) return;
+
+  const source = String(discoveryContext?.source || 'unknown');
+  const relation = DISCOVERY_RELATION_MAP[source] || 'Contact';
+
+  patchState((s) => {
+    if (!Array.isArray(s.player.blackCherryContacts)) s.player.blackCherryContacts = [];
+    s.player.blackCherryContacts.push({
+      actorId,
+      displayName: actor.contactDisplayName || actor.first_name || actor.full_legal_name,
+      officialName: actor.full_legal_name,
+      relationToPlayer: actor.relationToPlayer || relation,
+      jobTitle: actor.profession || '',
+      company: actor.employer_id ? (window.ActorDB?.getCompanyName?.(actor.employer_id) || null) : null,
+      phone: actor.phone_numbers?.[0] || '—',
+      isPlayer: false,
+      sortOrder: s.player.blackCherryContacts.length,
+      discoveredVia: source,
+      discoveredDate: nowIso(),
+    });
+    return s;
+  });
 }
 
 function updateScore(actorId, delta, reason) {
@@ -606,6 +650,27 @@ function getNetworkMap() {
     tier: contact.tier.label,
     relationships: window.ActorDB?.getRelationships?.(contact.actorId) || []
   }));
+}
+
+export function hydrateAxisFromSave(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return;
+  state.entries = Object.create(null);
+  for (const row of rows) {
+    if (!row?.actor_id) continue;
+    const id = String(row.actor_id);
+    state.entries[id] = {
+      actor_id: id,
+      relationship_score: clampScore(row.relationship_score),
+      favor_balance: Number(row.favor_balance || 0),
+      discovered_date: row.discovered_date || nowIso(),
+      last_contact_date: row.last_contact_date || null,
+      agenda_known: !!row.agenda_known,
+      intel_level: Number(row.intel_level || 0),
+      memory: Array.isArray(row.memory) ? row.memory : []
+    };
+  }
+  queuePersist();
+  renderAxisUi();
 }
 
 function exportRelationships() {

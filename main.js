@@ -50,6 +50,7 @@ const WATCH_FILES = new Set([
   'generation/ssn_rules.json',
   'generation/taglet_definitions.json',
   'generation/profession_tiers.json',
+  'generation/first_names_1940s_female.json',
   'lenses/lens_definitions.json'
 ]);
 
@@ -249,6 +250,14 @@ function validateDataRelativePath(rel) {
   if (normalized.includes('..')) return null;
   return normalized;
 }
+
+ipcMain.on('app-quit', () => {
+  try {
+    app.quit();
+  } catch {
+    /* ignore */
+  }
+});
 
 ipcMain.handle('load-data-file', (_, filename) => {
   const rel = validateDataRelativePath(filename);

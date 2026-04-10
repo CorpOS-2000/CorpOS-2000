@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('corpOS', {
+  quit: () => ipcRenderer.send('app-quit'),
   loadDataFile: (filename) => ipcRenderer.invoke('load-data-file', filename),
   saveDataFile: (filename, jsonString) => ipcRenderer.invoke('save-data-file', filename, jsonString),
   getDataDirPath: () => ipcRenderer.invoke('get-data-dir-path'),

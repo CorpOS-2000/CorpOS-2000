@@ -173,5 +173,322 @@
         "tier": "Neutral"
       }
     ]
+  },
+  {
+    "actor_id": "ACT-MOM-1QTKP8SU",
+    "relationship_score": 53,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T09:18:52.032Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T09:18:52.032Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 53,
+        "tier": "Favorable"
+      },
+      {
+        "at": "2000-01-01T09:02:47.028Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 52,
+        "tier": "Favorable"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-KYLE-HARGROVE",
+    "relationship_score": 56,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T07:03:14.988Z",
+    "last_contact_date": "2000-01-01T06:56:37.062Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:56:37.062Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 56,
+        "tier": "Favorable"
+      },
+      {
+        "at": "2000-01-01T06:55:09.990Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 48,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T07:02:45.990Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 40,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T07:02:43.986Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 32,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T07:04:04.980Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 24,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T07:02:55.998Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 16,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T07:03:14.988Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 8,
+        "tier": "Neutral"
+      },
+      {
+        "at": "2000-01-01T07:03:14.988Z",
+        "description": "Kyle called on first day — CorpOS account manager.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-MGTXXH3G",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-LSSFI4OQ",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-U1CHTXS3",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-AEGOLPQW",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-RC4XRDLU",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-YV2L6I41",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-VAZ8PRMV",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-2W5ADYQ5",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T10:29:20.970Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T10:29:20.970Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-ZGJHZNFS",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T10:29:20.970Z",
+    "last_contact_date": "2000-01-01T10:29:20.970Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T10:29:20.970Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T10:29:20.970Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
   }
 ]

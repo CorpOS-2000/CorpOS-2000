@@ -143,6 +143,22 @@ export const Validator = {
     return errors;
   },
 
+  resolvePhoneCollisions() {
+    const actors = this._ctx.getActors();
+    const seen = new Map();
+    const collisions = [];
+    for (const actor of actors) {
+      for (const phone of actor.phone_numbers || []) {
+        if (seen.has(phone)) {
+          collisions.push({ actor_id: actor.actor_id, phone });
+        } else {
+          seen.set(phone, actor.actor_id);
+        }
+      }
+    }
+    return collisions;
+  },
+
   checkHouseholdIntegrity() {
     const actors = this._ctx.getActors();
     const byHousehold = new Map();

@@ -42,6 +42,7 @@ export const ActorDB = {
     const ssnRules = await this._loadJson('generation/ssn_rules.json').catch(() => ({}));
     const taglets = await this._loadJson('generation/taglet_definitions.json').catch(() => []);
     const professionTiers = await this._loadJson('generation/profession_tiers.json').catch(() => []);
+    const firstNames1940sFemale = await this._loadJson('generation/first_names_1940s_female.json').catch(() => []);
 
     TagletEngine.setDefinitions(taglets);
     TagletEngine.setActorGetter((actorId) => this.getRaw(actorId));
@@ -60,7 +61,8 @@ export const ActorDB = {
         phone_rules: phoneRules,
         email_domains: emailDomains,
         ssn_rules: ssnRules,
-        profession_tiers: professionTiers
+        profession_tiers: professionTiers,
+        first_names_1940s_female: firstNames1940sFemale
       },
       isUnique: (field, value) => Validator.checkUniqueness(field, value),
       getAllActors: () => this.getAllRaw()
@@ -154,6 +156,24 @@ export const ActorDB = {
       .map((a) => SiteLens.apply(a, 'social'));
   },
 
+  /**
+   * Import or replace a full actor record from save (merge discovered NPCs after world bootstrap).
+   */
+  importActorRecord(actorData) {
+    const copy = clone(actorData);
+    const id = copy.actor_id;
+    if (!id) return null;
+    const i = this._actors.findIndex((a) => a.actor_id === id);
+    if (i >= 0) {
+      this._actors[i] = copy;
+    } else {
+      this._actors.push(copy);
+    }
+    this._rebuildIndexes();
+    this._backfillDCProfiles();
+    return copy;
+  },
+
   create(actorData) {
     if (!Validator.checkUniqueness('ssn', actorData.ssn)) {
       throw new Error('Duplicate SSN');
@@ -226,6 +246,38 @@ export const ActorDB = {
     return this._actors.filter((a) => a.active !== false).length;
   },
 
+  getAllPhones() {
+    return this._actors.flatMap((a) => a.phone_numbers || []);
+  },
+
+  getAllSSNs() {
+    return this._actors.map((a) => a.ssn).filter(Boolean);
+  },
+
+  getByRole(role) {
+    return this._actors.filter((a) => a.role === role && a.active !== false);
+  },
+
+  setPlayerActor(actor) {
+    const idx = this._actors.findIndex((a) => a.actor_id === 'PLAYER_PRIMARY');
+    if (idx >= 0) {
+      this._actors[idx] = clone(actor);
+    } else {
+      this._actors.push(clone(actor));
+    }
+    this._rebuildIndexes();
+  },
+
+  getCompanyName(employerId) {
+    if (!employerId) return null;
+    if (typeof window !== 'undefined') {
+      const reg = window.__gameState?.()?.registry;
+      const biz = reg?.businesses?.find?.((b) => b.id === employerId);
+      if (biz) return biz.tradingName || biz.name || employerId;
+    }
+    return employerId;
+  },
+
   validate() {
     return Validator.runFull();
   },
@@ -267,7 +319,12 @@ export const ActorDB = {
 
   async bootstrapPopulationIfEmpty() {
     if (this._actors.length > 0) return { generated: 0, valid: true };
-    const generated = ActorGenerator.generate(500, {
+    return this.bootstrapPopulationAsync();
+  },
+
+  async bootstrapPopulationAsync() {
+    if (this._actors.some((a) => a.role && a.role !== 'player')) return { generated: 0, valid: true };
+    const generated = await ActorGenerator.generateAsync(500, {
       roles: {
         civilian: 450,
         contact: 30,
@@ -283,10 +340,16 @@ export const ActorDB = {
         elite: 0.02
       },
       age_range: { min: 22, max: 65 }
+    }, {
+      batchSize: 50,
+      onBatch: (rec) => {
+        this._actors.push(rec);
+        this._rebuildIndexes();
+      }
     });
-    for (const rec of generated) this._actors.push(rec);
     this._assignHouseholdAddresses();
     this._rebuildIndexes();
+    this._backfillDCProfiles();
     const report = this.validate();
     await this.export();
     return { generated: generated.length, ...report };

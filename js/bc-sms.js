@@ -5,7 +5,7 @@
 import { getState, patchState } from './gameState.js';
 
 export const GOVERNMENT_SENDERS = {
-  CORPOS_SYSTEM: { name: 'CorpOS System', avatarColor: '#0a246a', avatarLabel: 'COS', number: 'CORPOS-2000', official: true },
+  CORPOS_SYSTEM: { name: 'CORPOS SYSTEM', avatarColor: '#0a246a', avatarLabel: 'COS', number: 'CORPOS-2000', official: true },
   FRA: { name: 'Fed. Revenue Authority', avatarColor: '#333300', avatarLabel: 'FRA', number: 'FRA-GOV', official: true },
   FBCE: { name: 'Fed. Bureau Commerce', avatarColor: '#1a0066', avatarLabel: 'FBCE', number: 'FBCE-GOV', official: true },
   COMPLIANCE_MONITOR: { name: 'Compliance Monitor', avatarColor: '#003322', avatarLabel: 'MON', number: 'CORPOS-MON', official: true },
@@ -169,4 +169,25 @@ export const SMS = {
     }
     return results;
   },
+
+  /** Display label for thread header / list (includes virtual system senders). */
+  getDisplayName(actorId) {
+    const systemSenders = {
+      CORPOS_SYSTEM: 'CORPOS SYSTEM',
+      FRA: 'Federal Revenue Authority',
+      FBCE: 'Fed. Bureau of Commerce',
+      COMPLIANCE_MONITOR: 'Compliance Monitor',
+      CA_LOTTERY: 'CA Lottery Commission'
+    };
+    if (systemSenders[actorId]) return systemSenders[actorId];
+    const actor = window.ActorDB?.get?.(actorId, 'social');
+    if (actor) {
+      return actor.public_profile?.display_name || actor.full_legal_name || actorId;
+    }
+    return actorId;
+  },
+
+  isGovernmentSender(actorId) {
+    return ['CORPOS_SYSTEM', 'FRA', 'FBCE', 'COMPLIANCE_MONITOR'].includes(actorId);
+  }
 };

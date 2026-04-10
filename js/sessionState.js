@@ -11,7 +11,8 @@ const state = {
   },
   jeemail: {
     accounts: {},
-    currentUser: null
+    currentUser: null,
+    openMessage: null
   },
   wahoo: {
     accounts: {},
