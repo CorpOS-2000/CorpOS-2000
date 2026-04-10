@@ -1631,9 +1631,11 @@ export function ensureWorldNetHome() {
   const win = document.getElementById('win-worldnet');
   if (win && !win.dataset.init) {
     win.dataset.init = '1';
-    historyEntries = [];
-    historyIndex = -1;
-    navigate('moogle_home', '', { pushHistory: true });
+    // If something (e.g. Black Cherry Maps via navigateTo) already navigated before the
+    // window finished opening, do not reset history or overwrite that page.
+    if (historyEntries.length === 0) {
+      navigate('moogle_home', '', { pushHistory: true });
+    }
   }
 }
 
