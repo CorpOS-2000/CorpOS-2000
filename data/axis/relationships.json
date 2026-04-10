@@ -215,13 +215,20 @@
   },
   {
     "actor_id": "ACT-KYLE-HARGROVE",
-    "relationship_score": 56,
+    "relationship_score": 64,
     "favor_balance": 0,
     "discovered_date": "2000-01-01T07:03:14.988Z",
-    "last_contact_date": "2000-01-01T06:56:37.062Z",
+    "last_contact_date": "2000-01-01T07:25:07.998Z",
     "agenda_known": false,
     "intel_level": 0,
     "memory": [
+      {
+        "at": "2000-01-01T07:25:07.998Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 64,
+        "tier": "Favorable"
+      },
       {
         "at": "2000-01-01T06:56:37.062Z",
         "description": "First call — professional and helpful",
@@ -484,6 +491,163 @@
       },
       {
         "at": "2000-01-01T10:29:20.970Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-Z2LXEIQZ",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T12:00:00.036Z",
+    "last_contact_date": "2000-01-01T12:00:00.036Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T12:00:00.036Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T12:00:00.036Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-Z73A2NQO",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T12:23:48.030Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T12:23:48.030Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-LP6AT6A6",
+    "relationship_score": 53,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:59:19.002Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:59:19.002Z",
+        "description": "Polite goodbye",
+        "delta": 1,
+        "score": 53,
+        "tier": "Favorable"
+      },
+      {
+        "at": "2000-01-01T06:55:24.006Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 52,
+        "tier": "Favorable"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-A9DF3QMB",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-EVSJ1X3R",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Your mother.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-2W76B8CS",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
         "description": "Your mother.",
         "delta": 0,
         "score": 0,

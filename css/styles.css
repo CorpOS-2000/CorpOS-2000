@@ -825,6 +825,23 @@ body {
   background: rgba(0, 80, 255, 0.25);
 }
 
+.di.di-selected {
+  background: rgba(0, 80, 255, 0.38);
+  outline: 1px dotted rgba(255, 255, 255, 0.55);
+  outline-offset: -1px;
+}
+
+.di.di-selected .lbl {
+  background: #0a246a;
+  color: #fff;
+}
+
+.di.di-dragging {
+  opacity: 0.85;
+  z-index: 99000;
+  pointer-events: none;
+}
+
 .di .ico {
   font-size: 28px;
   filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
@@ -2037,6 +2054,99 @@ body {
   font-weight: bold;
 }
 
+/* Operator purge dialog — must sit above user picker (z-index 99997) */
+#corpos-purge-dialog.corpos-purge-confirm {
+  z-index: 100130;
+}
+
+.corpos-purge-confirm .corpos-confirm__btn--danger {
+  color: #8b0000;
+  font-weight: bold;
+}
+
+/* In-app prompt (replaces window.prompt in Electron) */
+.corpos-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 100120;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.corpos-prompt.is-hidden {
+  display: none;
+}
+
+.corpos-prompt__panel {
+  width: 100%;
+  max-width: 380px;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+}
+
+.corpos-prompt__titlebar {
+  background: linear-gradient(90deg, #0a246a, #3a6ea5);
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.corpos-prompt__body {
+  padding: 12px;
+}
+
+.corpos-prompt__label {
+  display: block;
+  font-size: 11px;
+  color: #222;
+  margin-bottom: 6px;
+}
+
+.corpos-prompt__input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 24px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 2px inset #d4d0c8;
+  font-family: Tahoma, 'MS Sans Serif', Arial, sans-serif;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.corpos-prompt__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.corpos-prompt__btn {
+  min-width: 78px;
+  padding: 3px 10px;
+  background: #d4d0c8;
+  color: #111;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.corpos-prompt__btn:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}
+
+.corpos-prompt__btn--primary {
+  font-weight: bold;
+}
+
 .corpos-transfer {
   position: fixed;
   inset: 0;
@@ -2446,3 +2556,121 @@ body.corpos-busy * {
 }
 .mm-picker-search { font-family: Tahoma, sans-serif; }
 .mm-picker-dropdown div:hover { background: #d0d8ff; }
+
+/* Enrollment / Moogle picker: stack above map canvas; allow text caret (global * { user-select: none }) */
+.mm-picker-root .mm-picker-toolbar input.mm-picker-search {
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+}
+
+#enrollment-screen input,
+#enrollment-screen textarea,
+#enrollment-screen select {
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto;
+}
+
+/* ─── User Picker (purge controls exist only in this overlay; list cleared on hide) ─── */
+#user-picker-screen {
+  position: fixed; inset: 0; z-index: 99997;
+  background: #0d1a3a;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+}
+#user-picker-screen .up-box {
+  background: #d4d0c8; border: 2px outset #e0e0e0;
+  padding: 18px 24px; min-width: 280px; max-width: 420px;
+  text-align: center;
+}
+#user-picker-screen .up-title {
+  font-size: 12px; font-weight: bold; color: #0a246a;
+  margin-bottom: 12px;
+}
+#user-picker-screen .up-list {
+  list-style: none; margin: 0; padding: 0;
+}
+#user-picker-screen .up-entry {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid transparent; margin-bottom: 2px;
+  font-size: 12px; color: #222;
+}
+#user-picker-screen .up-entry:hover { background: #d0d8ff; border-color: #0a246a; }
+#user-picker-screen .up-entry.up-sel { background: #0a246a; color: #fff; border-color: #0a246a; }
+#user-picker-screen .up-select {
+  appearance: none; border: 1px solid transparent; background: transparent;
+  flex: 1; display: flex; align-items: center; gap: 4px; cursor: pointer;
+  font: inherit; color: inherit; text-align: left; padding: 0; margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+#user-picker-screen .up-select:hover { border-color: #8899cc; }
+#user-picker-screen .up-icon { font-size: 18px; }
+#user-picker-screen .up-name { flex: 1; text-align: left; }
+#user-picker-screen .up-id {
+  font-size: 12px; font-family: 'Share Tech Mono', monospace;
+  color: #555; margin-left: 4px;
+}
+#user-picker-screen .up-registry {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #a0a0a0;
+  text-align: left;
+}
+#user-picker-screen .up-registry-head {
+  font-size: 10px;
+  font-weight: bold;
+  color: #0a246a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+#user-picker-screen .up-reg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 2px;
+  font-size: 11px;
+  color: #222;
+}
+#user-picker-screen .up-reg-row + .up-reg-row {
+  border-top: 1px solid #c0c0c0;
+}
+#user-picker-screen .up-reg-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+#user-picker-screen .up-reg-name {
+  font-weight: bold;
+  color: #111;
+}
+#user-picker-screen .up-reg-id {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #555;
+}
+#user-picker-screen .up-reg-purge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: Tahoma, 'Segoe UI', sans-serif;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  color: #8b0000;
+  font-weight: bold;
+  min-height: 22px;
+}
+#user-picker-screen .up-reg-purge:hover {
+  background: #e8e4dc;
+  color: #a00000;
+}
+#user-picker-screen .up-reg-purge:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}

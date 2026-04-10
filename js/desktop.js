@@ -1,14 +1,53 @@
 import { getSessionState, patchSession } from './sessionState.js';
-import { getState, isAppInstalled } from './gameState.js';
+import { getState, isAppInstalled, patchState } from './gameState.js';
 import { isInstallableApp } from './installable-apps.js';
+import { openExplorerFileInWritepad } from './writepad.js';
+import {
+  navigateExplorerTo,
+  uniqueVfsChildName,
+  explorerAddressPathForNode
+} from './file-explorer.js';
+import { on } from './events.js';
+import { showCorpOsPrompt } from './corpos-prompt.js';
 
 const WALLPAPER_COLORS = ['#008080', '#004c8c', '#1f3f1f', '#3b2f5c', '#6b3a1e', '#202020'];
+
+const DESKTOP_PARENT_ID = 'folder-desktop';
+
+/** Movement beyond this many pixels from mousedown turns a click into a drag. */
+const DRAG_THRESHOLD_PX = 5;
+/** Two clicks on the same icon within this window count as a double-click. */
+const DBLCLICK_MS = 400;
 
 /** Grid cell for overlap / auto-layout (icons are ~80px + label). */
 const ICON_SLOT_W = 100;
 const ICON_SLOT_H = 92;
 
+/*
+ * Unified desktop icon interaction state machine.
+ *
+ * States:
+ *   IDLE          — nothing happening
+ *   PRESSED       — mousedown on an icon; waiting to see drag vs click vs dblclick
+ *   DRAGGING      — icon is following the cursor
+ *
+ * Transitions:
+ *   IDLE  →  mousedown on icon          →  PRESSED
+ *   PRESSED → mousemove > threshold     →  DRAGGING
+ *   PRESSED → mouseup (2nd click <400ms on same icon) → fire open → IDLE
+ *   PRESSED → mouseup (otherwise)       → single-click select → IDLE
+ *   DRAGGING → mouseup                  → drop icon → IDLE
+ */
+
+/** @type {{ icon: HTMLElement, offsetX: number, offsetY: number, startLeft: number, startTop: number, rafId: number | null, pendingX: number, pendingY: number } | null} */
 let drag = null;
+
+/** @type {{ icon: HTMLElement, sx: number, sy: number } | null} */
+let pressed = null;
+
+/** Last successful single-click: used to detect the second click for double-click. */
+let lastClick = { icon: null, time: 0 };
+let pendingCustomIconRender = false;
 
 function desktopEl() {
   return document.getElementById('desktop');
@@ -224,42 +263,140 @@ export function refreshInstallableAppVisibility() {
   }
 }
 
-function beginDrag(e) {
-  const icon = e.target.closest('#desktop .di');
-  if (!icon || e.button !== 0) return;
-  const left = parseInt(icon.style.left, 10) || icon.offsetLeft || 8;
-  const top = parseInt(icon.style.top, 10) || icon.offsetTop || 8;
-  drag = {
-    icon,
-    sx: e.clientX,
-    sy: e.clientY,
-    left,
-    top,
-    moved: false
-  };
+/* ── Interaction: open an icon (double-click or programmatic) ────────── */
+
+function openIcon(icon) {
+  const appId = icon.dataset.open || icon.getAttribute('data-open');
+  if (appId) {
+    window.openW?.(appId);
+    return;
+  }
+  const vfsId = icon.dataset.vfsId;
+  if (vfsId) {
+    openDesktopVfsItem(vfsId);
+  }
 }
 
-function onMove(e) {
+/* ── Interaction: select (highlight) ────────────────────────────────── */
+
+function selectIcon(icon) {
+  const d = desktopEl();
+  if (!d) return;
+  d.querySelectorAll('#desktop .di.di-selected').forEach((el) => el.classList.remove('di-selected'));
+  icon.classList.add('di-selected');
+}
+
+function clearSelection() {
+  desktopEl()?.querySelectorAll('#desktop .di.di-selected').forEach((el) => el.classList.remove('di-selected'));
+}
+
+function flushDeferredCustomIconRender() {
+  if (!pendingCustomIconRender) return;
+  if (drag || pressed) return;
+  pendingCustomIconRender = false;
+  renderCustomIcons();
+}
+
+/* ── Interaction: state machine handlers ────────────────────────────── */
+
+function onIconMouseDown(e) {
+  const icon = e.target.closest('#desktop .di');
+  if (!icon || e.button !== 0) return;
+
+  e.preventDefault();
+  pressed = { icon, sx: e.clientX, sy: e.clientY };
+}
+
+function onDocMouseMove(e) {
+  if (drag) {
+    drag.pendingX = e.clientX;
+    drag.pendingY = e.clientY;
+    // Apply on every move event so icon movement stays tightly synced to cursor.
+    flushDragFrame();
+    return;
+  }
+
+  if (!pressed) return;
+
+  const dx = e.clientX - pressed.sx;
+  const dy = e.clientY - pressed.sy;
+  if (Math.abs(dx) <= DRAG_THRESHOLD_PX && Math.abs(dy) <= DRAG_THRESHOLD_PX) return;
+
+  const icon = pressed.icon;
+  const iconLeft = parseInt(icon.style.left, 10) || icon.offsetLeft || 8;
+  const iconTop = parseInt(icon.style.top, 10) || icon.offsetTop || 8;
+
+  drag = {
+    icon,
+    offsetX: pressed.sx - iconLeft,
+    offsetY: pressed.sy - iconTop,
+    startLeft: iconLeft,
+    startTop: iconTop,
+    rafId: null,
+    pendingX: e.clientX,
+    pendingY: e.clientY
+  };
+  pressed = null;
+  lastClick = { icon: null, time: 0 };
+
+  icon.classList.add('di-dragging');
+  selectIcon(icon);
+
+  drag.rafId = requestAnimationFrame(flushDragFrame);
+}
+
+function flushDragFrame() {
   if (!drag) return;
-  const dx = e.clientX - drag.sx;
-  const dy = e.clientY - drag.sy;
-  if (!drag.moved && Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-  const p = clampToDesktop(drag.left + dx, drag.top + dy, drag.icon);
+  drag.rafId = null;
+  const x = drag.pendingX - drag.offsetX;
+  const y = drag.pendingY - drag.offsetY;
+  const p = clampToDesktop(x, y, drag.icon);
   applyIconPosition(drag.icon, p.x, p.y);
 }
 
-function endDrag() {
-  if (!drag) return;
-  resolveDraggedIconOverlap(drag.icon);
-  persistPosition(drag.icon);
-  drag = null;
+function onDocMouseUp(e) {
+  if (e.button !== 0) return;
+
+  if (drag) {
+    if (drag.rafId != null) cancelAnimationFrame(drag.rafId);
+    flushDragFrame();
+    drag.icon.classList.remove('di-dragging');
+    resolveDraggedIconOverlap(drag.icon);
+    persistPosition(drag.icon);
+    drag = null;
+    flushDeferredCustomIconRender();
+    return;
+  }
+
+  if (!pressed) return;
+
+  const icon = pressed.icon;
+  pressed = null;
+
+  const now = performance.now();
+  if (lastClick.icon === icon && (now - lastClick.time) < DBLCLICK_MS) {
+    lastClick = { icon: null, time: 0 };
+    clearSelection();
+    openIcon(icon);
+    flushDeferredCustomIconRender();
+    return;
+  }
+
+  lastClick = { icon, time: now };
+  selectIcon(icon);
+  flushDeferredCustomIconRender();
 }
 
-function makeCustomIcon(kind, x, y) {
-  const id = `custom-${Date.now()}-${Math.floor(Math.random() * 9999)}`;
-  const icon = kind === 'folder' ? '📁' : '📄';
-  const label = kind === 'folder' ? 'New Folder' : 'New Text Document';
-  return { id, kind, icon, label, x, y };
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function vfsDesktopEntries() {
+  return (getState().virtualFs?.entries || []).filter((e) => e.parentId === DESKTOP_PARENT_ID);
 }
 
 function renderCustomIcons() {
@@ -267,15 +404,91 @@ function renderCustomIcons() {
   const d = desktopEl();
   if (!d) return;
   const st = getSessionState();
-  for (const ci of st.desktop.customIcons) {
+  for (const ent of vfsDesktopEntries()) {
     const el = document.createElement('div');
     el.className = 'di custom-di';
-    el.dataset.iconId = ci.id;
-    el.style.left = `${ci.x}px`;
-    el.style.top = `${ci.y}px`;
-    el.innerHTML = `<div class="ico">${ci.icon}</div><div class="lbl">${ci.label}</div>`;
+    el.dataset.iconId = ent.id;
+    el.dataset.vfsId = ent.id;
+    const saved = st.desktop.positions[ent.id];
+    const x = Number.isFinite(saved?.x) ? saved.x : 8;
+    const y = Number.isFinite(saved?.y) ? saved.y : 8;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    const icon = ent.kind === 'folder' ? '📁' : '📄';
+    el.innerHTML = `<div class="ico">${icon}</div><div class="lbl">${escapeHtml(ent.name)}</div>`;
     d.appendChild(el);
   }
+}
+
+function migrateLegacyCustomIcons() {
+  const legacy = getSessionState().desktop?.customIcons;
+  if (!Array.isArray(legacy) || !legacy.length) return;
+  const toPlace = [...legacy];
+  patchSession((s) => {
+    s.desktop.customIcons = [];
+  });
+  const posUpdates = [];
+  patchState((s) => {
+    for (const ci of toPlace) {
+      const isFolder = ci.kind === 'folder';
+      const baseName = isFolder ? 'New Folder' : 'New Text Document.txt';
+      const name = uniqueVfsChildName(s.virtualFs.entries, DESKTOP_PARENT_ID, baseName);
+      const nid = `vf-${s.virtualFs.nextSeq++}`;
+      const row = {
+        id: nid,
+        parentId: DESKTOP_PARENT_ID,
+        name,
+        kind: isFolder ? 'folder' : 'file',
+        typeLabel: isFolder ? 'File Folder' : 'Text Document',
+        size: isFolder ? '' : 0,
+        description: '',
+        created: new Date().toISOString(),
+        modified: new Date().toISOString()
+      };
+      if (!isFolder) row.content = '';
+      s.virtualFs.entries.push(row);
+      posUpdates.push({ nid, x: ci.x, y: ci.y, oldId: ci.id });
+    }
+    return s;
+  });
+  patchSession((se) => {
+    for (const p of posUpdates) {
+      se.desktop.positions[p.nid] = { x: p.x, y: p.y };
+      if (p.oldId) delete se.desktop.positions[p.oldId];
+    }
+  });
+}
+
+export function openDesktopVfsItem(vfsId) {
+  const ent = getState().virtualFs?.entries?.find((x) => x.id === vfsId);
+  if (!ent) return;
+  if (ent.kind === 'folder') {
+    window.openW?.('explorer');
+    navigateExplorerTo(ent.id);
+    return;
+  }
+  const path = explorerAddressPathForNode(ent.parentId);
+  openExplorerFileInWritepad({ name: ent.name, entry: ent }, path);
+}
+
+export async function renameDesktopVfsPrompt(vfsId) {
+  const ent = getState().virtualFs?.entries?.find((x) => x.id === vfsId);
+  if (!ent || ent.system) return;
+  if (ent.kind !== 'folder' && !/\.(txt|log|md)$/i.test(ent.name || '')) return;
+  const next = await showCorpOsPrompt({
+    title: 'Rename',
+    label: 'New name:',
+    defaultValue: ent.name || ''
+  });
+  if (next == null) return;
+  const trimmed = String(next).trim();
+  if (!trimmed || trimmed === ent.name) return;
+  patchState((st) => {
+    const row = st.virtualFs?.entries?.find((x) => x.id === vfsId);
+    if (row) row.name = trimmed;
+    return st;
+  });
+  renderCustomIcons();
 }
 
 function openWallpaperDialog() {
@@ -335,10 +548,31 @@ function createDesktopItem(kind, x, y) {
   d.appendChild(proto);
   const p = clampToDesktop(x, y, proto);
   proto.remove();
-  const entry = makeCustomIcon(kind, p.x, p.y);
+  let newId = '';
+  patchState((s) => {
+    const entries = s.virtualFs.entries;
+    const isFolder = kind === 'folder';
+    const baseName = isFolder ? 'New Folder' : 'New Text Document.txt';
+    const name = uniqueVfsChildName(entries, DESKTOP_PARENT_ID, baseName);
+    const nid = `vf-${s.virtualFs.nextSeq++}`;
+    newId = nid;
+    const row = {
+      id: nid,
+      parentId: DESKTOP_PARENT_ID,
+      name,
+      kind: isFolder ? 'folder' : 'file',
+      typeLabel: isFolder ? 'File Folder' : 'Text Document',
+      size: isFolder ? '' : 0,
+      description: '',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString()
+    };
+    if (!isFolder) row.content = '';
+    entries.push(row);
+    return s;
+  });
   patchSession((s) => {
-    s.desktop.customIcons.push(entry);
-    s.desktop.positions[entry.id] = { x: entry.x, y: entry.y };
+    s.desktop.positions[newId] = { x: p.x, y: p.y };
   });
   renderCustomIcons();
 }
@@ -355,11 +589,23 @@ export function initDesktopSystem() {
   const d = desktopEl();
   if (!d) return;
   hydrateExistingIcons();
+  migrateLegacyCustomIcons();
   renderCustomIcons();
   applyWallpaper();
   refreshInstallableAppVisibility();
 
-  d.addEventListener('mousedown', beginDrag);
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', endDrag);
+  on('stateChanged', () => {
+    if (drag || pressed) {
+      pendingCustomIconRender = true;
+      return;
+    }
+    renderCustomIcons();
+  });
+
+  d.addEventListener('mousedown', onIconMouseDown);
+  d.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('#desktop .di')) clearSelection();
+  });
+  document.addEventListener('mousemove', onDocMouseMove);
+  document.addEventListener('mouseup', onDocMouseUp);
 }

@@ -60,7 +60,7 @@ export function generateBankAccountNumber(prefix) {
 
 export function appendBankingTransaction(st, entry) {
   if (!st.bankingTransactionLog) st.bankingTransactionLog = [];
-  st.bankingTransactionLog.push({
+  const row = {
     simTimestampMs: st.sim?.elapsedMs ?? 0,
     bankName: entry.bankName,
     accountNumber: entry.accountNumber,
@@ -70,7 +70,16 @@ export function appendBankingTransaction(st, entry) {
     destinationBank: entry.destinationBank ?? null,
     complianceFlag: !!entry.complianceFlag,
     description: entry.description ?? ''
-  });
+  };
+  st.bankingTransactionLog.push(row);
+  if (typeof window !== 'undefined') {
+    const gameTime = st.sim?.elapsedMs ?? 0;
+    queueMicrotask(() => {
+      import('./bc-sms.js')
+        .then((m) => m.smsBankingAlert(row, gameTime))
+        .catch(() => {});
+    });
+  }
   if (typeof window !== 'undefined' && window.SaveManager?.save) {
     queueMicrotask(() => {
       try {
@@ -138,6 +147,7 @@ function createInitialStateInternal() {
       displayName: '',
       username: '',
       password: '',
+      passwordHash: '',
       age: 0,
       dob: '',
       sex: '',
@@ -299,7 +309,9 @@ function createInitialStateInternal() {
     /** WhereAllThingsGo.net warehouse storage units and liquidation pool. */
     warehouse: { units: [], liquidation: [] },
     /** Product hashtag tracking: tag -> { mentions, likes, dislikes, purchaseCountWindow, lastPurchaseSimMs, shortage? } */
-    marketBuzz: {}
+    marketBuzz: {},
+    /** CCR — Contacts, Contracts & Relations. */
+    ccr: { contracts: [], newsFeed: [], nextSeq: 1 }
   };
 }
 
@@ -626,6 +638,34 @@ export function migrateStateIfNeeded(st) {
     st.meta.version = 15;
     if (!Array.isArray(st.player.pendingSmsEvents)) st.player.pendingSmsEvents = [];
   }
+  if ((st.meta.version || 0) < 16) {
+    st.meta.version = 16;
+    const p = st.player;
+    if (p && (p.operatorId == null || p.operatorId === '')) {
+      const u = String(p.username || '').trim();
+      let suf = '0000';
+      if (u) {
+        let h = 0;
+        for (let i = 0; i < u.length; i++) h = ((h << 5) - h + u.charCodeAt(i)) | 0;
+        suf = String(Math.abs(h) % 10000).padStart(4, '0');
+      } else {
+        suf = String(Math.floor(1000 + Math.random() * 9000));
+      }
+      p.operatorId = `00-2000-${suf}`;
+    }
+  }
+  if ((st.meta.version || 0) < 17) {
+    st.meta.version = 17;
+    if (!st.ccr || typeof st.ccr !== 'object') {
+      st.ccr = { contracts: [], newsFeed: [], nextSeq: 1 };
+    }
+    st.ccr.contracts = Array.isArray(st.ccr.contracts) ? st.ccr.contracts : [];
+    st.ccr.newsFeed = Array.isArray(st.ccr.newsFeed) ? st.ccr.newsFeed : [];
+    if (st.ccr.nextSeq == null) st.ccr.nextSeq = 1;
+  }
+  if (!st.ccr || typeof st.ccr !== 'object') {
+    st.ccr = { contracts: [], newsFeed: [], nextSeq: 1 };
+  }
   if (!st.smsThreads || typeof st.smsThreads !== 'object') st.smsThreads = {};
   if (!Array.isArray(st.player.cashUpTransactions)) st.player.cashUpTransactions = [];
   if (!Array.isArray(st.player.blackCherryContacts)) st.player.blackCherryContacts = [];
@@ -651,9 +691,13 @@ export function nextIdentityFineAmount(st) {
   return 5000 * 2 ** n;
 }
 
-function levyFineFromAccounts(st, amount) {
+function levyFineFromAccounts(st, amount, fineDescription) {
   let due = Math.round(amount);
   const order = ['fncb', 'meridian', 'harbor', 'pacific', 'darkweb', 'davidmitchell'];
+  const desc =
+    typeof fineDescription === 'string' && fineDescription.trim()
+      ? fineDescription.trim()
+      : 'Administrative penalty';
   for (const id of order) {
     if (due < 1) break;
     const a = st.accounts.find((x) => x.id === id);
@@ -662,6 +706,15 @@ function levyFineFromAccounts(st, amount) {
     const take = Math.min(bal, due);
     a.balance = bal - take;
     due -= take;
+    if (take > 0) {
+      appendBankingTransaction(st, {
+        bankName: a.name,
+        accountNumber: a.accountNumber ?? '',
+        type: 'regulatory_fine',
+        amount: take,
+        description: desc
+      });
+    }
   }
   if (due > 0) {
     st.regulatory.fineArrears = (st.regulatory.fineArrears || 0) + due;
@@ -687,9 +740,9 @@ export function applyDueRegulatoryFinesPatch() {
         continue;
       }
       const amt = nextIdentityFineAmount(st);
-      levyFineFromAccounts(st, amt);
-      st.regulatory.identityFineCount = (st.regulatory.identityFineCount || 0) + 1;
       const title = p.violation === 'misrepresentation' ? 'Misrepresentation' : 'False Identification';
+      levyFineFromAccounts(st, amt, `Federal penalty — ${title}`);
+      st.regulatory.identityFineCount = (st.regulatory.identityFineCount || 0) + 1;
       messages.push(
         `Federal Notice — ${title}: administrative penalty ${formatMoney(amt)} levied (bank ref: ${p.bankId}). Verification period elapsed.`
       );
@@ -937,6 +990,17 @@ export function queueSoftwareInstall(appId) {
     });
     return st;
   });
+  try {
+    const host = app.sourceHost || 'WorldNet';
+    const priceStr = price > 0 ? `$${price.toFixed(2)}` : '$0.00';
+    window.ActivityLog?.log?.(
+      'APP_INSTALL_START',
+      `Download initiated: ${app.label} from ${host} — ${priceStr}`,
+      { notable: app.trustLevel !== 'verified' }
+    );
+  } catch {
+    /* ignore */
+  }
   return { ok: true, app };
 }
 
@@ -1108,4 +1172,143 @@ export function processSoftwareInstallsIfNeeded() {
     return st;
   });
   return completed;
+}
+
+/* ── CCR (Contacts, Contracts & Relations) helpers ───────── */
+
+export function ccrListContracts(filterFn) {
+  const list = state.ccr?.contracts || [];
+  return filterFn ? list.filter(filterFn) : [...list];
+}
+
+export function ccrActiveForNpc(issuerActorId) {
+  return (state.ccr?.contracts || []).filter(
+    (c) => c.issuerActorId === issuerActorId && c.status === 'active'
+  );
+}
+
+export function ccrHasActiveContract(issuerActorId) {
+  return ccrActiveForNpc(issuerActorId).length > 0;
+}
+
+export function ccrGetNewsFeed(limit = 50) {
+  const feed = state.ccr?.newsFeed || [];
+  return feed.slice(-limit).reverse();
+}
+
+function ccrPushNews(st, kind, headline, refs = {}) {
+  st.ccr.newsFeed.push({
+    atSimMs: st.sim?.elapsedMs ?? 0,
+    kind,
+    headline,
+    contractId: refs.contractId || null,
+    actorId: refs.actorId || null
+  });
+  if (st.ccr.newsFeed.length > 200) {
+    st.ccr.newsFeed = st.ccr.newsFeed.slice(-200);
+  }
+}
+
+export function ccrCreateContract({ issuerActorId, contractorId, mainRequirement, moduleIds, basePriceUsd, modulePriceUsd, deadlineSimMs }) {
+  let created = null;
+  patchState((st) => {
+    const ccr = st.ccr;
+    if (ccr.contracts.some((c) => c.issuerActorId === issuerActorId && c.contractorId === (contractorId || 'player') && c.status === 'active')) {
+      return st;
+    }
+    const id = `ccr-${ccr.nextSeq++}`;
+    created = {
+      id,
+      issuerActorId,
+      contractorId: contractorId || 'player',
+      mainRequirement,
+      moduleIds: [...moduleIds],
+      basePriceUsd,
+      modulePriceUsd: { ...modulePriceUsd },
+      status: 'active',
+      deadlineSimMs: deadlineSimMs || null,
+      acknowledged: false,
+      negotiationLog: [],
+      createdAtMs: st.sim?.elapsedMs ?? 0,
+      completedAtMs: null
+    };
+    ccr.contracts.push(created);
+    const issuerName = window.AXIS?.resolveContact?.(issuerActorId)?.name || issuerActorId;
+    ccrPushNews(st, 'contract_created', `New contract awarded: ${issuerName} seeks services.`, { contractId: id, actorId: issuerActorId });
+    return st;
+  });
+  if (created) window.ActivityLog?.log?.('CCR_CONTRACT_CREATE', `Contract ${created.id} created for ${issuerActorId}`);
+  return created;
+}
+
+export function ccrCompleteContract(contractId) {
+  let found = false;
+  patchState((st) => {
+    const c = st.ccr.contracts.find((x) => x.id === contractId && x.status === 'active');
+    if (!c) return st;
+    c.status = 'completed';
+    c.completedAtMs = st.sim?.elapsedMs ?? 0;
+    found = true;
+    const issuerName = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
+    ccrPushNews(st, 'contract_completed', `Contract completed: ${issuerName} deal finalized.`, { contractId, actorId: c.issuerActorId });
+    return st;
+  });
+  if (found) window.ActivityLog?.log?.('CCR_CONTRACT_COMPLETE', `Contract ${contractId} completed`);
+  return found;
+}
+
+export function ccrCancelContract(contractId) {
+  let found = false;
+  patchState((st) => {
+    const c = st.ccr.contracts.find((x) => x.id === contractId && x.status === 'active');
+    if (!c) return st;
+    c.status = 'cancelled';
+    found = true;
+    const issuerName = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
+    ccrPushNews(st, 'contract_cancelled', `Contract cancelled: ${issuerName} deal voided.`, { contractId, actorId: c.issuerActorId });
+    return st;
+  });
+  if (found) window.ActivityLog?.log?.('CCR_CONTRACT_CANCEL', `Contract ${contractId} cancelled`);
+  return found;
+}
+
+export function ccrAcknowledgeContract(contractId) {
+  patchState((st) => {
+    const c = st.ccr.contracts.find((x) => x.id === contractId);
+    if (c) c.acknowledged = true;
+    return st;
+  });
+}
+
+export function ccrNegotiate(contractId, changes, relationshipDelta = 0) {
+  let ok = false;
+  patchState((st) => {
+    const c = st.ccr.contracts.find((x) => x.id === contractId && (x.status === 'active' || x.status === 'negotiating'));
+    if (!c) return st;
+    if (changes.moduleIds) c.moduleIds = [...changes.moduleIds];
+    if (changes.basePriceUsd != null) c.basePriceUsd = changes.basePriceUsd;
+    if (changes.modulePriceUsd) c.modulePriceUsd = { ...changes.modulePriceUsd };
+    if (changes.deadlineSimMs != null) c.deadlineSimMs = changes.deadlineSimMs;
+    c.negotiationLog.push({
+      atSimMs: st.sim?.elapsedMs ?? 0,
+      changes: { ...changes },
+      relationshipDelta
+    });
+    const issuerName = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
+    ccrPushNews(st, 'negotiation', `Deal revised: terms renegotiated with ${issuerName}.`, { contractId, actorId: c.issuerActorId });
+    ok = true;
+    return st;
+  });
+  if (ok) window.ActivityLog?.log?.('CCR_NEGOTIATE', `Contract ${contractId} renegotiated (delta: ${relationshipDelta})`);
+  if (ok && relationshipDelta !== 0) {
+    const c = (state.ccr?.contracts || []).find((x) => x.id === contractId);
+    if (c) window.AXIS?.updateScore?.(c.issuerActorId, relationshipDelta, 'Contract renegotiation');
+  }
+  return ok;
+}
+
+export function ccrContractTotal(contract) {
+  const base = Number(contract.basePriceUsd) || 0;
+  const modSum = Object.values(contract.modulePriceUsd || {}).reduce((s, v) => s + (Number(v) || 0), 0);
+  return base + modSum;
 }

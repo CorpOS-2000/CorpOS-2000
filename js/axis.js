@@ -1,6 +1,17 @@
-import { getGameEpochMs, getState, patchState } from './gameState.js';
+import {
+  getGameEpochMs, getState, patchState, formatMoney,
+  ccrListContracts, ccrActiveForNpc, ccrHasActiveContract,
+  ccrCreateContract, ccrCompleteContract, ccrCancelContract,
+  ccrAcknowledgeContract, ccrNegotiate, ccrContractTotal
+} from './gameState.js';
 import { saveAfterMutation } from '../engine/SaveManager.js';
 import { toast } from './toast.js';
+import { patchSession } from './sessionState.js';
+import { openBlackCherrySmsTo } from './black-cherry.js';
+import {
+  MAIN_REQUIREMENTS, getRequirement, getUnlockedModules,
+  getModuleById, computeMinTotal
+} from './ccr-catalog.js';
 
 export const RELATIONSHIP_TIERS = Object.freeze([
   { min: 81, max: 100, label: 'Trusted Ally', color: '#006600', bg: '#ccffcc' },
@@ -37,7 +48,9 @@ const state = {
   filterTier: 'All',
   search: '',
   activeTab: 'profile',
-  persistTimer: null
+  persistTimer: null,
+  contractBuilder: null,
+  msgMenuOpen: false
 };
 
 function clampScore(value) {
@@ -193,10 +206,22 @@ function resolveContact(actorId) {
   };
 }
 
+/** Actor IDs in the cell phone book (excluding the player) — canonical "people you know". */
+function knownContactActorIds() {
+  const ids = new Set();
+  for (const row of getState().player?.blackCherryContacts || []) {
+    const id = row?.actorId;
+    if (id && id !== 'PLAYER_PRIMARY') ids.add(String(id));
+  }
+  return ids;
+}
+
 function filteredContacts() {
+  const known = knownContactActorIds();
   const contacts = Object.keys(state.entries)
     .map(resolveContact)
     .filter(Boolean)
+    .filter((contact) => known.has(String(contact.actorId)))
     .filter((contact) => {
       if (state.filterTier !== 'All' && contact.tier.label !== state.filterTier) return false;
       if (!state.search) return true;
@@ -277,6 +302,12 @@ function favorLabel(entry) {
 }
 
 function tabBody(contact) {
+  if (state.activeTab === 'contracts') {
+    return renderContractsModule();
+  }
+  if (state.activeTab === 'agenda') {
+    return renderAgendaModule();
+  }
   if (!contact) return '<div class="axis-empty">No contact selected.</div>';
   const { entry } = contact;
   if (state.activeTab === 'profile') {
@@ -297,24 +328,18 @@ function tabBody(contact) {
       <div class="axis-kv"><span>Favor balance</span><span>${escapeHtml(favorLabel(entry))}</span></div>
       <div class="axis-kv"><span>Days since last contact</span><span>${escapeHtml(String(daysSince(entry.last_contact_date || entry.discovered_date)))}</span></div>
       <div class="axis-kv"><span>Last interaction</span><span>${escapeHtml(last?.description || 'Newly discovered contact')}</span></div>
-      <div class="axis-actions">
-        <button type="button" class="wbtn" data-axis-action="send-message">📱 Send Message</button>
+      <div class="axis-actions axis-actions--msg">
+        <div class="axis-msg-wrap">
+          <button type="button" class="wbtn" data-axis-action="toggle-msg-menu">💬 Send Message</button>
+          <div class="axis-msg-menu ${state.msgMenuOpen ? 'is-open' : ''}" id="axis-msg-menu" role="menu">
+            <div class="axis-msg-prompt">Where do you want to communicate?</div>
+            <button type="button" class="axis-msg-opt" data-axis-action="msg-email">📧 Email</button>
+            <button type="button" class="axis-msg-opt" data-axis-action="msg-phone">📱 Phone (SMS)</button>
+          </div>
+        </div>
         <button type="button" class="wbtn" data-axis-action="view-worldnet">📋 View on WorldNet</button>
         <button type="button" class="wbtn" data-axis-action="mark-hostile">⚠️ Mark Hostile</button>
       </div>
-    </div>`;
-  }
-  if (state.activeTab === 'agenda') {
-    if ((entry.intel_level || 0) < 1 && entry.relationship_score < 21) {
-      return '<div class="axis-empty">Agenda unknown. Build the relationship or gather intel.</div>';
-    }
-    const surface = `${contact.name} appears focused on protecting their current position and improving their standing.`;
-    const full = `${contact.name} is pursuing leverage, access, and insulation from public risk.`;
-    const leverage = `${contact.name} is vulnerable to reputation pressure and favors tied to employer visibility.`;
-    return `<div class="axis-rich-copy">
-      <p>${escapeHtml(surface)}</p>
-      ${(entry.intel_level || 0) >= 2 || entry.relationship_score >= 51 ? `<p>${escapeHtml(full)}</p>` : ''}
-      ${(entry.intel_level || 0) >= 3 ? `<p><b>Leverage:</b> ${escapeHtml(leverage)}</p>` : ''}
     </div>`;
   }
   if (state.activeTab === 'connections') {
@@ -362,11 +387,192 @@ function tabBody(contact) {
     .join('')}</div>`;
 }
 
+/* ── Contracts module rendering ──────────────────────── */
+
+function contractRowHtml(c) {
+  const req = getRequirement(c.mainRequirement);
+  const issuer = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
+  const total = ccrContractTotal(c);
+  const mods = c.moduleIds.map((m) => getModuleById(m)?.label || m).join(', ') || 'None';
+  const statusCls = c.status === 'active' ? 'ccr-row-active' : c.status === 'completed' ? 'ccr-row-done' : 'ccr-row-cancelled';
+  const ack = !c.acknowledged && c.status === 'active' ? ' <span class="ccr-unack">NEW</span>' : '';
+  return `<tr class="${statusCls}">
+    <td>${escapeHtml(c.id)}${ack}</td>
+    <td>${escapeHtml(issuer)}</td>
+    <td>${escapeHtml(req?.label || c.mainRequirement)}</td>
+    <td>${escapeHtml(mods)}</td>
+    <td>${escapeHtml(formatMoney(total))}</td>
+    <td>${escapeHtml(c.status)}</td>
+    <td>${c.status === 'active'
+      ? `<button class="wbtn ccr-btn-sm" data-ccr-complete="${escapeHtml(c.id)}">Complete</button>
+         <button class="wbtn ccr-btn-sm" data-ccr-cancel="${escapeHtml(c.id)}">Cancel</button>`
+      : ''}</td>
+  </tr>`;
+}
+
+function renderContractsModule() {
+  const all = ccrListContracts();
+  const active = all.filter((c) => c.status === 'active');
+  const other = all.filter((c) => c.status !== 'active');
+  const bld = state.contractBuilder;
+  const showBuilder = !!bld;
+  return `
+    <div class="ccr-module">
+      <div class="ccr-toolbar">
+        <button class="wbtn" data-ccr-action="new-contract">+ Create Contract</button>
+      </div>
+      ${showBuilder ? renderContractBuilder() : ''}
+      <div class="ccr-section-head">Active Contracts (${active.length})</div>
+      ${active.length ? `<table class="ccr-tbl" cellpadding="0" cellspacing="0">
+        <tr class="ccr-tbl-hdr"><td>ID</td><td>Issuer</td><td>Requirement</td><td>Modules</td><td>Price</td><td>Status</td><td></td></tr>
+        ${active.map(contractRowHtml).join('')}
+      </table>` : '<div class="axis-empty">No active contracts.</div>'}
+      ${other.length ? `<div class="ccr-section-head" style="margin-top:10px;">Past Contracts (${other.length})</div>
+        <table class="ccr-tbl" cellpadding="0" cellspacing="0">
+        <tr class="ccr-tbl-hdr"><td>ID</td><td>Issuer</td><td>Requirement</td><td>Modules</td><td>Price</td><td>Status</td><td></td></tr>
+        ${other.map(contractRowHtml).join('')}
+      </table>` : ''}
+    </div>`;
+}
+
+function resetBuilder() {
+  state.contractBuilder = {
+    issuerActorId: state.selectedActorId || '',
+    mainRequirement: MAIN_REQUIREMENTS[0]?.id || '',
+    moduleIds: [],
+    basePriceInput: '',
+    modulePrices: {},
+    pickerOpen: false
+  };
+}
+
+function renderContractBuilder() {
+  const b = state.contractBuilder;
+  if (!b) return '';
+  const contacts = filteredContacts();
+  const unlocked = getUnlockedModules(b.mainRequirement);
+  const req = getRequirement(b.mainRequirement);
+  const baseMin = req?.baseMinUsd || 0;
+  const minTotal = computeMinTotal(b.mainRequirement, b.moduleIds);
+  const baseNum = parseFloat(b.basePriceInput) || 0;
+  const modTotal = b.moduleIds.reduce((s, mid) => s + (parseFloat(b.modulePrices[mid]) || 0), 0);
+  const total = baseNum + modTotal;
+  const hasActive = b.issuerActorId ? ccrHasActiveContract(b.issuerActorId) : false;
+  const valid = baseNum >= baseMin && total >= minTotal && b.moduleIds.length > 0 && b.issuerActorId && !hasActive;
+
+  return `<div class="ccr-builder">
+    <div class="ccr-section-head">New Contract</div>
+    <table class="ccr-form" cellpadding="0" cellspacing="0">
+      <tr><td class="ccr-label">Issuer (Client):</td><td>
+        <select data-ccr-field="issuer">${contacts.map((c) =>
+          `<option value="${escapeHtml(c.actorId)}" ${c.actorId === b.issuerActorId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+        ).join('')}${!contacts.length ? '<option value="">No contacts</option>' : ''}</select>
+        ${hasActive ? '<div class="ccr-warn">Contract already in progress with this client.</div>' : ''}
+      </td></tr>
+      <tr><td class="ccr-label">Main Requirement:</td><td>
+        <select data-ccr-field="requirement">${MAIN_REQUIREMENTS.map((r) =>
+          `<option value="${escapeHtml(r.id)}" ${r.id === b.mainRequirement ? 'selected' : ''}>${escapeHtml(r.label)} (min ${escapeHtml(formatMoney(r.baseMinUsd))})</option>`
+        ).join('')}</select>
+      </td></tr>
+      <tr><td class="ccr-label">Base Price ($):</td><td>
+        <input type="text" data-ccr-field="base-price" value="${escapeHtml(b.basePriceInput)}" placeholder="Min: ${baseMin}">
+        ${baseNum > 0 && baseNum < baseMin ? '<span class="ccr-err">Below minimum</span>' : ''}
+      </td></tr>
+      <tr><td class="ccr-label">Modules:</td><td>
+        <button class="wbtn" data-ccr-action="toggle-picker">+ Select Modules</button>
+        ${b.moduleIds.length ? `<div class="ccr-chips">${b.moduleIds.map((mid) => {
+          const mod = getModuleById(mid);
+          return `<span class="ccr-chip">${escapeHtml(mod?.label || mid)} <span class="ccr-chip-x" data-ccr-rm-mod="${escapeHtml(mid)}">x</span></span>`;
+        }).join('')}</div>` : '<div class="axis-empty" style="margin-top:4px;">No modules selected.</div>'}
+      </td></tr>
+      ${b.pickerOpen ? `<tr><td colspan="2">
+        <div class="ccr-picker">
+          ${unlocked.length ? `<table class="ccr-tbl" cellpadding="0" cellspacing="0">
+            <tr class="ccr-tbl-hdr"><td></td><td>Module</td><td>Min. Cost</td><td>Your Price</td></tr>
+            ${unlocked.map((m) => {
+              const chk = b.moduleIds.includes(m.id);
+              return `<tr><td><input type="checkbox" data-ccr-mod-chk="${escapeHtml(m.id)}" ${chk ? 'checked' : ''}></td>
+                <td>${escapeHtml(m.label)}</td><td>${escapeHtml(formatMoney(m.minIncrementUsd))}</td>
+                <td>${chk ? `<input type="text" class="ccr-mod-price" data-ccr-mod-price="${escapeHtml(m.id)}" value="${escapeHtml(String(b.modulePrices[m.id] ?? ''))}" placeholder="${m.minIncrementUsd}">` : '-'}</td></tr>`;
+            }).join('')}
+          </table>` : '<div class="axis-empty">No modules available. Install required software to unlock.</div>'}
+          <button class="wbtn" data-ccr-action="toggle-picker">Done</button>
+        </div>
+      </td></tr>` : ''}
+      <tr><td class="ccr-label">Total:</td><td>
+        <b>${escapeHtml(formatMoney(total))}</b> (minimum: ${escapeHtml(formatMoney(minTotal))})
+        ${total > 0 && total < minTotal ? ' <span class="ccr-err">Below minimum</span>' : ''}
+        ${valid ? ' <span class="ccr-ok">Valid</span>' : ''}
+      </td></tr>
+      <tr><td colspan="2" style="text-align:right;padding-top:6px;">
+        <button class="wbtn" data-ccr-action="cancel-builder">Cancel</button>
+        <button class="wbtn ccr-btn-submit" data-ccr-action="submit-contract" ${!valid ? 'disabled' : ''}>Submit Contract</button>
+      </td></tr>
+    </table>
+  </div>`;
+}
+
+/* ── Agenda module rendering ────────────────────────── */
+
+function renderAgendaModule() {
+  const active = ccrListContracts((c) => c.status === 'active');
+  active.sort((a, b) => {
+    if (a.acknowledged !== b.acknowledged) return a.acknowledged ? 1 : -1;
+    if (a.deadlineSimMs && b.deadlineSimMs) return a.deadlineSimMs - b.deadlineSimMs;
+    return a.createdAtMs - b.createdAtMs;
+  });
+
+  return `<div class="ccr-module">
+    <div class="ccr-section-head">Active Contracts (${active.length})</div>
+    ${active.length ? `<table class="ccr-tbl" cellpadding="0" cellspacing="0">
+      <tr class="ccr-tbl-hdr"><td>ID</td><td>Issuer</td><td>Requirement</td><td>Price</td><td>Status</td><td></td></tr>
+      ${active.map((c) => {
+        const issuer = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
+        const req = getRequirement(c.mainRequirement);
+        const total = ccrContractTotal(c);
+        const ack = !c.acknowledged ? ' <span class="ccr-unack">NEW</span>' : '';
+        return `<tr class="ccr-row-active">
+          <td>${escapeHtml(c.id)}${ack}</td>
+          <td>${escapeHtml(issuer)}</td>
+          <td>${escapeHtml(req?.label || c.mainRequirement)}</td>
+          <td>${escapeHtml(formatMoney(total))}</td>
+          <td>Active</td>
+          <td>
+            ${!c.acknowledged ? `<button class="wbtn ccr-btn-sm" data-ccr-ack="${escapeHtml(c.id)}">Acknowledge</button>` : ''}
+            <button class="wbtn ccr-btn-sm" data-ccr-complete="${escapeHtml(c.id)}">Complete</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </table>` : '<div class="axis-empty">No active contracts. Create one below.</div>'}
+
+    <div class="ccr-section-head" style="margin-top:12px;">Create Contract</div>
+    <div class="ccr-toolbar"><button class="wbtn" data-ccr-action="new-contract">+ New Contract</button></div>
+
+    <div class="ccr-section-head" style="margin-top:12px;">Assignment Rules</div>
+    <div class="ccr-rules-info">
+      Only one active contract per client is allowed. Complete or cancel an existing contract before creating a new one with the same client.
+    </div>
+  </div>`;
+}
+
+/* ── Main render ────────────────────────────────────── */
+
 function renderAxisUi() {
   const root = document.getElementById('axis-root');
   if (!root) return;
+
   const contacts = filteredContacts();
   const selected = resolveContact(state.selectedActorId);
+
+  const contactContracts = state.selectedActorId
+    ? ccrListContracts((c) => c.issuerActorId === state.selectedActorId || c.contractorId === state.selectedActorId)
+    : [];
+  const contactRole = contactContracts.some((c) => c.issuerActorId === state.selectedActorId && c.status === 'active')
+    ? 'Issuer (Client)' : contactContracts.some((c) => c.contractorId === state.selectedActorId && c.status === 'active')
+    ? 'Contractor' : 'Neutral';
+
+  const CENTER_TABS = ['profile', 'contracts', 'agenda', 'connections', 'intel', 'history'];
+
   root.innerHTML = `
     <div class="axis-shell">
       <div class="axis-left">
@@ -395,14 +601,26 @@ function renderAxisUi() {
       </div>
       <div class="axis-center">
         <div class="axis-tabs">
-          ${['profile', 'agenda', 'connections', 'intel', 'history']
-            .map(
-              (tab) =>
-                `<button type="button" class="axis-tab ${tab === state.activeTab ? 'is-active' : ''}" data-axis-tab="${tab}">${escapeHtml(tab[0].toUpperCase() + tab.slice(1))}</button>`
-            )
-            .join('')}
+          ${CENTER_TABS.map((tab) => {
+            const label =
+              tab === 'contracts' ? 'Contracts' : tab === 'agenda' ? 'Agenda' : tab[0].toUpperCase() + tab.slice(1);
+            return `<button type="button" class="axis-tab ${tab === state.activeTab ? 'is-active' : ''}" data-axis-tab="${tab}">${escapeHtml(label)}</button>`;
+          }).join('')}
         </div>
-        <div class="axis-panel">${tabBody(selected)}</div>
+        <div class="axis-panel">
+          ${selected ? `<div class="ccr-contact-role">Role: <b>${escapeHtml(contactRole)}</b> | Active contracts: ${contactContracts.filter((c) => c.status === 'active').length}</div>` : ''}
+          ${tabBody(selected)}
+          ${selected && contactContracts.length ? `<div class="ccr-section-head" style="margin-top:10px;">Contracts with ${escapeHtml(selected.name)}</div>
+            <table class="ccr-tbl" cellpadding="0" cellspacing="0">
+              <tr class="ccr-tbl-hdr"><td>ID</td><td>Requirement</td><td>Price</td><td>Status</td></tr>
+              ${contactContracts.map((c) => {
+                const req = getRequirement(c.mainRequirement);
+                const total = ccrContractTotal(c);
+                const cls = c.status === 'active' ? 'ccr-row-active' : c.status === 'completed' ? 'ccr-row-done' : '';
+                return `<tr class="${cls}"><td>${escapeHtml(c.id)}</td><td>${escapeHtml(req?.label || c.mainRequirement)}</td><td>${escapeHtml(formatMoney(total))}</td><td>${escapeHtml(c.status)}</td></tr>`;
+              }).join('')}
+            </table>` : ''}
+        </div>
       </div>
       <div class="axis-right">
         <div class="axis-network-title">Network Map</div>
@@ -418,32 +636,141 @@ function bindAxisUi() {
   if (!root || root.dataset.axisBound) return;
   root.dataset.axisBound = '1';
   root.addEventListener('click', (event) => {
-    const contact = event.target.closest('[data-axis-contact]');
-    if (contact) {
-      state.selectedActorId = contact.getAttribute('data-axis-contact') || '';
+    const topBtn = event.target.closest('[data-ccr-top]');
+    if (topBtn) {
+      state.topModule = topBtn.dataset.ccrTop || 'contacts';
+      state.contractBuilder = null;
+      renderAxisUi();
+      return;
+    }
+    const contactEl = event.target.closest('[data-axis-contact]');
+    if (contactEl) {
+      state.selectedActorId = contactEl.getAttribute('data-axis-contact') || '';
+      state.msgMenuOpen = false;
+      state.activeTab = 'profile';
       renderAxisUi();
       return;
     }
     const tab = event.target.closest('[data-axis-tab]');
     if (tab) {
       state.activeTab = tab.getAttribute('data-axis-tab') || 'profile';
+      state.msgMenuOpen = false;
       renderAxisUi();
       return;
     }
     const network = event.target.closest('[data-axis-network-actor]');
     if (network) {
       state.selectedActorId = network.getAttribute('data-axis-network-actor') || '';
+      state.msgMenuOpen = false;
+      state.activeTab = 'profile';
       renderAxisUi();
       return;
     }
-    const action = event.target.closest('[data-axis-action]')?.getAttribute('data-axis-action');
-    if (!action || !state.selectedActorId) return;
-    if (action === 'send-message') {
-      window.openW?.('cherry');
-      updateScore(state.selectedActorId, 1, 'Player initiated contact via Black Cherry');
-      toast(`Black Cherry opened for ${actorName(state.selectedActorId)}.`);
+
+    /* CCR contract actions */
+    const ccrAction = event.target.closest('[data-ccr-action]')?.dataset.ccrAction;
+    if (ccrAction === 'new-contract') {
+      resetBuilder();
+      state.activeTab = 'contracts';
+      state.msgMenuOpen = false;
+      renderAxisUi();
       return;
     }
+    if (ccrAction === 'cancel-builder') { state.contractBuilder = null; renderAxisUi(); return; }
+    if (ccrAction === 'toggle-picker' && state.contractBuilder) {
+      state.contractBuilder.pickerOpen = !state.contractBuilder.pickerOpen;
+      renderAxisUi();
+      return;
+    }
+    if (ccrAction === 'submit-contract' && state.contractBuilder) {
+      const b = state.contractBuilder;
+      const baseNum = parseFloat(b.basePriceInput) || 0;
+      const modPrices = {};
+      b.moduleIds.forEach((mid) => {
+        const mod = getModuleById(mid);
+        modPrices[mid] = Math.max(parseFloat(b.modulePrices[mid]) || 0, mod?.minIncrementUsd || 0);
+      });
+      const c = ccrCreateContract({
+        issuerActorId: b.issuerActorId,
+        contractorId: 'player',
+        mainRequirement: b.mainRequirement,
+        moduleIds: b.moduleIds,
+        basePriceUsd: baseNum,
+        modulePriceUsd: modPrices
+      });
+      if (c) {
+        toast({ title: 'Contract Created', message: `Contract ${c.id} submitted.`, icon: '📇', autoDismiss: 4000 });
+        state.contractBuilder = null;
+      }
+      renderAxisUi();
+      return;
+    }
+
+    const completeId = event.target.closest('[data-ccr-complete]')?.dataset.ccrComplete;
+    if (completeId) {
+      if (ccrCompleteContract(completeId)) {
+        toast({ title: 'Contract Completed', message: `${completeId} marked complete.`, icon: '📇', autoDismiss: 4000 });
+      }
+      renderAxisUi();
+      return;
+    }
+    const cancelId = event.target.closest('[data-ccr-cancel]')?.dataset.ccrCancel;
+    if (cancelId) {
+      if (ccrCancelContract(cancelId)) {
+        toast({ title: 'Contract Cancelled', message: `${cancelId} cancelled.`, icon: '📇', autoDismiss: 4000 });
+      }
+      renderAxisUi();
+      return;
+    }
+    const ackId = event.target.closest('[data-ccr-ack]')?.dataset.ccrAck;
+    if (ackId) {
+      ccrAcknowledgeContract(ackId);
+      renderAxisUi();
+      return;
+    }
+    const rmMod = event.target.closest('[data-ccr-rm-mod]')?.dataset.ccrRmMod;
+    if (rmMod && state.contractBuilder) {
+      state.contractBuilder.moduleIds = state.contractBuilder.moduleIds.filter((id) => id !== rmMod);
+      delete state.contractBuilder.modulePrices[rmMod];
+      renderAxisUi();
+      return;
+    }
+
+    const action = event.target.closest('[data-axis-action]')?.getAttribute('data-axis-action');
+    if (action === 'toggle-msg-menu') {
+      state.msgMenuOpen = !state.msgMenuOpen;
+      renderAxisUi();
+      return;
+    }
+    if (action === 'msg-email') {
+      if (!state.selectedActorId) return;
+      state.msgMenuOpen = false;
+      const raw = window.ActorDB?.getRaw?.(state.selectedActorId);
+      const email = raw?.emails?.[0] || '';
+      if (!email) {
+        toast({ title: 'No email', message: 'No email address on file for this contact.', icon: '📧', autoDismiss: 4000 });
+        renderAxisUi();
+        return;
+      }
+      patchSession((s) => {
+        if (!s.jeemail) s.jeemail = { accounts: {}, currentUser: null, openMessage: null, composePrefill: null };
+        s.jeemail.composePrefill = { to: email, subject: '', body: '' };
+      });
+      window.openW?.('worldnet');
+      window.wnetGo?.('jeemail_compose');
+      updateScore(state.selectedActorId, 1, 'Opened JeeMail compose from CCR');
+      return;
+    }
+    if (action === 'msg-phone') {
+      if (!state.selectedActorId) return;
+      state.msgMenuOpen = false;
+      openBlackCherrySmsTo(state.selectedActorId);
+      updateScore(state.selectedActorId, 1, 'Opened SMS from CCR');
+      toast({ title: 'Black Cherry', message: 'SMS thread opened for this contact.', icon: '📱', autoDismiss: 3500 });
+      renderAxisUi();
+      return;
+    }
+    if (!action || !state.selectedActorId) return;
     if (action === 'view-worldnet') {
       window.openW?.('worldnet');
       window.wnetGo?.('home');
@@ -460,11 +787,44 @@ function bindAxisUi() {
     if (event.target.id === 'axis-search') {
       state.search = event.target.value || '';
       renderAxisUi();
+      return;
+    }
+    if (event.target.dataset.ccrField === 'base-price' && state.contractBuilder) {
+      state.contractBuilder.basePriceInput = event.target.value;
+      return;
+    }
+    const modPrice = event.target.dataset.ccrModPrice;
+    if (modPrice && state.contractBuilder) {
+      state.contractBuilder.modulePrices[modPrice] = event.target.value;
+      return;
     }
   });
   root.addEventListener('change', (event) => {
     if (event.target.id === 'axis-filter') {
       state.filterTier = event.target.value || 'All';
+      renderAxisUi();
+      return;
+    }
+    if (event.target.dataset.ccrField === 'issuer' && state.contractBuilder) {
+      state.contractBuilder.issuerActorId = event.target.value;
+      renderAxisUi();
+      return;
+    }
+    if (event.target.dataset.ccrField === 'requirement' && state.contractBuilder) {
+      state.contractBuilder.mainRequirement = event.target.value;
+      state.contractBuilder.moduleIds = [];
+      state.contractBuilder.modulePrices = {};
+      renderAxisUi();
+      return;
+    }
+    const modChk = event.target.dataset.ccrModChk;
+    if (modChk && state.contractBuilder) {
+      if (event.target.checked) {
+        if (!state.contractBuilder.moduleIds.includes(modChk)) state.contractBuilder.moduleIds.push(modChk);
+      } else {
+        state.contractBuilder.moduleIds = state.contractBuilder.moduleIds.filter((id) => id !== modChk);
+        delete state.contractBuilder.modulePrices[modChk];
+      }
       renderAxisUi();
     }
   });
@@ -694,6 +1054,41 @@ function escapeHtml(text) {
     .replace(/"/g, '&quot;');
 }
 
+function getSelectedActorId() {
+  return state.selectedActorId || '';
+}
+
+function setSelectedActorId(actorId) {
+  const id = String(actorId || '');
+  if (id && getEntry(id)) {
+    state.selectedActorId = id;
+    renderAxisUi();
+  }
+}
+
+/** Ensure AXIS entries exist for everyone in the phone book (no duplicate toasts per person). */
+function syncPhoneBookToCcr() {
+  const rows = getState().player?.blackCherryContacts || [];
+  let added = 0;
+  for (const row of rows) {
+    if (!row?.actorId || row.actorId === 'PLAYER_PRIMARY') continue;
+    if (getEntry(row.actorId)) continue;
+    const entry = ensureEntry(row.actorId);
+    if (!entry) continue;
+    pushHistory(entry, 'Synced from your phone book.', 0);
+    added++;
+  }
+  if (added > 0) {
+    queuePersist();
+    toast({
+      title: 'CCR',
+      message: `${added} contact${added === 1 ? '' : 's'} synced from your phone book.`,
+      icon: '📇',
+      autoDismiss: 4500
+    });
+  }
+}
+
 function exposeAxis() {
   const api = {
     discover,
@@ -708,19 +1103,25 @@ function exposeAxis() {
     processDecay,
     getNetworkMap,
     exportRelationships,
-    render: renderAxisUi
+    getSelectedActorId,
+    setSelectedActorId,
+    resolveContact,
+    render: renderAxisUi,
+    syncFromPhoneBook: syncPhoneBookToCcr
   };
   window.WorldNet = {
     ...(window.WorldNet || {}),
     axis: api
   };
   window.AXIS = api;
+  window.CCR = api;
 }
 
 export async function initAxis(loadJson) {
   if (state.ready) {
     exposeAxis();
     bindAxisUi();
+    syncPhoneBookToCcr();
     renderAxisUi();
     return;
   }
@@ -747,6 +1148,7 @@ export async function initAxis(loadJson) {
   state.ready = true;
   exposeAxis();
   bindAxisUi();
+  syncPhoneBookToCcr();
   window.addEventListener('corpos:window-state-changed', renderAxisUi);
   renderAxisUi();
 }

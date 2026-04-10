@@ -6,7 +6,7 @@ import { PeekManager } from './peek-manager.js';
 import { NotificationSound } from './notification-sound.js';
 import { showLiveTranscript, triggerIncomingCall } from './black-cherry.js';
 import { SMS } from './bc-sms.js';
-import { getState } from './gameState.js';
+import { getState, patchState } from './gameState.js';
 
 const KYLE_ID = 'ACT-KYLE-HARGROVE';
 let ringInterval = null;
@@ -94,8 +94,15 @@ function handleKyleAnswer() {
 }
 
 export function triggerKyleCall() {
+  if (getState().flags?.kyleCallCompleted) return;
   const kyle = window.ActorDB?.getRaw?.(KYLE_ID);
   if (!kyle) return;
+
+  patchState((s) => {
+    if (!s.flags) s.flags = {};
+    s.flags.kyleCallCompleted = true;
+    return s;
+  });
 
   const phone = kyle.phone_numbers?.[0] || '';
   const phoneFmt = phone.length >= 8 ? `(559) ${phone.slice(-8)}` : phone;

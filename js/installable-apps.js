@@ -62,7 +62,7 @@ export const INSTALLABLE_APPS = Object.freeze({
     downloadDurationMs: 1 * 3600000,
     installDurationMs: 1 * 3600000,
     trustLevel: 'verified',
-    description: 'Track contacts, favors, and relationship intelligence through AXIS.',
+    description: 'Manage contacts, contracts, and business relations through CCR.',
     priceUsd: 159.99
   },
   'webex-publisher': {

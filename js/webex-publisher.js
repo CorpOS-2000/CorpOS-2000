@@ -1641,6 +1641,12 @@ function publishProject() {
 
   setPipelinePageRoutes(getState().contentRegistry.pages || []);
 
+  try {
+    window.ActivityLog?.log?.('WEBSITE_PUBLISH', `Website published: http://${fullHost}/`);
+  } catch {
+    /* ignore */
+  }
+
   setStatus(
     `Published "${siteName}" at ${fullHost}${shouldChargeDomain ? ` — charged $${fee.toFixed(2)} for domain week` : ''}.`
   );

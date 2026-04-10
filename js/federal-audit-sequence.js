@@ -6,6 +6,7 @@ import { SMS } from './bc-sms.js';
 import { PeekManager } from './peek-manager.js';
 import { ToastManager } from './toast.js';
 import { TOAST_KEYS } from './toast.js';
+import { deliverAuditReportEmail } from '../engine/ActivityLog.js';
 
 function formatShortSimDate() {
   const ms = getGameEpochMs() + (getState().sim?.elapsedMs ?? 0);
@@ -40,6 +41,10 @@ export const FederalAuditSequence = {
   runStage(stage) {
     clearInterval(this._interval);
     clearTimeout(this._timeout);
+    clearTimeout(this._copyTimeout);
+    clearTimeout(this._analysisTimeout);
+    this._copyTimeout = null;
+    this._analysisTimeout = null;
 
     const stages = {
       standby: {
@@ -126,6 +131,22 @@ export const FederalAuditSequence = {
     if (!cfg) return;
 
     this.render(cfg);
+
+    if (stage === 'in_progress') {
+      this._copyTimeout = setTimeout(() => {
+        this._copyTimeout = null;
+        window.ActivityLog?.agentCopyLog?.();
+      }, 2000);
+    }
+
+    if (stage === 'analyzing') {
+      const delayMs = 15000;
+      this._analysisTimeout = setTimeout(() => {
+        this._analysisTimeout = null;
+        const result = window.ActivityLog?.agentAnalyzeLog?.();
+        this._lastAuditResult = result || null;
+      }, Math.max(0, delayMs - 1000));
+    }
 
     if (cfg.showTimer) {
       this.runTimer(cfg.duration, cfg.timerColor || cfg.color, () => {
@@ -240,28 +261,49 @@ export const FederalAuditSequence = {
   fireComplianceNotification() {
     const p = getState().player || {};
     const opId = p.operatorId || '00-2000-0000';
-    const ref = Date.now().toString().slice(-6);
+    const ref = this._auditRef || String(Date.now()).slice(-6);
     const simMs = getState().sim?.elapsedMs ?? 0;
+    const result = this._lastAuditResult;
+    const suspCount = result?.suspicious?.length ?? 0;
+    const tampered = result?.tampered ?? false;
 
-    const body =
-      `COMPLIANCE NOTICE — Federal audit ref. FOCS-${ref} has been completed. ` +
-      `Noncompliance was detected and reported to the Federal Bureau of Commerce Enforcement. ` +
-      `A compliance officer will be in contact. Operator ID: ${opId}`;
+    const body = tampered
+      ? `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
+        `CRITICAL: Evidence of log tampering detected. Class III violation recorded. ` +
+        `FBCE has been notified. A compliance officer will contact you. Operator: ${opId}`
+      : suspCount > 0
+      ? `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
+        `${suspCount} suspicious activit${suspCount === 1 ? 'y' : 'ies'} detected and reported to FBCE. ` +
+        `A full report has been sent to your registered JeeMail address. Operator: ${opId}`
+      : `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
+        `No violations detected. Your operator record has been updated. Operator: ${opId}`;
 
     SMS.send({ from: 'CORPOS_SYSTEM', message: body, gameTime: simMs });
 
+    if (result?.analysis) {
+      deliverAuditReportEmail(result.analysis, ref, opId);
+    }
+
     PeekManager.show({
       sender: 'CORPOS COMPLIANCE',
-      preview: 'Federal audit complete — noncompliance reported to FBCE',
+      preview: tampered
+        ? 'CRITICAL: Log tampering detected — FBCE notified'
+        : suspCount > 0
+        ? `Audit complete — ${suspCount} violation${suspCount > 1 ? 's' : ''} reported`
+        : 'Audit complete — no violations found',
       type: 'compliance',
       targetId: 'CORPOS_SYSTEM',
-      icon: '⚠'
+      icon: tampered ? '🚨' : suspCount > 0 ? '⚠' : '✓'
     });
 
     ToastManager.fire({
       key: TOAST_KEYS.FEDERAL_AUDIT_RESULT,
       title: 'Federal Audit',
-      message: 'Audit completed. Violations reported to FBCE.',
+      message: tampered
+        ? 'Audit complete — log tampering reported to FBCE.'
+        : suspCount > 0
+        ? 'Audit completed. Review compliance notice and JeeMail.'
+        : 'Audit completed — no violations found.',
       icon: '🏛'
     });
   },
@@ -269,8 +311,12 @@ export const FederalAuditSequence = {
   cleanup() {
     clearInterval(this._interval);
     clearTimeout(this._timeout);
+    clearTimeout(this._copyTimeout);
+    clearTimeout(this._analysisTimeout);
     this._interval = null;
     this._timeout = null;
+    this._copyTimeout = null;
+    this._analysisTimeout = null;
 
     if (this._el) {
       this._el.style.transition = 'opacity 1s ease';

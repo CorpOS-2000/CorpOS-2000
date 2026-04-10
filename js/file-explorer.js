@@ -1,12 +1,25 @@
 import { MediaPlayer } from '../engine/MediaPlayer.js';
+import { ActivityLog, LOG_PATH_NODE_ID } from '../engine/ActivityLog.js';
+import { openExplorerFileInWritepad } from './writepad.js';
 import { getState, patchState, isAppInstalled } from './gameState.js';
 import { getSessionState, patchSession } from './sessionState.js';
 import { on } from './events.js';
+import { showCorpOsPrompt } from './corpos-prompt.js';
 
 /** @type {string} */
-let currentNodeId = 'my-computer';
+export let currentNodeId = 'my-computer';
+
+export function navigateExplorerTo(nodeId) {
+  currentNodeId = nodeId;
+  renderAll();
+}
 /** @type {any[]} */
 let lastItems = [];
+/** Hold ~½s before a list item drag starts so double-click / Open still work reliably. */
+const VFS_DRAG_HOLD_MS = 500;
+
+/** @type {{ item: object, row: HTMLElement, pointerId: number, ghost: HTMLElement | null, lastX: number, lastY: number, raf: number | null } | null} */
+let vfsDrag = null;
 let ctxEl = null;
 const NODES = {
   'my-computer': { label: 'My Computer', parent: null },
@@ -17,13 +30,23 @@ const NODES = {
   'folder-doc-music': { label: 'Music', parent: 'folder-documents' },
   'folder-downloads': { label: 'My Downloads', parent: 'disk-c' },
   'folder-videos': { label: 'My Videos', parent: 'disk-c' },
-  'folder-pictures': { label: 'My Pictures', parent: 'disk-c' }
+  'folder-pictures': { label: 'My Pictures', parent: 'disk-c' },
+  'folder-corpos': { label: 'CORPOS', parent: 'disk-c' },
+  'folder-system': { label: 'SYSTEM', parent: 'folder-corpos' }
 };
 
 const CHILDREN = {
   'my-computer': ['floppy-a', 'disk-c'],
-  'disk-c': ['folder-desktop', 'folder-documents', 'folder-downloads', 'folder-videos', 'folder-pictures'],
-  'folder-documents': ['folder-doc-music']
+  'disk-c': [
+    'folder-desktop',
+    'folder-documents',
+    'folder-downloads',
+    'folder-videos',
+    'folder-pictures',
+    'folder-corpos'
+  ],
+  'folder-documents': ['folder-doc-music'],
+  'folder-corpos': ['folder-system']
 };
 
 const DESKTOP_SHORTCUTS = [
@@ -50,6 +73,48 @@ function breadcrumb(id) {
     p = NODES[p]?.parent;
   }
   return parts.join(' \\ ');
+}
+
+/** Display path like C:\\CORPOS\\SYSTEM for the address bar when under Local Disk. */
+function vfsFolderPathFromId(nodeId) {
+  if (NODES[nodeId]) return null;
+  const entries = vfsEntries();
+  let cur = nodeId;
+  const names = [];
+  for (let i = 0; i < 40 && cur; i++) {
+    const e = entries.find((x) => x.id === cur);
+    if (!e || e.kind !== 'folder') return null;
+    names.unshift(e.name);
+    const parent = e.parentId;
+    if (NODES[parent]) return { root: parent, names };
+    cur = parent;
+  }
+  return null;
+}
+
+function addressPathForNode(nodeId) {
+  if (nodeId === 'my-computer') return 'My Computer';
+  if (nodeId === 'floppy-a') return '3½ Floppy (A:)';
+  const vfsPath = vfsFolderPathFromId(nodeId);
+  if (vfsPath) {
+    const base = addressPathForNode(vfsPath.root);
+    return vfsPath.names.length ? `${base}\\${vfsPath.names.join('\\')}` : base;
+  }
+  const chain = [];
+  let p = nodeId;
+  while (p) {
+    chain.unshift(p);
+    p = NODES[p]?.parent;
+  }
+  if (!chain.includes('disk-c')) return breadcrumb(nodeId);
+  const tail = chain
+    .filter((id) => id !== 'my-computer' && id !== 'disk-c')
+    .map((id) => NODES[id]?.label || id);
+  return `C:\\${tail.join('\\')}`;
+}
+
+export function explorerAddressPathForNode(nodeId) {
+  return addressPathForNode(nodeId);
 }
 
 function vfsEntries() {
@@ -87,6 +152,17 @@ function getItems(nodeId) {
         size: ''
       });
     }
+    return items;
+  }
+
+  if (nodeId === 'folder-corpos') {
+    items.push({
+      id: 'folder-system',
+      name: NODES['folder-system'].label,
+      kind: 'folder',
+      typeLabel: 'File Folder',
+      size: ''
+    });
     return items;
   }
 
@@ -146,11 +222,12 @@ function getItems(nodeId) {
 
   for (const e of vfsEntries()) {
     if (e.parentId === nodeId) {
+      const k = e.kind === 'folder' ? 'folder' : 'file';
       items.push({
         id: e.id,
         name: e.name,
-        kind: 'file',
-        typeLabel: 'Text Document',
+        kind: k,
+        typeLabel: e.typeLabel || (k === 'folder' ? 'File Folder' : 'Text Document'),
         size: e.size,
         vfs: true,
         entry: e
@@ -186,10 +263,33 @@ function ensureClipboardShape(s) {
   if (!Array.isArray(s.explorerClipboard.items)) s.explorerClipboard.items = [];
 }
 
+function vfsFileLooksLikeAudio(item) {
+  const n = (item.name || '').toLowerCase();
+  return /\.(mp3|wav|ogg|m4a|flac)$/i.test(n);
+}
+
 function openRow(item) {
   if (item.kind === 'folder') {
     currentNodeId = item.id;
     renderAll();
+    return;
+  }
+  if (item.kind === 'file' && item.vfs && item.entry) {
+    if (vfsFileLooksLikeAudio(item)) {
+      window.openW?.('media-player');
+      try {
+        window.toast?.({
+          title: 'Media Player',
+          message: 'Use the library in My Documents → Music to play tracks.',
+          icon: '🎵',
+          autoDismiss: 5000
+        });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    openExplorerFileInWritepad(item, addressPathForNode(currentNodeId));
     return;
   }
   if (item.kind === 'shortcut' && item.open) {
@@ -201,6 +301,25 @@ function openRow(item) {
     window.openW?.('media-player');
     return;
   }
+}
+
+function deleteVfsEntry(item) {
+  if (!item?.vfs || !item.entry) return;
+  const eid = item.entry.id;
+  const name = item.entry.name || item.name;
+  if (eid === LOG_PATH_NODE_ID) {
+    ActivityLog.recordAuditFileDeletionEvent();
+  } else {
+    ActivityLog.log('FILE_DELETE', `Deleted: ${name}`, {
+      suspicious: /AUDITLOG/i.test(name) || item.entry?.system === true
+    });
+  }
+  patchState((st) => {
+    if (!st.virtualFs?.entries) return st;
+    st.virtualFs.entries = st.virtualFs.entries.filter((x) => x.id !== eid);
+    return st;
+  });
+  renderAll();
 }
 
 function isFolderTarget(nodeId) {
@@ -261,9 +380,17 @@ function pasteIntoTarget() {
           parentId: target,
           name: copyName(entries, target, src.name),
           kind: src.kind || 'file',
+          typeLabel: src.typeLabel,
           size: src.size,
-          description: src.description || ''
+          content: src.content,
+          description: src.description || '',
+          system: src.system,
+          readonly: src.readonly,
+          created: src.created,
+          modified: new Date().toISOString()
         });
+        const destPath = addressPathForNode(target);
+        ActivityLog.log('FILE_COPY', `Copied: ${src.name} to ${destPath}`);
       }
     }
     return st;
@@ -280,7 +407,7 @@ function pasteIntoTarget() {
   renderAll();
 }
 
-function copyName(entries, parentId, base) {
+export function uniqueVfsChildName(entries, parentId, base) {
   const names = new Set(entries.filter((e) => e.parentId === parentId).map((e) => e.name));
   if (!names.has(base)) return base;
   let i = 2;
@@ -288,16 +415,102 @@ function copyName(entries, parentId, base) {
   return `${base} (${i})`;
 }
 
+function copyName(entries, parentId, base) {
+  return uniqueVfsChildName(entries, parentId, base);
+}
+
+function vfsEntryRenamable(ent) {
+  if (!ent) return false;
+  if (ent.system) return false;
+  if (ent.kind === 'folder') return true;
+  const n = (ent.name || '').toLowerCase();
+  return /\.(txt|log|md)$/i.test(n) || String(ent.typeLabel || '').toLowerCase().includes('text');
+}
+
+async function promptRenameVfsEntry(ent) {
+  if (!vfsEntryRenamable(ent)) return;
+  const next = await showCorpOsPrompt({
+    title: 'Rename',
+    label: 'New name:',
+    defaultValue: ent.name || ''
+  });
+  if (next == null) return;
+  const trimmed = String(next).trim();
+  if (!trimmed || trimmed === ent.name) return;
+  patchState((st) => {
+    const row = st.virtualFs?.entries?.find((x) => x.id === ent.id);
+    if (row) row.name = trimmed;
+    return st;
+  });
+  renderAll();
+}
+
+function createVfsItemInNode(nodeId, kind) {
+  if (!canPasteInto(nodeId)) return;
+  const isFolder = kind === 'folder';
+  const baseName = isFolder ? 'New Folder' : 'New Text Document.txt';
+  patchState((st) => {
+    const entries = st.virtualFs.entries;
+    const name = uniqueVfsChildName(entries, nodeId, baseName);
+    const nid = `vf-${st.virtualFs.nextSeq++}`;
+    const row = {
+      id: nid,
+      parentId: nodeId,
+      name,
+      kind: isFolder ? 'folder' : 'file',
+      typeLabel: isFolder ? 'File Folder' : 'Text Document',
+      size: isFolder ? '' : 0,
+      description: '',
+      created: new Date().toISOString(),
+      modified: new Date().toISOString()
+    };
+    if (!isFolder) row.content = '';
+    entries.push(row);
+    return st;
+  });
+  setStatus(isFolder ? 'Created folder' : 'Created text document');
+  renderAll();
+}
+
+function moveVfsEntryToParent(entryId, newParentId) {
+  if (!canPasteInto(newParentId)) return;
+  const st = getState();
+  const ent = st.virtualFs?.entries?.find((x) => x.id === entryId);
+  if (!ent) return;
+  if (ent.parentId === newParentId) return;
+  if (ent.id === newParentId) return;
+  let p = newParentId;
+  const entries = st.virtualFs.entries;
+  for (let i = 0; i < 50 && p; i++) {
+    if (p === entryId) return;
+    const row = entries.find((x) => x.id === p);
+    p = row?.parentId;
+  }
+  patchState((draft) => {
+    const row = draft.virtualFs.entries.find((x) => x.id === entryId);
+    if (!row) return draft;
+    row.parentId = newParentId;
+    row.name = uniqueVfsChildName(draft.virtualFs.entries, newParentId, row.name);
+    row.modified = new Date().toISOString();
+    return draft;
+  });
+  setStatus('Moved');
+  renderAll();
+}
+
 function showRowContext(e, item) {
   hideCtx();
   const menu = document.createElement('div');
   menu.className = 'fx-ctx';
   const isVfs = !!item.vfs;
+  const showRename = isVfs && vfsEntryRenamable(item.entry);
   menu.innerHTML = `
     <button type="button" data-a="open">${item.kind === 'folder' ? 'Open' : 'Open'}</button>
+    <button type="button" data-a="rename" ${!showRename ? 'disabled' : ''}>Rename</button>
     <hr />
     <button type="button" data-a="cut" ${!isVfs ? 'disabled' : ''}>Cut</button>
     <button type="button" data-a="copy" ${!isVfs ? 'disabled' : ''}>Copy</button>
+    <button type="button" data-a="delete" ${!isVfs ? 'disabled' : ''}>Delete</button>
     <button type="button" data-a="paste" ${!canPasteInto(currentNodeId) ? 'disabled' : ''}>Paste</button>
     <hr />
     <button type="button" data-a="prop">Properties</button>
@@ -311,8 +524,10 @@ function showRowContext(e, item) {
     if (!b || b.disabled) return;
     const a = b.getAttribute('data-a');
     if (a === 'open') openRow(item);
+    if (a === 'rename') void promptRenameVfsEntry(item.entry);
     if (a === 'cut') cutSelection(item);
     if (a === 'copy') copySelection(item);
+    if (a === 'delete') deleteVfsEntry(item);
     if (a === 'paste') pasteIntoTarget();
     if (a === 'prop') {
       let msg;
@@ -338,7 +553,11 @@ function showBlankContext(e) {
   const menu = document.createElement('div');
   menu.className = 'fx-ctx';
   const en = canPasteInto(currentNodeId) && (getSessionState().explorerClipboard?.items?.length || 0) > 0;
+  const mk = canPasteInto(currentNodeId);
   menu.innerHTML = `
+    <button type="button" data-a="new-folder" ${!mk ? 'disabled' : ''}>New Folder</button>
+    <button type="button" data-a="new-text" ${!mk ? 'disabled' : ''}>New Text Document</button>
+    <hr />
     <button type="button" data-a="paste" ${!en ? 'disabled' : ''}>Paste</button>
   `;
   menu.style.left = `${Math.min(e.clientX, window.innerWidth - 100)}px`;
@@ -347,7 +566,10 @@ function showBlankContext(e) {
   ctxEl = menu;
   menu.addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-a]');
-    if (b?.getAttribute('data-a') === 'paste') pasteIntoTarget();
+    const a = b?.getAttribute('data-a');
+    if (a === 'paste') pasteIntoTarget();
+    if (a === 'new-folder') createVfsItemInNode(currentNodeId, 'folder');
+    if (a === 'new-text') createVfsItemInNode(currentNodeId, 'text');
     hideCtx();
   });
   setTimeout(() => document.addEventListener('click', () => hideCtx(), { once: true }), 0);
@@ -356,6 +578,142 @@ function showBlankContext(e) {
 function setStatus(t) {
   const el = document.getElementById('fx-sb-msg');
   if (el) el.textContent = t;
+}
+
+function endVfsDrag() {
+  const d = vfsDrag;
+  if (!d) return;
+  if (d.raf) {
+    cancelAnimationFrame(d.raf);
+    d.raf = null;
+  }
+  document.querySelectorAll('.fx-row.fx-row--drop-target').forEach((r) => r.classList.remove('fx-row--drop-target'));
+  try {
+    if (d.row && d.pointerId != null) d.row.releasePointerCapture(d.pointerId);
+  } catch {
+    /* ignore */
+  }
+  d.row?.classList.remove('fx-row--drag-source');
+  d.ghost?.remove();
+  vfsDrag = null;
+}
+
+function highlightFolderDropTarget(x, y) {
+  const host = document.getElementById('fx-list');
+  document.querySelectorAll('.fx-row.fx-row--drop-target').forEach((r) => r.classList.remove('fx-row--drop-target'));
+  if (!host) return;
+  const stack = document.elementsFromPoint(x, y);
+  for (const el of stack) {
+    const row = el.closest?.('.fx-row');
+    if (!row || !host.contains(row)) continue;
+    const idx = row.dataset.fxItemIndex;
+    if (idx == null) continue;
+    const it = lastItems[Number(idx)];
+    if (it && it.kind === 'folder' && canPasteInto(it.id)) {
+      row.classList.add('fx-row--drop-target');
+      break;
+    }
+  }
+}
+
+function attemptVfsDrop(drag, x, y) {
+  const dragId = drag.item.id;
+  const host = document.getElementById('fx-list');
+  const stack = document.elementsFromPoint(x, y);
+  for (const el of stack) {
+    const row = el.closest?.('.fx-row');
+    if (!row || !host?.contains(row)) continue;
+    const idx = row.dataset.fxItemIndex;
+    if (idx == null) continue;
+    const it = lastItems[Number(idx)];
+    if (!it || it.kind !== 'folder' || !canPasteInto(it.id)) continue;
+    moveVfsEntryToParent(dragId, it.id);
+    return;
+  }
+}
+
+function bindVfsRowPointerDrag(row, item) {
+  row.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    let timer = null;
+    let cancelled = false;
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const clearTimer = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const cleanup = () => {
+      clearTimer();
+      row.removeEventListener('pointermove', onMove);
+      row.removeEventListener('pointerup', onUp);
+      row.removeEventListener('pointercancel', onUp);
+    };
+
+    const onMove = (ev) => {
+      if (vfsDrag?.row === row) {
+        vfsDrag.lastX = ev.clientX;
+        vfsDrag.lastY = ev.clientY;
+        if (!vfsDrag.raf) {
+          vfsDrag.raf = requestAnimationFrame(() => {
+            vfsDrag.raf = null;
+            if (!vfsDrag?.ghost) return;
+            vfsDrag.ghost.style.left = `${vfsDrag.lastX + 12}px`;
+            vfsDrag.ghost.style.top = `${vfsDrag.lastY + 8}px`;
+            highlightFolderDropTarget(vfsDrag.lastX, vfsDrag.lastY);
+          });
+        }
+        return;
+      }
+      if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) > 10) {
+        cancelled = true;
+        clearTimer();
+      }
+    };
+
+    const onUp = () => {
+      if (vfsDrag?.row === row) {
+        attemptVfsDrop(vfsDrag, vfsDrag.lastX, vfsDrag.lastY);
+        endVfsDrag();
+      }
+      cleanup();
+    };
+
+    timer = setTimeout(() => {
+      if (cancelled || vfsDrag) return;
+      hideCtx();
+      vfsDrag = {
+        item,
+        row,
+        pointerId: e.pointerId,
+        ghost: null,
+        lastX: e.clientX,
+        lastY: e.clientY,
+        raf: null
+      };
+      try {
+        row.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+      row.classList.add('fx-row--drag-source');
+      const ghost = document.createElement('div');
+      ghost.className = 'fx-drag-ghost';
+      ghost.textContent = item.name || 'File';
+      document.body.appendChild(ghost);
+      vfsDrag.ghost = ghost;
+      ghost.style.left = `${e.clientX + 12}px`;
+      ghost.style.top = `${e.clientY + 8}px`;
+    }, VFS_DRAG_HOLD_MS);
+
+    row.addEventListener('pointermove', onMove);
+    row.addEventListener('pointerup', onUp);
+    row.addEventListener('pointercancel', onUp);
+  });
 }
 
 let winRef = null;
@@ -423,16 +781,31 @@ function renderList() {
   if (!host) return;
 
   lastItems = getItems(currentNodeId);
-  if (addr) addr.textContent = breadcrumb(currentNodeId);
-  if (title) title.textContent = `Exploring — ${NODES[currentNodeId]?.label || 'My Computer'}`;
+  if (addr) addr.textContent = addressPathForNode(currentNodeId);
+  const vfsFolderEnt = vfsEntries().find((e) => e.id === currentNodeId && e.kind === 'folder');
+  const placeLabel = NODES[currentNodeId]?.label || vfsFolderEnt?.name;
+  if (title) title.textContent = `Exploring — ${placeLabel || 'My Computer'}`;
 
   host.innerHTML = '';
-  for (const item of lastItems) {
+  for (let i = 0; i < lastItems.length; i++) {
+    const item = lastItems[i];
     const row = document.createElement('div');
     row.className = 'fx-row';
     if (item.gray) row.style.color = '#888';
+    row.dataset.fxItemIndex = String(i);
     row.innerHTML = `<span>${escapeHtml(item.name)}</span><span>${escapeHtml(item.typeLabel)}</span><span>${escapeHtml(formatSize(item.size))}</span>`;
-    row.addEventListener('dblclick', () => openRow(item));
+    row.addEventListener('click', () => {
+      host.querySelectorAll('.fx-row.is-sel').forEach((r) => r.classList.remove('is-sel'));
+      row.classList.add('is-sel');
+    });
+    row.addEventListener('dblclick', (ev) => {
+      ev.preventDefault();
+      openRow(item);
+    });
+    const canDragVfs = item.vfs && item.entry && !item.entry.system;
+    if (canDragVfs) {
+      bindVfsRowPointerDrag(row, item);
+    }
     row.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       showRowContext(e, item);
@@ -459,6 +832,7 @@ function renderAll() {
 export async function initFileExplorer(loadJsonFile) {
   winRef = document.getElementById('win-explorer');
   await ensureVirtualFsSeeded(loadJsonFile);
+  ActivityLog.init();
 
   document.getElementById('fx-list')?.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.fx-row')) return;

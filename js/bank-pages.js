@@ -247,7 +247,7 @@ function commonRegisterFields(meta, state) {
 ${tableRow('Date of birth', `<input type="text" data-bank-field="reg-dob" value="${prefDob}" placeholder="e.g. March 14, 1976" style="width:220px;font-size:11px;padding:2px;">`)}
 ${tableRow('SSN (###-##-####) — must match CorpOS Personal Profile', `<input type="text" data-bank-field="reg-ssn-full" value="${prefSsn}" style="width:140px;font-size:11px;padding:2px;">`)}
 ${tableRow('Home address', `<input type="text" data-bank-field="reg-addr" value="${prefAddr}" style="width:220px;font-size:11px;padding:2px;"><input type="hidden" data-bank-field="reg-addr-id" value=""> <button type="button" data-action="bank-addr-lookup" style="font-size:10px;height:20px;padding:0 6px;cursor:pointer;">Lookup\u2026</button><div data-bank-addr-picker style="display:none;margin-top:4px;"></div>`)}
-${tableRow('Day phone', `<input type="text" data-bank-field="reg-phone" value="${prefPhone}" style="width:160px;font-size:11px;padding:2px;">`)}
+${tableRow('Phone (required — 10 digits, SMS notice)', `<input type="tel" data-bank-field="reg-phone" value="${prefPhone}" inputmode="numeric" autocomplete="off" placeholder="5551234567" style="width:160px;font-size:11px;padding:2px;">`)}
 ${tableRow('Email', `<input type="text" data-bank-field="reg-email" value="${prefEmail}" style="width:220px;font-size:11px;padding:2px;">`)}
 ${tableRow('Employment status', `<input type="text" data-bank-field="reg-employment" value="${prefEmp}" placeholder="Employed / Self-employed" style="width:200px;font-size:11px;padding:2px;">`)}
 ${tableRow('Employer / business name', `<input type="text" data-bank-field="reg-employer" value="${prefEmpl}" style="width:220px;font-size:11px;padding:2px;">`)}

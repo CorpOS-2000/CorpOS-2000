@@ -150,6 +150,16 @@ export function submitBusinessRegistration({ actorId, tradingName, legalName, en
     return draft;
   });
 
+  try {
+    window.ActivityLog?.log?.(
+      'BIZREG_SUBMIT',
+      `Business registration submitted — ${tradingName.trim()} (${entityType || 'LLC'})`,
+      { notable: true }
+    );
+  } catch {
+    /* ignore */
+  }
+
   return { ok: true, message: `Application submitted. Expected approval: ${dueDate.toUTCString().slice(0, 16)}.`, id };
 }
 
@@ -242,6 +252,15 @@ function provisionApprovedBusiness(app) {
 
     return draft;
   });
+
+  try {
+    window.ActivityLog?.log?.(
+      'COMPANY_REGISTER',
+      `Company registered: ${app.tradingName} — ${app.industry || 'general'}`
+    );
+  } catch {
+    /* ignore */
+  }
 
   if (window.SaveManager?.save) {
     try {

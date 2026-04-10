@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="css/moogle.css">
   <link rel="stylesheet" href="css/media-player.css">
   <link rel="stylesheet" href="css/explorer.css">
+  <link rel="stylesheet" href="css/daily-herald.css">
   <script>
     (function () {
       function show(title, detail) {
@@ -73,8 +74,16 @@
   </div>
 </div>
 
-<div id="enrollment-screen" style="display:none;position:fixed;inset:0;z-index:99998;background:#0d1a3a;align-items:center;justify-content:center;overflow-y:auto;">
+<div id="enrollment-screen" style="display:none;position:fixed;inset:0;z-index:100060;background:#0d1a3a;align-items:center;justify-content:center;overflow-y:auto;">
   <div class="enrollment-inner" style="width:100%;max-width:600px;padding:24px;"></div>
+</div>
+
+<div id="user-picker-screen" style="display:none;">
+  <div class="up-box">
+    <div class="up-title">Select a user to log on</div>
+    <ul id="up-list" class="up-list"></ul>
+    <div class="up-registry" id="up-registry" aria-label="Local operator registry"></div>
+  </div>
 </div>
 
 <div id="login-screen">
@@ -113,21 +122,21 @@
     <div class="ttext" id="ttext"></div>
   </div>
 
-  <div class="di" style="top:28px;left:20px" ondblclick="openW('herald')"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
-  <div class="di" style="top:108px;left:20px" ondblclick="openW('worldnet')"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
+  <div class="di" data-open="herald" style="top:28px;left:20px"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
+  <div class="di" data-open="worldnet" style="top:108px;left:20px"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
   <div class="di" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
-  <div class="di" style="top:348px;left:20px" ondblclick="openW('explorer')"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
-  <div class="di" style="top:428px;left:20px" ondblclick="openW('tasks')"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
-  <div class="di" style="top:28px;left:110px" ondblclick="openW('personal')"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
-  <div class="di" style="top:108px;left:110px" ondblclick="openW('corporate')"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
+  <div class="di" data-open="explorer" style="top:348px;left:20px"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
+  <div class="di" data-open="tasks" style="top:428px;left:20px"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
+  <div class="di" data-open="personal" style="top:28px;left:110px"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
+  <div class="di" data-open="corporate" style="top:108px;left:110px"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
   <div class="di" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
-  <div class="di" data-app-id="media-player" style="top:268px;left:110px" ondblclick="openW('media-player')"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
-  <div class="di" data-app-id="admin-npc" style="top:348px;left:110px" ondblclick="openW('admin-npc')"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
-  <div class="di" data-app-id="admin-company" style="top:428px;left:110px" ondblclick="openW('admin-company')"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
-  <div class="di" data-app-id="admin-gov" style="top:508px;left:20px" ondblclick="openW('admin-gov')"><div class="ico">⚖️</div><div class="lbl">Gov. System</div></div>
-  <div class="di" data-app-id="admin-web" style="top:508px;left:110px" ondblclick="openW('admin-web')"><div class="ico">📝</div><div class="lbl">Web Editor</div></div>
-  <div class="di" data-app-id="admin-axis" style="top:588px;left:20px" ondblclick="openW('admin-axis')"><div class="ico">📇</div><div class="lbl">Contacts &amp; Relations</div></div>
-  <div class="di" data-app-id="webex-publisher" style="top:588px;left:110px" ondblclick="openW('webex-publisher')"><div class="ico">🌐</div><div class="lbl">WebEx-Publisher</div></div>
+  <div class="di" data-app-id="media-player" data-open="media-player" style="top:268px;left:110px"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
+  <div class="di" data-app-id="admin-npc" data-open="admin-npc" style="top:348px;left:110px"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
+  <div class="di" data-app-id="admin-company" data-open="admin-company" style="top:428px;left:110px"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
+  <div class="di" data-app-id="admin-gov" data-open="admin-gov" style="top:508px;left:20px"><div class="ico">⚖️</div><div class="lbl">Gov. System</div></div>
+  <div class="di" data-app-id="admin-web" data-open="admin-web" style="top:508px;left:110px"><div class="ico">📝</div><div class="lbl">Web Editor</div></div>
+  <div class="di" data-app-id="admin-axis" data-open="admin-axis" style="top:588px;left:20px"><div class="ico">📇</div><div class="lbl">Contacts &amp; Relations</div></div>
+  <div class="di" data-app-id="webex-publisher" data-open="webex-publisher" style="top:588px;left:110px"><div class="ico">🌐</div><div class="lbl">WebEx-Publisher</div></div>
 
   <div class="ww inactive" id="win-personal" style="width:430px;height:500px;top:60px;left:200px;display:none;">
     <div class="wtb" onmousedown="drag(event,'win-personal')">
@@ -291,15 +300,28 @@
 
   <div class="ww inactive" id="win-admin-axis" style="width:860px;height:560px;top:34px;left:110px;display:none;">
     <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#3a5a9a);" onmousedown="drag(event,'win-admin-axis')">
-      <span class="wti">📇</span><span class="wtt">AXIS — Active Contact &amp; Intelligence System</span>
+      <span class="wti">📇</span><span class="wtt">CCR — Contacts, Contracts &amp; Relations</span>
       <button type="button" class="wcb" onclick="minW('admin-axis')">_</button>
       <button type="button" class="wcb" onclick="maxW('admin-axis')">□</button>
       <button type="button" class="wcb" onclick="closeW('admin-axis')">✕</button>
     </div>
-    <div class="wmb"><span class="wmi">Contacts</span><span class="wmi">Relations</span><span class="wmi">Intel</span><span class="wmi">Help</span></div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">View</span><span class="wmi">Help</span></div>
     <div class="wc" style="padding:0;overflow:hidden;"><div id="axis-root" style="height:100%;"></div></div>
-    <div class="wsb"><div class="sp">Contacts &amp; Relations</div><div class="sp">ActorDB linked</div><div class="sp">AXIS runtime online</div></div>
+    <div class="wsb"><div class="sp">CCR Online</div><div class="sp">ActorDB linked</div><div class="sp">Contracts synced</div></div>
     <div class="wrz" onmousedown="resz(event,'win-admin-axis')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-herald" style="width:680px;height:540px;top:50px;left:130px;display:none;">
+    <div class="wtb" style="background:linear-gradient(180deg,#0a246a,#1c3f80);" onmousedown="drag(event,'win-herald')">
+      <span class="wti">📰</span><span class="wtt">The Daily Herald</span>
+      <button type="button" class="wcb" onclick="minW('herald')">_</button>
+      <button type="button" class="wcb" onclick="maxW('herald')">□</button>
+      <button type="button" class="wcb" onclick="closeW('herald')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc" style="overflow:auto;padding:0;background:#e8e4d8;" id="dh-root"></div>
+    <div class="wsb"><div class="sp">Connected to Daily Herald Network</div><div class="sp">Business Desk</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-herald')">◢</div>
   </div>
 
   <div class="ww inactive" id="win-worldnet" style="width:640px;height:480px;top:50px;left:160px;display:none;">
@@ -420,6 +442,35 @@
     <div class="wrz" onmousedown="resz(event,'win-explorer')">◢</div>
   </div>
 
+  <div class="ww inactive" id="win-writepad" style="width:520px;height:420px;top:88px;left:170px;display:none;flex-direction:column;">
+    <div class="wtb" onmousedown="drag(event,'win-writepad')">
+      <span class="wti">📝</span><span class="wtt" id="wp-title">Writepad</span>
+      <button type="button" class="wcb" onclick="minW('writepad')">_</button>
+      <button type="button" class="wcb" onclick="maxW('writepad')">□</button>
+      <button type="button" class="wcb" onclick="closeW('writepad')">✕</button>
+    </div>
+    <div class="wmb" id="wp-menubar" style="position:relative;">
+      <span class="wmi" id="wp-mi-file" role="button" tabindex="0">File</span>
+      <span class="wmi">Edit</span>
+      <span class="wmi">Format</span>
+      <span class="wmi">Help</span>
+      <div id="wp-file-menu" class="fx-ctx" style="display:none;" aria-hidden="true">
+        <button type="button" id="wp-menu-open">Open…</button>
+      </div>
+    </div>
+    <div class="wc" style="padding:0;display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div id="wp-path-hint" style="font-size:10px;color:#555;padding:4px 8px;border-bottom:1px solid #aca899;background:#ece9d8;"></div>
+      <textarea id="wp-body" spellcheck="false" style="flex:1;min-height:180px;border:none;margin:0;padding:8px;font-family:'Courier New',Courier,monospace;font-size:11px;resize:none;outline:none;"></textarea>
+    </div>
+    <div class="fx-sb" style="border-top:1px solid #808080;background:#ece9d8;padding:4px 8px;display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+      <button type="button" id="wp-save" style="min-width:72px;">Save</button>
+      <button type="button" id="wp-close" style="min-width:72px;">Close</button>
+      <div style="flex:1;"></div>
+      <span style="font-size:10px;color:#666;">CorpOS Writepad</span>
+    </div>
+    <div class="wrz" onmousedown="resz(event,'win-writepad')">◢</div>
+  </div>
+
   <div class="ww inactive" id="win-webex-publisher" style="width:820px;height:620px;top:48px;left:100px;display:none;flex-direction:column;">
     <div class="wtb" onmousedown="drag(event,'win-webex-publisher')">
       <span class="wti">🌐</span><span class="wtt">WebEx-Publisher — CorpOS 2000</span>
@@ -461,6 +512,7 @@
         <div class="smitem" onclick="openW('worldnet');toggleStart()">🌐 WorldNet Explorer</div>
         <div class="smitem">🏢 Properties</div>
         <div class="smitem" onclick="openW('explorer');toggleStart()">🖥️ My Computer</div>
+        <div class="smitem" onclick="(window.openBlankWritepad||function(){openW('writepad')})();toggleStart()">📝 Writepad</div>
         <div class="smitem" onclick="openW('personal');toggleStart()">👤 Personal Profile</div>
         <div class="smitem" onclick="openW('corporate');toggleStart()">🏛️ Corporate Profile</div>
         <div class="smitem">📊 Corp. Ledger</div>

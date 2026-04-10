@@ -187,7 +187,8 @@
   color: #666;
 }
 
-#win-explorer .fx-ctx {
+/* Menus are fixed to document.body; keep styles without #win-explorer so they still apply. */
+.fx-ctx {
   position: fixed;
   z-index: 99999;
   background: #d4d0c8;
@@ -197,7 +198,7 @@
   padding: 2px;
 }
 
-#win-explorer .fx-ctx button {
+.fx-ctx button {
   display: block;
   width: 100%;
   text-align: left;
@@ -208,17 +209,57 @@
   cursor: pointer;
 }
 
-#win-explorer .fx-ctx button:hover:not(:disabled) {
+.fx-ctx button:hover:not(:disabled) {
   background: #0a246a;
   color: #fff;
 }
 
-#win-explorer .fx-ctx button:disabled {
+.fx-ctx button:disabled {
   color: #888;
 }
 
-#win-explorer .fx-ctx hr {
+.fx-ctx hr {
   border: none;
   border-top: 1px solid #aca899;
   margin: 2px 0;
+}
+
+/* Long-press VFS drag in Explorer list */
+.fx-drag-ghost {
+  position: fixed;
+  z-index: 100100;
+  pointer-events: none;
+  padding: 4px 10px;
+  background: #ffffe1;
+  border: 1px solid #808080;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+  font: 11px Tahoma, sans-serif;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#win-explorer .fx-row--drag-source {
+  opacity: 0.5;
+}
+
+#win-explorer .fx-row--drop-target {
+  outline: 2px dotted #0a246a;
+  outline-offset: -2px;
+  background: #d0e8ff !important;
+}
+
+/* Writepad — File menu dropdown (anchored under menu bar; overrides .fx-ctx fixed) */
+#win-writepad #wp-menubar {
+  position: relative;
+}
+
+#win-writepad #wp-file-menu {
+  position: absolute !important;
+  left: 2px;
+  top: 100%;
+  margin-top: 2px;
+  z-index: 120;
+  min-width: 148px;
 }

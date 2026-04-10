@@ -1,7 +1,15 @@
 import { pause, unpause } from './clock.js';
 import { TOAST_KEYS, toast } from './toast.js';
-import { getState } from './gameState.js';
-import { showEnrollment, verifyOsLogin, triggerLicenseTermination } from './corpos-enrollment.js';
+import { getState, resetState } from './gameState.js';
+import { patchSession } from './sessionState.js';
+import { resetBlackCherryView } from './black-cherry.js';
+import {
+  showEnrollment,
+  verifyOsLogin,
+  triggerLicenseTermination,
+  CORPOS_DEV_ENROLLMENT_AUTOFILL,
+  CORPOS_DEV_DEFAULT_PASSWORD
+} from './corpos-enrollment.js';
 import { triggerKyleCall } from './kyle-call.js';
 import {
   loadFirstPlayableAudio,
@@ -36,7 +44,7 @@ let corpBootAudioInstance = null;
 const LOGIN_VERIFY_PENDING_HTML =
   'Verifying credentials with Federal Business Registry...<br>Checking compliance status...<br><span id="vdone"></span>';
 
-/** Restores login form after Access Denied; cleared when a new doLogin() runs. */
+/** Restores login form after Access Denied; cleared on new attempt or successful login. */
 let loginFailUiTimer = null;
 
 /** Single pre-BIOS step: insert disc (cosmetic; Enter continues to POST). */
@@ -425,7 +433,7 @@ export function startBootFlow() {
 export function showLogo() {
   const ls = document.getElementById('logo-screen');
   if (!ls) {
-    showLogin();
+    showLoginOrEnrollment();
     return;
   }
   ls.classList.add('show');
@@ -496,28 +504,327 @@ async function runLogoWithBootSound(ls) {
   }, fadeStart);
 }
 
+async function waitForSaveReady() {
+  while (!window.__corpOsSaveStatus?.ready) {
+    await new Promise((r) => setTimeout(r, 80));
+  }
+  return window.__corpOsSaveStatus;
+}
+
+/**
+ * Enrollment must sit above Start menu (z-index 99999), Black Cherry (10050), and logoff (99998).
+ * After logoff / purge, login or other chrome can otherwise stay in the stacking order and steal hits.
+ */
+function prepareChromeForEnrollment() {
+  document.getElementById('smenu')?.classList.remove('open');
+  document.getElementById('start-btn')?.classList.remove('active');
+  const logoff = document.getElementById('logoff-screen');
+  if (logoff) {
+    logoff.classList.remove('show');
+    logoff.style.display = 'none';
+  }
+  const login = document.getElementById('login-screen');
+  if (login) {
+    login.classList.remove('show');
+    login.style.display = 'none';
+    login.style.opacity = '1';
+    login.style.pointerEvents = '';
+  }
+  const desktop = document.getElementById('desktop');
+  if (desktop) {
+    desktop.classList.remove('show');
+    desktop.style.opacity = '';
+  }
+  hideUserPicker();
+  const enroll = document.getElementById('enrollment-screen');
+  if (enroll) {
+    enroll.style.zIndex = '100060';
+    enroll.style.position = 'fixed';
+    enroll.style.inset = '0';
+  }
+}
+
 async function showLoginOrEnrollment() {
-  const p = getState().player;
-  if (p.licenseTerminated) {
-    triggerLicenseTermination(p.terminationReason || 'Section 17');
+  const saveStatus = await waitForSaveReady();
+
+  if (saveStatus.hasUsers) {
+    showUserPicker(saveStatus.accounts);
     return;
   }
-  if (!p.corposEnrollmentComplete) {
-    const enrollScreen = document.getElementById('enrollment-screen');
-    if (enrollScreen) {
-      enrollScreen.style.display = 'flex';
-      await showEnrollment();
-    }
+
+  prepareChromeForEnrollment();
+  const enrollScreen = document.getElementById('enrollment-screen');
+  if (enrollScreen) {
+    enrollScreen.style.display = 'flex';
+    await showEnrollment();
+    window.__corpOsSaveStatus.hasUsers = true;
+    window.__corpOsSaveStatus.accounts = window.SaveManager?.getAccountIndex?.() || [];
   }
   showLogin();
+}
+
+function ensurePurgeConfirmDialog() {
+  let overlay = document.getElementById('corpos-purge-dialog');
+  if (overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'corpos-purge-dialog';
+  overlay.className = 'corpos-confirm corpos-purge-confirm is-hidden';
+  overlay.innerHTML = `
+    <div class="corpos-confirm__panel" role="dialog" aria-modal="true" aria-labelledby="corpos-purge-title">
+      <div class="corpos-confirm__titlebar">
+        <span class="corpos-confirm__title" id="corpos-purge-title">Federal Business Registry — Operator purge</span>
+      </div>
+      <div class="corpos-confirm__body">
+        <div class="corpos-confirm__icon" aria-hidden="true">⚠</div>
+        <div class="corpos-confirm__copy">
+          <div class="corpos-confirm__message" id="corpos-purge-message"></div>
+          <div class="corpos-confirm__detail" id="corpos-purge-detail"></div>
+        </div>
+      </div>
+      <div class="corpos-confirm__actions">
+        <button type="button" class="corpos-confirm__btn" data-purge-cancel>Cancel</button>
+        <button type="button" class="corpos-confirm__btn corpos-confirm__btn--danger" data-purge-confirm>Purge record</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+/**
+ * Themed confirmation (replaces window.confirm). Resolves true if the operator confirms purge.
+ * @param {string} displayLabel
+ * @param {string} usernameNorm
+ * @returns {Promise<boolean>}
+ */
+function showPurgeConfirmDialog(displayLabel, usernameNorm) {
+  return new Promise((resolve) => {
+    const overlay = ensurePurgeConfirmDialog();
+    const msg = overlay.querySelector('#corpos-purge-message');
+    const det = overlay.querySelector('#corpos-purge-detail');
+    const btnCancel = overlay.querySelector('[data-purge-cancel]');
+    const btnOk = overlay.querySelector('[data-purge-confirm]');
+    if (!msg || !det || !btnCancel || !btnOk) {
+      resolve(false);
+      return;
+    }
+
+    msg.textContent =
+      'Revoke this workstation credential and purge all local data tied to it: saved session files, ' +
+      'virtual file system records, and compliance data. This action cannot be undone.';
+    det.textContent = `${displayLabel} (${usernameNorm})`;
+
+    overlay.classList.remove('is-hidden');
+
+    let settled = false;
+    const finish = (val) => {
+      if (settled) return;
+      settled = true;
+      overlay.classList.add('is-hidden');
+      btnCancel.removeEventListener('click', onCancel);
+      btnOk.removeEventListener('click', onOk);
+      overlay.removeEventListener('click', onOverlay);
+      window.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+
+    const onCancel = () => finish(false);
+    const onOk = () => finish(true);
+    const onOverlay = (e) => {
+      if (e.target === overlay) onCancel();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      }
+    };
+
+    btnCancel.addEventListener('click', onCancel);
+    btnOk.addEventListener('click', onOk);
+    overlay.addEventListener('click', onOverlay);
+    window.addEventListener('keydown', onKey);
+
+    requestAnimationFrame(() => {
+      try {
+        btnCancel.focus();
+      } catch {
+        /* ignore */
+      }
+    });
+  });
+}
+
+async function openNewOperatorEnrollmentFlow() {
+  prepareChromeForEnrollment();
+  window.__corpOsSaveStatus = window.__corpOsSaveStatus || { ready: true, hasUsers: false, accounts: [] };
+  window.__corpOsSaveStatus.hasUsers = false;
+  window.__corpOsSaveStatus.accounts = [];
+  const enrollScreen = document.getElementById('enrollment-screen');
+  if (enrollScreen) {
+    enrollScreen.style.display = 'flex';
+    await showEnrollment();
+  }
+  window.__corpOsSaveStatus.accounts = window.SaveManager?.getAccountIndex?.() || [];
+  window.__corpOsSaveStatus.hasUsers = window.__corpOsSaveStatus.accounts.length > 0;
+  const unameEl = document.getElementById('uname');
+  if (unameEl) { unameEl.value = ''; unameEl.readOnly = false; }
+  const upassEl = document.getElementById('upass');
+  if (upassEl) upassEl.value = '';
+  showLogin();
+}
+
+function onPurgeOperatorClick(e, acct) {
+  e.preventDefault();
+  e.stopPropagation();
+  const label = acct.displayName || acct.username;
+  void (async () => {
+    const ok = await showPurgeConfirmDialog(label, acct.username);
+    if (!ok) return;
+    const res = window.SaveManager?.deleteOperatorRecord?.(acct.username);
+    if (!res?.ok) {
+      window.alert?.('Purge failed. The operator record could not be removed.');
+      return;
+    }
+    // Full session reload: UEFI → BIOS → logo → login/enrollment. Clears enrollment / Moogle Maps state.
+    window.location.reload();
+  })();
+}
+
+function showUserPicker(accounts) {
+  const screen = document.getElementById('user-picker-screen');
+  if (!screen) {
+    showLogin();
+    return;
+  }
+  if (!accounts || accounts.length === 0) {
+    const idx = window.SaveManager?.getAccountIndex?.() || [];
+    if (idx.length === 0) {
+      void openNewOperatorEnrollmentFlow();
+    } else {
+      showUserPicker(idx);
+    }
+    return;
+  }
+  const list = document.getElementById('up-list');
+  if (list) {
+    list.innerHTML = '';
+    for (const acct of accounts) {
+      const li = document.createElement('li');
+      li.className = 'up-entry';
+      li.dataset.username = acct.username;
+
+      const selectBtn = document.createElement('button');
+      selectBtn.type = 'button';
+      selectBtn.className = 'up-select';
+      const icon = document.createElement('span');
+      icon.className = 'up-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = '👤';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'up-name';
+      nameSpan.textContent = acct.displayName || acct.username;
+      const idSpan = document.createElement('span');
+      idSpan.className = 'up-id';
+      idSpan.textContent = acct.username;
+      selectBtn.append(icon, nameSpan, idSpan);
+      selectBtn.addEventListener('click', () => {
+        const unameEl = document.getElementById('uname');
+        if (unameEl) { unameEl.value = acct.username; unameEl.readOnly = true; }
+        hideUserPicker();
+        showLogin();
+        const passEl = document.getElementById('upass');
+        if (passEl) { passEl.value = ''; passEl.focus(); }
+      });
+
+      li.append(selectBtn);
+      list.appendChild(li);
+    }
+  }
+
+  const reg = document.getElementById('up-registry');
+  if (reg) {
+    reg.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'up-registry-head';
+    head.textContent = 'Local operator registry';
+    reg.appendChild(head);
+    for (const acct of accounts) {
+      const row = document.createElement('div');
+      row.className = 'up-reg-row';
+      const meta = document.createElement('div');
+      meta.className = 'up-reg-meta';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'up-reg-name';
+      nameEl.textContent = acct.displayName || acct.username;
+      const idEl = document.createElement('span');
+      idEl.className = 'up-reg-id';
+      idEl.textContent = acct.username;
+      meta.append(nameEl, idEl);
+
+      const purgeBtn = document.createElement('button');
+      purgeBtn.type = 'button';
+      purgeBtn.className = 'up-reg-purge';
+      purgeBtn.title = 'Revoke license and purge local operator record';
+      purgeBtn.textContent = 'Purge record';
+      purgeBtn.addEventListener('click', (ev) => onPurgeOperatorClick(ev, acct));
+
+      row.append(meta, purgeBtn);
+      reg.appendChild(row);
+    }
+  }
+  screen.classList.add('show');
+  screen.style.display = 'flex';
+  screen.style.pointerEvents = 'auto';
+}
+
+function hideUserPicker() {
+  const screen = document.getElementById('user-picker-screen');
+  const list = document.getElementById('up-list');
+  const reg = document.getElementById('up-registry');
+  if (list) list.innerHTML = '';
+  if (reg) reg.innerHTML = '';
+  if (screen) {
+    screen.classList.remove('show');
+    screen.style.display = 'none';
+    screen.style.pointerEvents = 'none';
+  }
+}
+
+function devFillLoginCredentials() {
+  const accounts = window.SaveManager?.getAccountIndex?.() || [];
+  if (!accounts.length) return;
+  const pick = accounts[Math.floor(Math.random() * accounts.length)];
+  const un = document.getElementById('uname');
+  const pw = document.getElementById('upass');
+  if (un) {
+    un.value = pick.username;
+    un.readOnly = true;
+  }
+  if (pw) pw.value = CORPOS_DEV_DEFAULT_PASSWORD;
+}
+
+function ensureDevLoginShortcut() {
+  if (!CORPOS_DEV_ENROLLMENT_AUTOFILL) return;
+  const lform = document.getElementById('lform');
+  if (!lform || document.getElementById('login-dev-creds')) return;
+  const btn = document.createElement('button');
+  btn.id = 'login-dev-creds';
+  btn.type = 'button';
+  btn.className = 'login-dev-creds-btn';
+  btn.textContent = 'Dev: fill operator + Federal test password (1234)';
+  btn.addEventListener('click', devFillLoginCredentials);
+  const notice = lform.querySelector('.lnotice');
+  if (notice) lform.insertBefore(btn, notice);
+  else lform.appendChild(btn);
 }
 
 export function showLogin() {
   const p = getState().player;
   const unameEl = document.getElementById('uname');
-  if (unameEl && p.username) unameEl.value = p.username;
+  if (unameEl && p.username && !unameEl.value) unameEl.value = p.username;
   const ls = document.getElementById('login-screen');
   ls?.classList.add('show');
+  ls && (ls.style.display = 'flex');
   const vEl = document.getElementById('lverify');
   const fEl = document.getElementById('lform');
   if (loginFailUiTimer) {
@@ -529,9 +836,15 @@ export function showLogin() {
     vEl.style.display = 'none';
   }
   if (fEl) fEl.style.display = 'block';
+  ensureDevLoginShortcut();
 }
 
 export function doLogin() {
+  if (loginFailUiTimer) {
+    clearTimeout(loginFailUiTimer);
+    loginFailUiTimer = null;
+  }
+
   const uname = (document.getElementById('uname')?.value || '').trim();
   const upass = document.getElementById('upass')?.value || '';
   const result = verifyOsLogin(uname, upass);
@@ -544,12 +857,27 @@ export function doLogin() {
       if (fEl) fEl.style.display = 'none';
       vEl.style.display = 'block';
       vEl.innerHTML = `<span style="color:#cc0000;font-weight:bold;">Access Denied.</span><br>Invalid credentials.${result.attemptsLeft != null ? ` ${result.attemptsLeft} attempt${result.attemptsLeft === 1 ? '' : 's'} remaining.` : ''}`;
-      setTimeout(() => {
+      loginFailUiTimer = setTimeout(() => {
+        loginFailUiTimer = null;
         vEl.style.display = 'none';
         if (fEl) fEl.style.display = 'block';
+        vEl.innerHTML = LOGIN_VERIFY_PENDING_HTML;
       }, 2400);
     }
     return;
+  }
+
+  hideUserPicker();
+  try {
+    window.__corpOsHydrateUser?.(uname);
+  } catch (e) {
+    console.error('[Boot] Hydrate user failed:', e);
+  }
+
+  try {
+    window.ActivityLog?.log?.('LOGIN_SUCCESS', `Operator login: ${uname}`);
+  } catch {
+    /* ignore */
   }
 
   try {
@@ -562,8 +890,11 @@ export function doLogin() {
 
   const form = document.getElementById('lform');
   const v = document.getElementById('lverify');
+  if (v) {
+    v.innerHTML = LOGIN_VERIFY_PENDING_HTML;
+    v.style.display = 'block';
+  }
   if (form) form.style.display = 'none';
-  if (v) v.style.display = 'block';
   setTimeout(() => {
     const el = document.getElementById('vdone');
     if (el) {
@@ -625,11 +956,22 @@ function bootDesktop() {
     });
   }, 2400);
   setTimeout(() => fireQueuedSmsEvents(), 3000);
-  setTimeout(() => triggerKyleCall(), 10000);
+  setTimeout(() => {
+    const st = getState();
+    if (st.flags?.kyleCallCompleted) return;
+    triggerKyleCall();
+  }, 10000);
 }
 
 export function doShutdown() {
   pause('shutdown');
+  try {
+    const ms = getState().sim?.elapsedMs ?? 0;
+    const dur = ms > 0 ? `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m` : '0m';
+    window.ActivityLog?.log?.('SESSION_END', `CorpOS session terminated — duration ${dur}`);
+  } catch {
+    /* ignore */
+  }
   const saveResult = SaveManager.save();
 
   const screen = document.getElementById('shutdown-screen');
@@ -697,6 +1039,12 @@ export function doShutdown() {
 }
 
 export function doLogOff() {
+  try {
+    const u = getState().player?.username || 'OPERATOR';
+    window.ActivityLog?.log?.('LOGOFF', `Operator logoff: ${u}`);
+  } catch {
+    /* ignore */
+  }
   const result = SaveManager.save();
   const screen = document.getElementById('logoff-screen');
   const container = document.getElementById('logoff-lines');
@@ -743,10 +1091,35 @@ export function doLogOff() {
   setTimeout(() => {
     screen.classList.remove('show');
     container.innerHTML = '';
+
+    resetState();
+    patchSession((s) => {
+      s.blackCherry = { inbox: [], recentCalls: [], pendingRudenessEvents: [] };
+      s.jeemail = { accounts: {}, currentUser: null, openMessage: null };
+      s.wahoo = { accounts: {}, currentUser: null };
+      s.explorerClipboard = { mode: null, items: [] };
+      return s;
+    });
+    try { resetBlackCherryView(); } catch { /* ignore */ }
+    SaveManager.setActiveUsername(null);
+
     if (loginFailUiTimer) {
       clearTimeout(loginFailUiTimer);
       loginFailUiTimer = null;
     }
+    const unameEl = document.getElementById('uname');
+    if (unameEl) { unameEl.value = ''; unameEl.readOnly = false; }
+    const upassEl = document.getElementById('upass');
+    if (upassEl) upassEl.value = '';
+
+    window.__corpOsSaveStatus = window.__corpOsSaveStatus || { ready: true, hasUsers: false, accounts: [] };
+    window.__corpOsSaveStatus.accounts = window.SaveManager?.getAccountIndex?.() || [];
+    window.__corpOsSaveStatus.hasUsers = window.__corpOsSaveStatus.accounts.length > 0;
+
+    if (window.__corpOsSaveStatus.hasUsers) {
+      showUserPicker(window.__corpOsSaveStatus.accounts);
+    }
+
     const loginScreen = document.getElementById('login-screen');
     if (loginScreen) {
       loginScreen.style.display = 'flex';

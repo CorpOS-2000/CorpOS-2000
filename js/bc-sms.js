@@ -2,7 +2,7 @@
  * bc-sms.js — Threaded SMS system for Black Cherry.
  * Manages threads keyed by senderId, government sender registry, and unread counts.
  */
-import { getState, patchState } from './gameState.js';
+import { getState, patchState, formatMoney } from './gameState.js';
 
 export const GOVERNMENT_SENDERS = {
   CORPOS_SYSTEM: { name: 'CORPOS SYSTEM', avatarColor: '#0a246a', avatarLabel: 'COS', number: 'CORPOS-2000', official: true },
@@ -14,6 +14,49 @@ export const GOVERNMENT_SENDERS = {
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * SMS for any row logged via appendBankingTransaction (deposits, purchases, transfers, fees, interest, etc.).
+ * @param {object} entry
+ * @param {number} gameTime
+ */
+export function smsBankingAlert(entry, gameTime) {
+  if (!entry || typeof window === 'undefined') return;
+  const bank = String(entry.bankName || 'Account').trim() || 'Account';
+  const acct = String(entry.accountNumber || '').replace(/\s/g, '');
+  const last4 = acct.length >= 4 ? acct.slice(-4) : acct || '—';
+  const desc = String(entry.description || entry.type || 'Activity').trim() || 'Activity';
+  const amt = Number(entry.amount);
+  const type = String(entry.type || '').toLowerCase();
+
+  const outTypes = new Set([
+    'withdraw',
+    'purchase',
+    'debit',
+    'loan_payment',
+    'transfer',
+    'regulatory_fine'
+  ]);
+  const isOutflow = amt < 0 || outTypes.has(type);
+  const absStr = formatMoney(Math.abs(amt));
+  const dirWord = isOutflow ? 'Debit' : 'Credit';
+
+  let dest = '';
+  if (entry.destinationAccountNumber) {
+    const dBank = entry.destinationBank ? `${entry.destinationBank} ` : '';
+    const dNum = String(entry.destinationAccountNumber).replace(/\s/g, '');
+    const d4 = dNum.length >= 4 ? dNum.slice(-4) : dNum;
+    dest = ` → ${dBank}…${d4}`;
+  }
+
+  const msg = `${bank} *${last4}: ${dirWord} ${absStr}. ${desc}${dest}`;
+
+  SMS.send({
+    from: 'CORPOS_SYSTEM',
+    message: msg,
+    gameTime: gameTime ?? getState().sim?.elapsedMs ?? 0
+  });
 }
 
 function ensureThreads() {
@@ -85,6 +128,11 @@ export const SMS = {
       thread.unreadCount = (thread.unreadCount || 0) + 1;
       return s;
     });
+    try {
+      window.ActivityLog?.log?.('SMS_RECEIVE', `SMS received from ${senderName}`);
+    } catch {
+      /* ignore */
+    }
   },
 
   receive(actorId, message, gameTime) {
@@ -95,10 +143,12 @@ export const SMS = {
 
   sendPlayerReply(senderId, message, gameTime) {
     ensureThreads();
+    const thread = getState().smsThreads?.[senderId];
+    const recipientName = thread?.senderName || senderId;
     patchState(s => {
-      const thread = s.smsThreads[senderId];
-      if (!thread) return s;
-      thread.messages.push({
+      const th = s.smsThreads[senderId];
+      if (!th) return s;
+      th.messages.push({
         id: uid(),
         text: message,
         simMs: gameTime || 0,
@@ -107,6 +157,11 @@ export const SMS = {
       });
       return s;
     });
+    try {
+      window.ActivityLog?.log?.('SMS_SEND', `SMS sent to ${recipientName}`);
+    } catch {
+      /* ignore */
+    }
   },
 
   getThread(senderId) {
@@ -117,6 +172,7 @@ export const SMS = {
   getInbox() {
     ensureThreads();
     const threads = getState().smsThreads || {};
+    const seen = new Set();
     return Object.values(threads)
       .filter(t => t.messages && t.messages.length > 0)
       .map(t => {
@@ -131,6 +187,11 @@ export const SMS = {
           lastTime: last?.simMs || 0,
           unreadCount: t.unreadCount || 0,
         };
+      })
+      .filter(entry => {
+        if (seen.has(entry.senderId)) return false;
+        seen.add(entry.senderId);
+        return true;
       })
       .sort((a, b) => b.lastTime - a.lastTime);
   },

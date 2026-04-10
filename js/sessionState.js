@@ -12,7 +12,9 @@ const state = {
   jeemail: {
     accounts: {},
     currentUser: null,
-    openMessage: null
+    openMessage: null,
+    /** Set by CCR before navigating to compose — applied when compose view mounts. */
+    composePrefill: null
   },
   wahoo: {
     accounts: {},

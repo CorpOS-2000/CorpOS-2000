@@ -19,6 +19,7 @@ import {
   applyMeridianSavingsInterestIfNeeded,
   getState,
   patchState,
+  resetState,
   migrateStateIfNeeded,
   processWorldNetDeliveriesIfNeeded
 } from './gameState.js';
@@ -66,6 +67,8 @@ import { initPlayerReplies, tickPlayerReplies, wireReplyDeps } from './player-in
 import { MediaPlayer } from '../engine/MediaPlayer.js';
 import { initMediaPlayer } from './media-player.js';
 import { initFileExplorer } from './file-explorer.js';
+import { initWritepad } from './writepad.js';
+import { initDailyHerald } from './daily-herald.js';
 
 let newsItems = [];
 const CONTENT_TOAST_DEBOUNCE_MS = 700;
@@ -363,10 +366,34 @@ async function main() {
   await initWorldNet(loadJsonText);
   await Promise.all([warmReviewBomberPosts(), warmMytubeCatalog()]);
   await initAxis(loadJsonFile);
-  const bootSave = SaveManager.loadAndHydrateState();
-  if (bootSave.axisRelationships?.length) {
-    hydrateAxisFromSave(bootSave.axisRelationships);
-  }
+  SaveManager.migrateLegacySave();
+  window.__corpOsSaveStatus = {
+    ready: true,
+    hasUsers: SaveManager.hasRegisteredUsers(),
+    accounts: SaveManager.getAccountIndex()
+  };
+
+  window.__corpOsHydrateUser = function (username) {
+    SaveManager.setActiveUsername(username);
+    const result = SaveManager.loadUser(username);
+    if (result.exists && !result.corrupted && result.data) {
+      resetState();
+      patchState((s) => migrateStateIfNeeded(s));
+      const axisRows = SaveManager.hydrate(result.data);
+      if (axisRows?.length) {
+        hydrateAxisFromSave(axisRows);
+      }
+      try {
+        window.CCR?.syncFromPhoneBook?.();
+      } catch {
+        /* ok */
+      }
+      SaveManager.applyPendingDiscoveredActors();
+    }
+    ensureMomExists();
+    generatePlayerAndMomAfterEnrollment();
+  };
+
   window.SaveManager = SaveManager;
   await initSocialComments(loadJsonFile);
   await initPlayerReplies(loadJsonFile);
@@ -404,8 +431,6 @@ async function main() {
   initDesktopSystem();
   initBlackCherry();
   DevConsole.init();
-  ensureMomExists();
-  generatePlayerAndMomAfterEnrollment();
   initContextMenus();
   initTaskHandlerPanel();
   wireSpeedControls();
@@ -416,6 +441,8 @@ async function main() {
   window.GameSystems = window.GameSystems || {};
   window.GameSystems.mediaPlayer = MediaPlayer;
   await initFileExplorer(loadJsonFile);
+  initWritepad();
+  initDailyHerald({ mount: document.getElementById('dh-root') });
 
   on('tick', ({ elapsedMs }) => {
     updateClockDisplay();
@@ -436,6 +463,11 @@ async function main() {
     }
     for (const app of processSoftwareInstallsIfNeeded()) {
       refreshInstallableAppVisibility();
+      try {
+        window.ActivityLog?.log?.('APP_INSTALL_DONE', `Install complete: ${app.label}`);
+      } catch {
+        /* ignore */
+      }
       toast({
         key: `install_complete_${app.id}`,
         title: 'Application Installed',

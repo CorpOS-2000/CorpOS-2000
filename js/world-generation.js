@@ -45,8 +45,11 @@ export async function generateWorldNpcsDuringBios() {
  */
 export function generatePlayerAndMomAfterEnrollment() {
   const st = getState();
+  if (!st.player?.corposEnrollmentComplete) return;
   if (_playerGenComplete) return;
-  if (st.player?.momActorId && ActorDB.getRaw('PLAYER_PRIMARY')) {
+  // One mother per operator — persisted on player. Do not require ActorDB to be
+  // hydrated yet (cold boot can race PLAYER_PRIMARY); regenerating creates duplicates.
+  if (st.player?.momActorId) {
     _playerGenComplete = true;
     return;
   }
@@ -185,7 +188,7 @@ function buildInitialContactList(playerActor, momActor, kyleActor) {
 
   const starterPool = ActorDB.getByRole('contact')
     .filter((a) => ['low', 'middle'].includes(a.lifestyle_tier))
-    .slice(0, 3);
+    .slice(0, 10);
 
   starterPool.forEach((actor, idx) => {
     contacts.push({
@@ -205,6 +208,12 @@ function buildInitialContactList(playerActor, momActor, kyleActor) {
     s.player.blackCherryContacts = contacts;
     return s;
   });
+
+  try {
+    window.CCR?.syncFromPhoneBook?.();
+  } catch (e) {
+    console.warn('[WorldGen] CCR syncFromPhoneBook:', e);
+  }
 }
 
 /**

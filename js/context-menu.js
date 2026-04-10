@@ -1,5 +1,9 @@
 import { getSessionState, setClipboardText } from './sessionState.js';
-import { desktopContextActions } from './desktop.js';
+import {
+  desktopContextActions,
+  openDesktopVfsItem,
+  renameDesktopVfsPrompt
+} from './desktop.js';
 
 let menuEl = null;
 let lastTarget = null;
@@ -127,7 +131,23 @@ export function initContextMenus() {
     e.preventDefault();
     lastTarget = e.target;
 
-    const items = onBrowser ? buildBrowserMenu() : buildDesktopMenu(e);
+    let items;
+    if (onBrowser) {
+      items = buildBrowserMenu();
+    } else {
+      const vfsIcon = e.target.closest('#desktop .di.custom-di');
+      const vfsId = vfsIcon?.dataset?.vfsId;
+      if (vfsId) {
+        items = [
+          { label: 'Open', onClick: () => openDesktopVfsItem(vfsId) },
+          { label: 'Rename', onClick: () => void renameDesktopVfsPrompt(vfsId) },
+          { type: 'sep' },
+          ...buildDesktopMenu(e)
+        ];
+      } else {
+        items = buildDesktopMenu(e);
+      }
+    }
     const selectedText = getSelectedText();
     if (selectedText) {
       items.push({ type: 'sep' });

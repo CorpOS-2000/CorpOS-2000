@@ -25,6 +25,20 @@ import { SMS } from './bc-sms.js';
 const viewByBank = {};
 const sessionByBank = {};
 
+function maskAcct(num) {
+  const s = String(num || '').replace(/\s/g, '');
+  if (s.length < 4) return '****';
+  return `****${s.slice(-4)}`;
+}
+
+function logAct(type, detail, flags) {
+  try {
+    window.ActivityLog?.log?.(type, detail, flags || {});
+  } catch {
+    /* ignore */
+  }
+}
+
 let rerenderWnet = () => {};
 let bankNavigate = (pageKey, sub = '') => {
   if (typeof window !== 'undefined' && typeof window.wnetGo === 'function') {
@@ -208,6 +222,10 @@ function runBankAction(host, action) {
     sessionByBank[bankId] = true;
     viewByBank[bankId] = 'landing';
     toast(`Signed in to ${meta.title} online banking.`);
+    logAct(
+      'BANK_LOGIN',
+      `Login to ${meta.title} — account ${maskAcct(acc.accountNumber)}`
+    );
     rerenderWnet();
     return;
   }
@@ -290,6 +308,12 @@ function runBankAction(host, action) {
     }
     if (maiden.length < 2) {
       toast('Enter a secret phrase for verification.');
+      return;
+    }
+
+    const phoneDigitsOnly = phone.replace(/\D/g, '');
+    if (phoneDigitsOnly.length < 10) {
+      toast('A valid 10-digit mobile or day phone number is required for online banking enrollment.');
       return;
     }
 
@@ -443,6 +467,16 @@ function runBankAction(host, action) {
         `Enrollment submitted for ${meta.title}. A ${IDENTITY_FINE_DELAY_DAYS}-day verification window applies; discrepancies may result in penalties.`
       );
     }
+    try {
+      const simMs = getState().sim?.elapsedMs ?? 0;
+      SMS.send({
+        from: 'CORPOS_SYSTEM',
+        message: `${meta.title}: Online banking enrollment for User ID ${user}. Account ${accAfter?.accountNumber || 'pending'}. If you did not enroll, contact the branch.`,
+        gameTime: simMs
+      });
+    } catch {
+      /* ignore */
+    }
     const pk = host.getAttribute('data-bank-page');
     if (pk) bankNavigate(pk, '');
     else rerenderWnet();
@@ -509,6 +543,11 @@ function runBankAction(host, action) {
       const simMs = getState().sim?.elapsedMs || 0;
       SMS.send({ from: 'FRA', message: `NOTICE: A deposit on your account in the amount of ${amt.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} has been flagged for standard compliance review per Federal Mandate 2000-CR7. No action is required at this time.`, gameTime: simMs });
     }
+    const ref = `SIM-${String(getState().sim?.elapsedMs ?? 0).slice(-8)}`;
+    logAct(
+      'BANK_DEPOSIT',
+      `$${amt} deposited to ${acc?.name || meta.title} — ref ${ref}`
+    );
     rerenderWnet();
     return;
   }
@@ -556,6 +595,11 @@ function runBankAction(host, action) {
       const simMs = getState().sim?.elapsedMs || 0;
       SMS.send({ from: 'FRA', message: `NOTICE: A withdrawal on your account has been flagged for standard compliance review per Federal Mandate 2000-CR7. No action is required at this time.`, gameTime: simMs });
     }
+    logAct(
+      'BANK_WITHDRAWAL',
+      `$${amt} withdrawn from ${acc?.name || meta.title}`,
+      { suspicious: amt > 5000 }
+    );
     rerenderWnet();
     return;
   }
@@ -751,6 +795,12 @@ function runBankAction(host, action) {
       message: 'Transfer completed.',
       icon: '⇄'
     });
+    const dst = findAccountByFullNumber(getState(), destRaw);
+    logAct(
+      'BANK_TRANSFER',
+      `$${amt} transferred to account ${dst?.accountNumber || destRaw}`,
+      { suspicious: amt > 9000 }
+    );
     rerenderWnet();
     return;
   }

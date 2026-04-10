@@ -4,11 +4,14 @@
  */
 import { getState, patchState } from './gameState.js';
 import { generatePlayerAndMomAfterEnrollment } from './world-generation.js';
+import { SaveManager } from '../engine/SaveManager.js';
 
 const COS_SEAL_SVG = `<svg viewBox="0 0 140 140" width="64" height="64" style="vertical-align:middle;"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="1.5"/><rect x="14" y="14" width="112" height="112" rx="4" fill="none" stroke="#a6b5e7" stroke-width=".5" opacity=".25"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="1.5" opacity=".55"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="102" y="57" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><line x1="86" y1="72" x2="118" y2="72" stroke="#a6b5e7" stroke-width=".8" opacity=".45"/><text x="102" y="90" font-family="Orbitron,monospace" font-weight="700" font-size="24" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text><line x1="22" y1="108" x2="118" y2="108" stroke="#a6b5e7" stroke-width=".6" opacity=".3"/><text x="70" y="118" font-family="Share Tech Mono,monospace" font-size="7" fill="#445577" text-anchor="middle" letter-spacing="5">CORPOS 2000</text></svg>`;
 
 /* ──── DEV-ONLY: Set to true to show a "fill test data" button on Step 1. ──── */
-const CORPOS_DEV_ENROLLMENT_AUTOFILL = true;
+export const CORPOS_DEV_ENROLLMENT_AUTOFILL = true;
+/** Dev enrollment and logon use this password (Federal test credential). */
+export const CORPOS_DEV_DEFAULT_PASSWORD = '1234';
 /* ──────────────────────────────────────────────────────────────────────────── */
 
 const SEX_OPTIONS = ['Male', 'Female'];
@@ -232,6 +235,16 @@ function randomValidIdentityFields() {
   return { firstName, lastName, birthMonth, birthDay, birthYear, age, sex, race, htFt, htIn };
 }
 
+function devFillStep4Credentials() {
+  const suffix = String(Math.floor(100 + Math.random() * 900));
+  const user = `DEVOP${suffix}`;
+  const p = CORPOS_DEV_DEFAULT_PASSWORD;
+  const el = (id) => document.getElementById(id);
+  if (el('enr-user')) el('enr-user').value = user;
+  if (el('enr-pass')) el('enr-pass').value = p;
+  if (el('enr-pass2')) el('enr-pass2').value = p;
+}
+
 function devFillStep1() {
   const f = randomValidIdentityFields();
   const el = (id) => document.getElementById(id);
@@ -360,7 +373,7 @@ ${mandateHeader()}
   <p style="color:#b8c4e0;font-size:11px;margin-bottom:8px;">Enter your current residential address using the Federal Cartographic Lookup System (Moogle Maps).</p>
   <div id="enr-addr-display" style="display:none;padding:8px 12px;background:rgba(166,181,231,0.1);border:1px solid #4466aa;color:#fff;font-size:12px;margin-bottom:8px;"></div>
   <input type="hidden" id="enr-addr-id" value="">
-  <div id="enr-addr-picker" style="border:2px inset #555;background:#111a30;"></div>
+  <div id="enr-addr-picker" style="border:2px inset #555;background:#111a30;min-height:280px;position:relative;z-index:1;pointer-events:auto;"></div>
   <div style="margin-top:12px;text-align:right;">
     <button type="button" id="enr-step3-next" disabled style="padding:6px 24px;font-size:12px;font-weight:bold;background:#333;color:#888;border:2px outset #444;cursor:not-allowed;">Select an address to continue</button>
   </div>
@@ -427,13 +440,17 @@ ${mandateHeader()}
       <span style="font-size:10px;color:#b8c4e0;line-height:1.5;">I solemnly swear that all information provided herein is true and accurate to the best of my knowledge, under penalty of law pursuant to Federal Mandate 2000-CR7, Section 4(a). I understand that willful falsification constitutes a federal offense subject to license termination and criminal referral.</span>
     </label>
   </div>
-  <div style="margin-top:12px;text-align:right;">
+  <div style="margin-top:12px;text-align:right;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center;">
+    ${CORPOS_DEV_ENROLLMENT_AUTOFILL ? `<button type="button" id="enr-dev-creds" style="padding:4px 10px;font-size:9px;background:#2a1a0a;color:#ccaa66;border:1px solid #664422;cursor:pointer;">Dev: mandate test credentials (pwd 1234)</button>` : ''}
     <button type="button" id="enr-register" disabled style="padding:6px 24px;font-size:12px;font-weight:bold;background:#333;color:#888;border:2px outset #444;cursor:not-allowed;">Register</button>
   </div>
 </div>`;
 
   const attestBox = inner.querySelector('#enr-attest');
   const regBtn = inner.querySelector('#enr-register');
+  if (CORPOS_DEV_ENROLLMENT_AUTOFILL) {
+    inner.querySelector('#enr-dev-creds')?.addEventListener('click', devFillStep4Credentials);
+  }
   attestBox.addEventListener('change', () => {
     if (attestBox.checked) {
       regBtn.disabled = false;
@@ -454,9 +471,17 @@ ${mandateHeader()}
 }
 
 function handleRegistration(screen) {
-  const user = (document.getElementById('enr-user')?.value || '').trim().toUpperCase();
-  const pass = document.getElementById('enr-pass')?.value || '';
-  const pass2 = document.getElementById('enr-pass2')?.value || '';
+  let user = (document.getElementById('enr-user')?.value || '').trim().toUpperCase();
+  let pass = document.getElementById('enr-pass')?.value || '';
+  let pass2 = document.getElementById('enr-pass2')?.value || '';
+  if (CORPOS_DEV_ENROLLMENT_AUTOFILL) {
+    pass = CORPOS_DEV_DEFAULT_PASSWORD;
+    pass2 = CORPOS_DEV_DEFAULT_PASSWORD;
+    const ep = document.getElementById('enr-pass');
+    const ep2 = document.getElementById('enr-pass2');
+    if (ep) ep.value = pass;
+    if (ep2) ep2.value = pass2;
+  }
   const warnEl = document.getElementById('enr-cred-warn');
   function warn(msg) { if (warnEl) { warnEl.style.display = 'block'; warnEl.textContent = msg; } }
 
@@ -481,6 +506,7 @@ function handleRegistration(screen) {
     p.hargroveAddressId = d.hargroveAddressId || null;
     p.username = user;
     p.password = pass;
+    p.passwordHash = SaveManager.hashPassword(pass);
     p.corposEnrollmentComplete = true;
     p.corposEnrollmentCompletedAtSimMs = s.sim?.elapsedMs || 0;
     p.identityViolationAttemptCount = 0;
@@ -496,6 +522,13 @@ function handleRegistration(screen) {
 
   screen.style.display = 'none';
   generatePlayerAndMomAfterEnrollment();
+
+  const displayName = `${d.firstName} ${d.lastName}`.trim();
+  const passwordHash = SaveManager.hashPassword(pass);
+  SaveManager.registerUser(user, passwordHash, displayName);
+  SaveManager.setActiveUsername(user);
+  SaveManager.save();
+
   if (_enrollmentResolve) { _enrollmentResolve(); _enrollmentResolve = null; }
 }
 
@@ -503,10 +536,9 @@ function handleRegistration(screen) {
 
 export function verifyOsLogin(username, password) {
   const p = getState().player;
-  if (!p.corposEnrollmentComplete) return { ok: false, reason: 'not_enrolled' };
   if (p.licenseTerminated) return { ok: false, reason: 'terminated' };
 
-  const match = username.toUpperCase() === (p.username || '').toUpperCase() && password === p.password;
+  const match = SaveManager.verifyPassword(username, password);
   if (match) {
     patchState(s => { s.player.osFailedLoginCount = 0; return s; });
     return { ok: true };

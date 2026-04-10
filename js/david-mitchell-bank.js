@@ -20,6 +20,7 @@ import {
   normalizeSsnDigits
 } from './identity.js';
 import { complianceNoticeAmount } from './bank-config.js';
+import { SMS } from './bc-sms.js';
 
 const BANK_ID = 'davidmitchell';
 
@@ -387,6 +388,11 @@ export function dispatchDmbAction(action, ctx) {
       msg('All fields are required. Please complete the application.');
       return true;
     }
+    const phoneDigitsDm = String(phone).replace(/\D/g, '');
+    if (phoneDigitsDm.length < 10) {
+      msg('Enter a valid 10-digit phone number (required for online banking SMS verification).');
+      return true;
+    }
     if (!/^\d{4}$/.test(pin)) {
       msg('PIN must be exactly 4 digits.');
       return true;
@@ -453,6 +459,16 @@ export function dispatchDmbAction(action, ctx) {
       toast('David & Mitchell: Welcome — your account is open.');
     } else {
       msg(`Application received. A ${IDENTITY_FINE_DELAY_DAYS}-day verification window applies; discrepancies may carry penalties.`);
+    }
+    try {
+      const simMs = getState().sim?.elapsedMs ?? 0;
+      SMS.send({
+        from: 'CORPOS_SYSTEM',
+        message: `David & Mitchell Banking: Online enrollment for ${user}. Account ${num}. If this was not you, call your banker.`,
+        gameTime: simMs
+      });
+    } catch {
+      /* ignore */
     }
     navigate('dmb', 'confirm', { pushHistory: true });
     return true;

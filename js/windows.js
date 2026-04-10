@@ -3,6 +3,8 @@ const winMeta = new Map();
 let zCounter = 200;
 let dragState = null;
 let resizeState = null;
+let winInteractRaf = null;
+let winPendingMove = null;
 
 function emitWindowStateChange() {
   window.dispatchEvent(new CustomEvent('corpos:window-state-changed'));
@@ -177,20 +179,28 @@ export function initWindowChrome() {
   });
 
   document.addEventListener('mousemove', (e) => {
-    if (dragState) {
-      const win = document.getElementById(dragState.id);
-      if (win) {
-        win.style.left = `${dragState.ol + e.clientX - dragState.sx}px`;
-        win.style.top = `${dragState.ot + e.clientY - dragState.sy}px`;
+    if (!dragState && !resizeState) return;
+    winPendingMove = e;
+    if (winInteractRaf) return;
+    winInteractRaf = requestAnimationFrame(() => {
+      winInteractRaf = null;
+      const ev = winPendingMove;
+      if (!ev) return;
+      if (dragState) {
+        const win = document.getElementById(dragState.id);
+        if (win) {
+          win.style.left = `${dragState.ol + ev.clientX - dragState.sx}px`;
+          win.style.top = `${dragState.ot + ev.clientY - dragState.sy}px`;
+        }
       }
-    }
-    if (resizeState) {
-      const win = document.getElementById(resizeState.id);
-      if (win) {
-        win.style.width = `${Math.max(300, resizeState.ow + e.clientX - resizeState.sx)}px`;
-        win.style.height = `${Math.max(200, resizeState.oh + e.clientY - resizeState.sy)}px`;
+      if (resizeState) {
+        const win = document.getElementById(resizeState.id);
+        if (win) {
+          win.style.width = `${Math.max(300, resizeState.ow + ev.clientX - resizeState.sx)}px`;
+          win.style.height = `${Math.max(200, resizeState.oh + ev.clientY - resizeState.sy)}px`;
+        }
       }
-    }
+    });
   });
   document.addEventListener('mouseup', () => {
     dragState = null;

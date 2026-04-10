@@ -5,11 +5,16 @@
 import { getState, patchState, getGameEpochMs } from '../js/gameState.js';
 import { getSessionState, patchSession } from '../js/sessionState.js';
 import { ActorDB } from './ActorDB.js';
+import { ActivityLog } from './ActivityLog.js';
 
-const SAVE_KEY = 'corpos2000_player_save';
+const LEGACY_SAVE_KEY = 'corpos2000_player_save';
+const ACCOUNT_INDEX_KEY = 'corpos2000_account_index';
+const SAVE_KEY_PREFIX = 'corpos2000_save__';
 const CURRENT_VERSION = '2.1.0';
 
 const MIGRATION_ORDER = ['2.0.0', '2.1.0'];
+
+let _activeUsername = null;
 
 /** @type {Record<string, object> | null} */
 let _pendingDiscoveredActors = null;
@@ -84,18 +89,117 @@ function runMigrations(save) {
   return save;
 }
 
+function userSaveKey(username) {
+  return SAVE_KEY_PREFIX + String(username || '').trim().toUpperCase();
+}
+
+function loadAccountIndex() {
+  try {
+    const raw = localStorage.getItem(ACCOUNT_INDEX_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAccountIndex(arr) {
+  try {
+    localStorage.setItem(ACCOUNT_INDEX_KEY, JSON.stringify(arr));
+  } catch (e) {
+    console.error('[SaveManager] Failed to write account index:', e);
+  }
+}
+
 export const SaveManager = {
-  SAVE_KEY,
   CURRENT_VERSION,
+
+  getActiveUsername() {
+    return _activeUsername;
+  },
+
+  setActiveUsername(username) {
+    _activeUsername = username ? String(username).trim().toUpperCase() : null;
+  },
+
+  getAccountIndex() {
+    return loadAccountIndex();
+  },
+
+  hasRegisteredUsers() {
+    return loadAccountIndex().length > 0;
+  },
+
+  registerUser(username, passwordHash, displayName) {
+    const norm = String(username || '').trim().toUpperCase();
+    if (!norm) return false;
+    const idx = loadAccountIndex();
+    if (idx.some((a) => a.username === norm)) return false;
+    idx.push({
+      username: norm,
+      passwordHash: String(passwordHash || ''),
+      displayName: displayName || norm,
+      createdAt: new Date().toISOString()
+    });
+    saveAccountIndex(idx);
+    console.log(`[SaveManager] Registered user: ${norm}`);
+    return true;
+  },
+
+  /**
+   * Remove an operator from the workstation registry and delete their local save blob.
+   * Does not clear other users' data.
+   */
+  deleteOperatorRecord(username) {
+    const norm = String(username || '').trim().toUpperCase();
+    if (!norm) return { ok: false, reason: 'invalid' };
+    const prev = loadAccountIndex();
+    const idx = prev.filter((a) => a.username !== norm);
+    if (idx.length === prev.length) return { ok: false, reason: 'not_found' };
+    saveAccountIndex(idx);
+    try {
+      localStorage.removeItem(userSaveKey(norm));
+    } catch {
+      /* ignore */
+    }
+    if (_activeUsername === norm) _activeUsername = null;
+    _pendingDiscoveredActors = null;
+    console.log(`[SaveManager] Operator record purged: ${norm}`);
+    return { ok: true };
+  },
+
+  verifyPassword(username, password) {
+    const norm = String(username || '').trim().toUpperCase();
+    const idx = loadAccountIndex();
+    const entry = idx.find((a) => a.username === norm);
+    if (!entry) return false;
+    if (!entry.passwordHash) return true;
+    return entry.passwordHash === simpleHash(password);
+  },
+
+  updatePasswordHash(username, passwordHash) {
+    const norm = String(username || '').trim().toUpperCase();
+    const idx = loadAccountIndex();
+    const entry = idx.find((a) => a.username === norm);
+    if (!entry) return;
+    entry.passwordHash = passwordHash;
+    saveAccountIndex(idx);
+  },
+
+  hashPassword(password) {
+    return simpleHash(password);
+  },
 
   save() {
     const payload = this.buildPlayerSlice();
     payload.version = CURRENT_VERSION;
     payload.savedAt = new Date().toISOString();
     payload.gameDate = safeGameDatePayload();
+    const key = _activeUsername ? userSaveKey(_activeUsername) : userSaveKey(payload.identity?.username || 'DEFAULT');
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-      console.log(`[SaveManager] Saved at ${payload.savedAt}`);
+      localStorage.setItem(key, JSON.stringify(payload));
+      console.log(`[SaveManager] Saved ${key} at ${payload.savedAt}`);
       return { success: true, savedAt: payload.savedAt };
     } catch (err) {
       console.error('[SaveManager] Save failed:', err);
@@ -103,10 +207,11 @@ export const SaveManager = {
     }
   },
 
-  load() {
+  loadUser(username) {
+    const key = userSaveKey(username);
     let raw;
     try {
-      raw = localStorage.getItem(SAVE_KEY);
+      raw = localStorage.getItem(key);
     } catch (e) {
       console.error('[SaveManager] Storage read failed:', e);
       return { exists: false };
@@ -124,19 +229,84 @@ export const SaveManager = {
     return { exists: true, corrupted: false, data: save };
   },
 
-  reset() {
+  load() {
+    if (_activeUsername) return this.loadUser(_activeUsername);
+    let raw;
     try {
-      localStorage.removeItem(SAVE_KEY);
-    } catch {
-      /* ignore */
+      raw = localStorage.getItem(LEGACY_SAVE_KEY);
+    } catch (e) {
+      console.error('[SaveManager] Storage read failed:', e);
+      return { exists: false };
+    }
+    if (!raw) return { exists: false };
+    let save;
+    try {
+      save = JSON.parse(raw);
+    } catch (err) {
+      console.error('[SaveManager] Save file corrupted:', err);
+      return { exists: true, corrupted: true };
+    }
+    save = runMigrations(save);
+    save.version = CURRENT_VERSION;
+    return { exists: true, corrupted: false, data: save };
+  },
+
+  migrateLegacySave() {
+    try {
+      const raw = localStorage.getItem(LEGACY_SAVE_KEY);
+      if (!raw) return false;
+      const save = JSON.parse(raw);
+      const username = String(save.identity?.username || 'OPERATOR').trim().toUpperCase();
+      const key = userSaveKey(username);
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, raw);
+        console.log(`[SaveManager] Legacy save migrated to ${key}`);
+      }
+      let ph = save.identity?.passwordHash || '';
+      if (!ph && save.playerMeta?.password) {
+        ph = simpleHash(save.playerMeta.password);
+      }
+
+      const idx = loadAccountIndex();
+      if (!idx.some((a) => a.username === username)) {
+        idx.push({
+          username,
+          passwordHash: ph,
+          displayName: save.identity?.full_legal_name || username,
+          createdAt: save.savedAt || new Date().toISOString()
+        });
+        saveAccountIndex(idx);
+      }
+      localStorage.removeItem(LEGACY_SAVE_KEY);
+      return true;
+    } catch (e) {
+      console.warn('[SaveManager] Legacy migration failed:', e);
+      return false;
+    }
+  },
+
+  reset() {
+    if (_activeUsername) {
+      try {
+        localStorage.removeItem(userSaveKey(_activeUsername));
+      } catch {
+        /* ignore */
+      }
     }
     _pendingDiscoveredActors = null;
-    console.log('[SaveManager] Save cleared. New game on next load.');
+    console.log('[SaveManager] Save cleared for active user.');
   },
 
   hasSave() {
+    if (_activeUsername) {
+      try {
+        return !!localStorage.getItem(userSaveKey(_activeUsername));
+      } catch {
+        return false;
+      }
+    }
     try {
-      return !!localStorage.getItem(SAVE_KEY);
+      return !!localStorage.getItem(LEGACY_SAVE_KEY);
     } catch {
       return false;
     }
@@ -160,7 +330,37 @@ export const SaveManager = {
         home_address: P.address || '',
         phone_number: P.phone || (Array.isArray(P.phone_numbers) ? P.phone_numbers[0] : '') || '',
         operatorId: P.operatorId || P.username || '',
-        username: P.username || ''
+        username: P.username || '',
+        passwordHash: P.passwordHash || ''
+      },
+      playerMeta: {
+        corposEnrollmentComplete: !!P.corposEnrollmentComplete,
+        corposEnrollmentCompletedAtSimMs: P.corposEnrollmentCompletedAtSimMs ?? null,
+        momActorId: P.momActorId ?? null,
+        actor_id: P.actor_id || 'ACT-PLAYER01',
+        sex: P.sex || '',
+        race: P.race || '',
+        heightInches: P.heightInches || 0,
+        age: P.age || 0,
+        ssnFull: P.ssnFull || '',
+        ssnSuffix: P.ssnSuffix || '',
+        licenseTerminated: !!P.licenseTerminated,
+        terminationReason: P.terminationReason || '',
+        identityViolationAttemptCount: P.identityViolationAttemptCount || 0,
+        osFailedLoginCount: P.osFailedLoginCount || 0,
+        firstJeemailAccount: P.firstJeemailAccount ?? null,
+        irsNoticeAcknowledged: !!P.irsNoticeAcknowledged,
+        hargroveAddressId: P.hargroveAddressId ?? null,
+        vehicle: P.vehicle || '',
+        residence: P.residence || '',
+        acumen: P.acumen ?? 10,
+        webExProjects: P.webExProjects || [],
+        webExStockroom: P.webExStockroom || [],
+        webExDomainSubscriptions: P.webExDomainSubscriptions || [],
+        pendingSmsEvents: P.pendingSmsEvents || [],
+        cashUpTransactions: P.cashUpTransactions || [],
+        relationships: P.relationships || [],
+        phone_numbers: P.phone_numbers || [],
       },
       finances: {
         hardCash: P.hardCash ?? 0,
@@ -266,6 +466,37 @@ export const SaveManager = {
       }
       if (id.username) p.username = id.username;
       if (id.operatorId) p.operatorId = id.operatorId;
+      if (id.passwordHash) p.passwordHash = id.passwordHash;
+
+      const pm = d.playerMeta || {};
+      if (pm.corposEnrollmentComplete != null) p.corposEnrollmentComplete = pm.corposEnrollmentComplete;
+      if (pm.corposEnrollmentCompletedAtSimMs != null) p.corposEnrollmentCompletedAtSimMs = pm.corposEnrollmentCompletedAtSimMs;
+      if (pm.momActorId != null) p.momActorId = pm.momActorId;
+      if (pm.actor_id) p.actor_id = pm.actor_id;
+      if (pm.sex) p.sex = pm.sex;
+      if (pm.race) p.race = pm.race;
+      if (pm.heightInches) p.heightInches = pm.heightInches;
+      if (pm.age) p.age = pm.age;
+      if (pm.ssnFull) p.ssnFull = pm.ssnFull;
+      if (pm.ssnSuffix) p.ssnSuffix = pm.ssnSuffix;
+      if (pm.licenseTerminated != null) p.licenseTerminated = pm.licenseTerminated;
+      if (pm.terminationReason) p.terminationReason = pm.terminationReason;
+      if (pm.identityViolationAttemptCount != null) p.identityViolationAttemptCount = pm.identityViolationAttemptCount;
+      if (pm.osFailedLoginCount != null) p.osFailedLoginCount = pm.osFailedLoginCount;
+      if (pm.firstJeemailAccount !== undefined) p.firstJeemailAccount = pm.firstJeemailAccount;
+      if (pm.irsNoticeAcknowledged != null) p.irsNoticeAcknowledged = pm.irsNoticeAcknowledged;
+      if (pm.hargroveAddressId !== undefined) p.hargroveAddressId = pm.hargroveAddressId;
+      if (pm.vehicle) p.vehicle = pm.vehicle;
+      if (pm.residence) p.residence = pm.residence;
+      if (pm.acumen != null) p.acumen = pm.acumen;
+      if (Array.isArray(pm.webExProjects)) p.webExProjects = pm.webExProjects;
+      if (Array.isArray(pm.webExStockroom)) p.webExStockroom = pm.webExStockroom;
+      if (Array.isArray(pm.webExDomainSubscriptions)) p.webExDomainSubscriptions = pm.webExDomainSubscriptions;
+      if (Array.isArray(pm.pendingSmsEvents)) p.pendingSmsEvents = pm.pendingSmsEvents;
+      if (Array.isArray(pm.cashUpTransactions)) p.cashUpTransactions = pm.cashUpTransactions;
+      if (Array.isArray(pm.relationships)) p.relationships = pm.relationships;
+      if (Array.isArray(pm.phone_numbers)) p.phone_numbers = pm.phone_numbers;
+
       p.hardCash = d.finances?.hardCash ?? p.hardCash ?? 0;
       p.cashPassBalance = d.finances?.cashPassBalance ?? p.cashPassBalance ?? 0;
       if (d.finances?.bankAccounts) st.accounts = d.finances.bankAccounts;
@@ -312,6 +543,12 @@ export const SaveManager = {
     });
 
     this.setPendingDiscoveredActors(d.discoveredActors || null);
+
+    try {
+      ActivityLog.init();
+    } catch (e) {
+      console.warn('[SaveManager] ActivityLog.init', e);
+    }
 
     console.log('[SaveManager] Game state hydrated from save.');
     return axisRows;

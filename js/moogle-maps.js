@@ -328,6 +328,9 @@ function createMapInstance(canvas, opts = {}) {
     return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
   }
 
+  /** Set when non-readonly; removed in inst.destroy */
+  let documentMouseUpHandler = null;
+
   // Interaction
   if (!opts.readonly) {
     canvas.addEventListener('mousedown', (e) => {
@@ -366,6 +369,9 @@ function createMapInstance(canvas, opts = {}) {
     };
     canvas.addEventListener('mouseup', stopDrag);
     canvas.addEventListener('mouseleave', stopDrag);
+    // Release drag if mouseup happens outside the canvas (e.g. over the search field in the picker).
+    documentMouseUpHandler = stopDrag;
+    document.addEventListener('mouseup', documentMouseUpHandler);
 
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -424,7 +430,13 @@ function createMapInstance(canvas, opts = {}) {
       };
       requestAnimationFrame(animateDrop);
     },
-    destroy() { if (animFrame) cancelAnimationFrame(animFrame); }
+    destroy() {
+      if (animFrame) cancelAnimationFrame(animFrame);
+      if (documentMouseUpHandler) {
+        document.removeEventListener('mouseup', documentMouseUpHandler);
+        documentMouseUpHandler = null;
+      }
+    }
   };
 
   // Center map initially
@@ -585,15 +597,21 @@ function mountPickerWidget(opts) {
   if (!container) return null;
 
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'border:2px inset #d4d0c8;background:#fff;';
+  wrapper.className = 'mm-picker-root';
+  wrapper.style.cssText =
+    'display:flex;flex-direction:column;min-height:260px;border:2px inset #d4d0c8;background:#fff;position:relative;isolation:isolate;';
   wrapper.innerHTML = `
-<div style="padding:4px;">
-  <input type="text" class="mm-picker-search" placeholder="Search address..." style="width:100%;height:20px;font-size:11px;padding:0 4px;border:2px inset #d4d0c8;" value="${escapeHtml(opts.prefill || '')}">
-  <div class="mm-picker-dropdown" style="display:none;max-height:120px;overflow-y:auto;border:1px solid #999;background:#fff;font-size:10px;"></div>
+<div class="mm-picker-toolbar" style="flex:0 0 auto;position:relative;z-index:30;padding:4px;background:#fff;pointer-events:auto;">
+  <input type="text" class="mm-picker-search" placeholder="Search address..." autocomplete="off" spellcheck="false"
+    style="width:100%;height:22px;box-sizing:border-box;font-size:11px;padding:0 4px;border:2px inset #d4d0c8;position:relative;z-index:31;pointer-events:auto;touch-action:auto;cursor:text;"
+    value="${escapeHtml(opts.prefill || '')}">
+  <div class="mm-picker-dropdown" style="display:none;position:absolute;left:4px;right:4px;top:calc(100% + 2px);max-height:140px;overflow-y:auto;border:1px solid #999;background:#fff;font-size:10px;z-index:32;box-shadow:1px 2px 5px rgba(0,0,0,0.25);"></div>
 </div>
-<canvas class="mm-picker-canvas" width="350" height="220" style="display:block;width:100%;"></canvas>
-<div class="mm-picker-info" style="padding:4px;font-size:10px;display:none;"></div>
-<div style="padding:4px;text-align:right;">
+<div class="mm-picker-map-wrap" style="flex:1 1 auto;min-height:200px;position:relative;z-index:1;overflow:hidden;background:#f0ebe0;">
+  <canvas class="mm-picker-canvas" width="350" height="220" style="display:block;width:100%;height:100%;min-height:200px;position:relative;z-index:1;cursor:grab;"></canvas>
+</div>
+<div class="mm-picker-info" style="flex:0 0 auto;padding:4px;font-size:10px;display:none;"></div>
+<div style="flex:0 0 auto;padding:4px;text-align:right;">
   <button type="button" class="mm-picker-use" style="height:22px;padding:0 10px;background:#0a246a;color:#fff;border:1px outset #3366cc;font-size:10px;cursor:pointer;">Use this address</button>
 </div>`;
   container.appendChild(wrapper);
@@ -637,6 +655,14 @@ function mountPickerWidget(opts) {
   searchEl?.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') dropEl.style.display = 'none';
   });
+  searchEl?.addEventListener(
+    'pointerdown',
+    (e) => {
+      e.stopPropagation();
+      searchEl.focus();
+    },
+    true
+  );
 
   mapInst.onSelect = (addr) => { if (!filterTypes || filterTypes.includes(addr.type)) selectAddr(addr); };
 

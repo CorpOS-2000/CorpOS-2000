@@ -56,8 +56,10 @@ import { ActorDB } from '../engine/ActorDB.js';
 import { renderMoogleMapsPage, mountMoogleMaps, teardownMoogleMaps } from './moogle-maps.js';
 import { mountWarehousePage } from './warehouse-tick.js';
 import { mountMarketPulsePage } from './market-pulse-page.js';
+import { initDailyHerald } from './daily-herald.js';
 import { CORPOS_GATED_PAGE_KEYS, renderGateInterstitial } from './corpos-enrollment.js';
 import { simpleHash, deliverCorpOSWelcomePacket } from './jeemail-corpos.js';
+import { SMS } from './bc-sms.js';
 import { renderFocsMandateHtml, renderCorposPortalHtml } from './worldnet-gov-pages.js';
 
 let pages = { ...worldnetPages };
@@ -518,6 +520,19 @@ function renderDevtoolsAppCard(appId) {
 </div>`;
 }
 
+function sendNewAccountSms(serviceName, line) {
+  try {
+    const simMs = getState().sim?.elapsedMs ?? 0;
+    SMS.send({
+      from: 'CORPOS_SYSTEM',
+      message: `${serviceName}: ${line}`,
+      gameTime: simMs
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 function renderWahooRegister() {
   return `<div class="iebody">
 <h1 style="font-size:22px;color:#cc0000;font-family:'Times New Roman',serif;">Wahoo! Account Registration</h1>
@@ -527,6 +542,7 @@ function renderWahooRegister() {
 <tr><td>Password</td><td><input id="wahoo-pass" type="password" style="width:100%"></td></tr>
 <tr><td>Date of Birth</td><td><input id="wahoo-dob" type="date" style="width:100%"></td></tr>
 <tr><td>Security Question</td><td><input id="wahoo-secq" type="text" style="width:100%" placeholder="Your first company name?"></td></tr>
+<tr><td>Mobile phone <span style="font-size:9px;color:#666;">(optional — SMS confirmation)</span></td><td><input id="wahoo-phone" type="tel" inputmode="numeric" autocomplete="off" placeholder="10 digits" style="width:100%"></td></tr>
 </table>
 <div style="margin-top:10px;"><button type="button" data-action="wahoo-register">Create Wahoo Account</button></div>
 <div style="margin-top:8px;"><a data-nav="wahoo_login">Already registered? Sign in.</a></div>
@@ -578,6 +594,25 @@ function jeemailCurrentAccount() {
   return id ? s.jeemail.accounts[id] : null;
 }
 
+function applyJeeMailComposePrefillFromSession() {
+  const pf = getSessionState().jeemail?.composePrefill;
+  if (!pf) return;
+  queueMicrotask(() => {
+    const toEl = document.getElementById('jeemail-to');
+    const subEl = document.getElementById('jeemail-subject');
+    const bodyEl = document.getElementById('jeemail-body');
+    if (toEl && pf.to) toEl.value = pf.to;
+    if (subEl && pf.subject != null) subEl.value = pf.subject;
+    if (bodyEl && pf.body != null) bodyEl.value = pf.body;
+    // Only clear when the compose form is present (logged in). Login page has no #jeemail-to — keep prefill for post-sign-in.
+    if (toEl) {
+      patchSession((s) => {
+        if (s.jeemail) s.jeemail.composePrefill = null;
+      });
+    }
+  });
+}
+
 function renderJeeMailLogin() {
   return `<div class="iebody">
 <table style="width:100%;border:1px solid #99c;background:#eef7ff;">
@@ -624,6 +659,10 @@ function renderJeeMailRegister() {
   <div style="margin-bottom:6px;">
     <label style="font-size:11px;">Confirm password</label>
     <input type="password" id="jeemail-reg-confirm" maxlength="50" style="width:200px;">
+  </div>
+  <div style="margin-bottom:6px;">
+    <label style="font-size:11px;">Mobile phone <span style="color:#cc0000;">*</span> <span style="font-size:9px;color:#666;">(required — SMS verification)</span></label>
+    <input type="tel" id="jeemail-reg-phone" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="5551234567" style="width:200px;">
   </div>
   <div id="jeemail-reg-error" style="display:none;color:#cc0000;font-size:10px;margin-top:4px;"></div>
   <div style="margin-top:10px;"><button type="button" data-action="jeemail-register">Create Account</button></div>
@@ -905,6 +944,7 @@ function renderPage(key, sub = '') {
   if (key === 'corpos_portal') return renderCorposPortalHtml();
   if (key === 'warehouse') return pages.warehouse || defaultNotFoundHtml();
   if (key === 'market_pulse') return pages.market_pulse || defaultNotFoundHtml();
+  if (key === 'herald') return '<div id="dh-wnet-root" style="min-height:100%;"></div>';
   if (key === 'devtools') return renderDevtoolsPage();
   if (key === 'wn_shop') return renderShopHtml(sub || '');
   if (key === 'not_found') return defaultNotFoundHtml();
@@ -1103,9 +1143,23 @@ function navigate(key, sub = '', opts = {}) {
   if (currentPageKey === 'moogle_maps') mountMoogleMaps(content);
   if (currentPageKey === 'warehouse') mountWarehousePage(content);
   if (currentPageKey === 'market_pulse') mountMarketPulsePage(content);
+  if (currentPageKey === 'herald') {
+    const wm = content.querySelector('#dh-wnet-root');
+    if (wm) initDailyHerald({ mount: wm });
+  }
+  if (currentPageKey === 'jeemail_compose') {
+    applyJeeMailComposePrefillFromSession();
+  }
   syncAddressBar(currentPageKey, currentSubPath);
   updateWindowDataAttrs();
   status.textContent = 'Done';
+
+  try {
+    const u = urlForPage(currentPageKey, currentSubPath) || `http://www.wahoo.net/${currentPageKey}`;
+    window.ActivityLog?.log?.('WORLDNET_VISIT', `${u} — outbound`);
+  } catch {
+    /* ignore */
+  }
 
   if (opts.pushHistory) {
     historyEntries = historyEntries.slice(0, historyIndex + 1);
@@ -1309,6 +1363,15 @@ function dispatchAction(action, rootEl, sourceEl = null) {
         'Your petition could not be accepted at this time. The filing fee has been forfeited per agency policy.'
     });
     toast(r.message);
+    try {
+      window.ActivityLog?.log?.(
+        'SSA_REQUEST',
+        `SSA request submitted — legal name change petition (${r.success ? 'accepted' : 'denied'})`,
+        { notable: true }
+      );
+    } catch {
+      /* ignore */
+    }
     return true;
   }
   if (action === 'ssa-addr-lookup') {
@@ -1341,6 +1404,15 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     toast('Address updated successfully.');
     const curEl = document.getElementById('ssa-addr-current');
     if (curEl) curEl.textContent = `Current address: ${addrLabel}`;
+    try {
+      window.ActivityLog?.log?.(
+        'SSA_REQUEST',
+        'SSA request submitted — residential address update',
+        { notable: true }
+      );
+    } catch {
+      /* ignore */
+    }
     return true;
   }
   if (action === 'wahoo-register') {
@@ -1348,15 +1420,22 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     const pass = document.getElementById('wahoo-pass')?.value || '';
     const dob = document.getElementById('wahoo-dob')?.value || '';
     const secq = (document.getElementById('wahoo-secq')?.value || '').trim();
+    const phoneDigits = String(document.getElementById('wahoo-phone')?.value || '').replace(/\D/g, '');
     if (!user || !pass || !dob || !secq) {
       toast('Complete all fields to register.');
       return true;
     }
     patchSession((s) => {
-      s.wahoo.accounts[user] = { password: pass, dob, secq, contact: '' };
+      s.wahoo.accounts[user] = { password: pass, dob, secq, contact: '', phone: phoneDigits };
       s.wahoo.currentUser = user;
     });
     toast('Wahoo account created.');
+    if (phoneDigits.length >= 10) {
+      sendNewAccountSms(
+        'Wahoo!',
+        `Welcome, ${user}. Your WorldNet portal account is active. Reply STOP to opt out of alerts (simulation).`
+      );
+    }
     navigate('home', '', { pushHistory: true });
     return true;
   }
@@ -1371,6 +1450,11 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     patchSession((s) => {
       s.wahoo.currentUser = user;
     });
+    try {
+      window.ActivityLog?.log?.('WAHOO_LOGIN', `Wahoo! portal login: ${user}`);
+    } catch {
+      /* ignore */
+    }
     navigate('moogle_home', '', { pushHistory: true });
     return true;
   }
@@ -1406,12 +1490,15 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     const localPart = (usernameEl.value || '').trim().toLowerCase();
     const pass = (passwordEl.value || '').trim();
     const confirm = confirmEl ? (confirmEl.value || '').trim() : pass;
+    const phoneReg = (document.getElementById('jeemail-reg-phone')?.value || '').trim();
+    const phoneDigits = phoneReg.replace(/\D/g, '');
 
     const errors = [];
     if (!localPart || localPart.length < 3) errors.push('Username must be at least 3 characters.');
     if (!/^[a-z0-9._-]+$/.test(localPart)) errors.push('Username may only contain letters, numbers, dots, hyphens, and underscores.');
     if (!pass || pass.length < 4) errors.push('Password must be at least 4 characters.');
     if (pass !== confirm) errors.push('Passwords do not match.');
+    if (phoneDigits.length < 10) errors.push('A valid 10-digit mobile number is required for JeeMail (federal verification).');
 
     const fullEmail = `${localPart}@jeemail.net`;
     const accounts = getSessionState().jeemail?.accounts || {};
@@ -1427,6 +1514,7 @@ function dispatchAction(action, rootEl, sourceEl = null) {
       if (!s.jeemail.accounts) s.jeemail.accounts = {};
       s.jeemail.accounts[fullEmail] = {
         email: fullEmail,
+        phone: phoneDigits,
         password: pass,
         passwordHash: hashed,
         inbox: seedJeeMailInbox(fullEmail),
@@ -1449,7 +1537,17 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     }
 
     setTimeout(() => deliverCorpOSWelcomePacket(fullEmail, localPart), 800);
-    navigate('jeemail_inbox', '', { pushHistory: true });
+    sendNewAccountSms(
+      'JeeMail',
+      `Mailbox ${fullEmail} is ready. Verification code (simulation): ${String(100000 + (Math.floor(Math.random() * 899999) || 0))}.`
+    );
+    try {
+      window.ActivityLog?.log?.('JEEMAIL_REGISTER', `JeeMail account registered: ${fullEmail}`);
+    } catch {
+      /* ignore */
+    }
+    const postReg = getSessionState().jeemail?.composePrefill ? 'jeemail_compose' : 'jeemail_inbox';
+    navigate(postReg, '', { pushHistory: true });
     return true;
   }
   if (action === 'jeemail-open-msg') {
@@ -1482,7 +1580,13 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     patchSession((s) => {
       s.jeemail.currentUser = user;
     });
-    navigate('jeemail_inbox', '', { pushHistory: true });
+    try {
+      window.ActivityLog?.log?.('JEEMAIL_LOGIN', `JeeMail login: ${user}`);
+    } catch {
+      /* ignore */
+    }
+    const postLogin = getSessionState().jeemail?.composePrefill ? 'jeemail_compose' : 'jeemail_inbox';
+    navigate(postLogin, '', { pushHistory: true });
     return true;
   }
   if (action === 'jeemail-send') {
@@ -1491,6 +1595,9 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     const body = (document.getElementById('jeemail-body')?.value || '').trim();
     const acc = jeemailCurrentAccount();
     if (!acc) return true;
+    const actor = to && window.ActorDB?.getByEmail ? window.ActorDB.getByEmail(to) : null;
+    const replyName =
+      actor?.contactDisplayName || actor?.first_name || String(to).split('@')[0] || 'Contact';
     patchSession((s) => {
       const cur = s.jeemail.accounts[acc.email];
       cur.sent.push({
@@ -1500,8 +1607,15 @@ function dispatchAction(action, rootEl, sourceEl = null) {
         body,
         date: 'Jan 2, 2000'
       });
+      if (actor?.actor_id && cur.inbox) {
+        cur.inbox.unshift({
+          from: to,
+          subject: subject ? `Re: ${subject}` : 'Thanks for your message',
+          body: `Hi — thanks for your message. I'll get back to you soon.\n\n— ${replyName}`,
+          date: 'Jan 2, 2000'
+        });
+      }
     });
-    const actor = to && window.ActorDB?.getByEmail ? window.ActorDB.getByEmail(to) : null;
     if (actor?.actor_id && window.WorldNet?.axis) {
       window.WorldNet.axis.discover(actor.actor_id, {
         source: 'email',
@@ -1777,6 +1891,11 @@ export function wahooSearch(doc) {
   const input = root.getElementById('wsearch');
   const q = input?.value?.trim() || '';
   if (!q) return;
+  try {
+    window.ActivityLog?.log?.('WORLDNET_SEARCH', `Query: "${q}" via Wahoo!`);
+  } catch {
+    /* ignore */
+  }
   navigate('wahoo_results', encodeURIComponent(q), { pushHistory: true });
 }
 

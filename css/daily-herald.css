@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════════════════════════
+   The Daily Herald — Y2K-era news/contract website
+   ═══════════════════════════════════════════════════════════ */
+
+.dh-shell {
+  font-family: Tahoma, 'MS Sans Serif', Geneva, Arial, sans-serif;
+  font-size: 11px;
+  color: #1a1a1a;
+  background: #e8e4d8;
+  min-height: 100%;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+
+.dh-header {
+  width: 100%;
+  background: linear-gradient(180deg, #0a246a 0%, #1c3f80 50%, #0a246a 100%);
+  color: #fff;
+  border-bottom: 3px double #c0b088;
+}
+.dh-header td { padding: 8px 12px; vertical-align: middle; }
+.dh-logo-cell { text-align: left; }
+.dh-logo {
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0,0,0,.5);
+  letter-spacing: .5px;
+}
+.dh-tagline {
+  font-size: 10px;
+  color: #b8c8e0;
+  font-style: italic;
+  margin-top: 2px;
+}
+.dh-date-cell {
+  text-align: right;
+  font-size: 10px;
+  color: #d0d8e8;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* ── Nav ─────────────────────────────────────────────── */
+
+.dh-nav {
+  background: #d4d0c8;
+  border-bottom: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  padding: 2px 8px;
+  display: flex;
+  gap: 2px;
+}
+.dh-nav-active, .dh-nav-link {
+  padding: 2px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.dh-nav-active {
+  background: #fff;
+  border-color: #808080;
+  font-weight: bold;
+  color: #0a246a;
+}
+.dh-nav-link { color: #444; }
+.dh-nav-link:hover { background: #e8e4d8; border-color: #aaa; }
+
+/* ── Breaking banner ─────────────────────────────────── */
+
+.dh-breaking {
+  background: linear-gradient(90deg, #990000, #cc2200);
+  color: #fff;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  overflow: hidden;
+}
+.dh-breaking-tag {
+  background: #fff;
+  color: #cc0000;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+.dh-breaking-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Body + layout table ────────────────────────────── */
+
+.dh-body { padding: 0; }
+
+.dh-layout { width: 100%; }
+.dh-main {
+  vertical-align: top;
+  padding: 8px 10px;
+  width: 70%;
+}
+.dh-sidebar {
+  vertical-align: top;
+  width: 30%;
+  padding: 8px;
+  background: #d4d0c8;
+  border-left: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+
+/* ── Section titles ──────────────────────────────────── */
+
+.dh-sect-title {
+  background: linear-gradient(180deg, #2c5aa0, #1a3a70);
+  color: #fff;
+  font-weight: bold;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+}
+
+/* ── Headlines ───────────────────────────────────────── */
+
+.dh-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #d4d0c8;
+  background: #f5f3ee;
+}
+.dh-headline:hover { background: #ebe8dd; }
+.dh-hl-icon { flex-shrink: 0; }
+.dh-hl-text { flex: 1; min-width: 0; }
+.dh-hl-time { font-size: 9px; color: #888; flex-shrink: 0; }
+
+.dh-empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 12px;
+}
+
+/* ── Sidebar widgets ─────────────────────────────────── */
+
+.dh-widget {
+  margin-bottom: 8px;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  background: #f5f3ee;
+}
+.dh-widget-title {
+  background: linear-gradient(180deg, #2c5aa0, #1a3a70);
+  color: #fff;
+  font-weight: bold;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+.dh-widget-row {
+  padding: 3px 6px;
+  border-bottom: 1px solid #d4d0c8;
+  font-size: 10px;
+}
+.dh-widget-empty {
+  padding: 4px 6px;
+  font-size: 10px;
+  color: #888;
+  font-style: italic;
+}
+.dh-alert { color: #8b6914; }
+
+/* ── Classifieds ─────────────────────────────────────── */
+
+.dh-cl-tbl {
+  width: calc(100% - 16px);
+  margin: 0 8px 8px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.dh-cl-tbl td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #d4d0c8;
+}
+.dh-cl-hdr td {
+  background: #d4d0c8;
+  font-weight: bold;
+  font-size: 10px;
+  border-bottom: 1px solid #808080;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+
+.dh-footer {
+  text-align: center;
+  font-size: 9px;
+  color: #888;
+  padding: 8px;
+  border-top: 1px solid #c0b088;
+  background: #d4d0c8;
+}

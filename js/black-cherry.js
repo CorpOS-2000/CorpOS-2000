@@ -45,6 +45,77 @@ let _transcriptLineTimeout = null;
 let transcriptTimerInterval = null;
 let transcriptSeconds = 0;
 
+/** When true, new transcript content scrolls the panel to keep the latest line in view. */
+let _transcriptFollowBottom = true;
+/** Batched rAF for typewriter ticks so we do not queue many scroll animations. */
+let _transcriptScrollRaf = null;
+/** Debounce reading scroll position after programmatic smooth scroll settles. */
+let _transcriptScrollSettleTimer = null;
+
+/** Pixels from the bottom to still count as "at bottom" (resume auto-follow). */
+const TRANSCRIPT_BOTTOM_SLACK_PX = 6;
+
+function isTranscriptAtBottom(el) {
+  if (!el) return true;
+  const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+  return gap <= TRANSCRIPT_BOTTOM_SLACK_PX;
+}
+
+function onTranscriptBodyScroll() {
+  if (currentView !== 'transcript') return;
+  if (_transcriptScrollSettleTimer) clearTimeout(_transcriptScrollSettleTimer);
+  _transcriptScrollSettleTimer = setTimeout(() => {
+    _transcriptScrollSettleTimer = null;
+    if (currentView !== 'transcript') return;
+    const el = $('bc-transcript-body');
+    if (!el) return;
+    _transcriptFollowBottom = isTranscriptAtBottom(el);
+  }, 120);
+}
+
+function bindTranscriptScrollFollow() {
+  const el = $('bc-transcript-body');
+  if (!el || el.dataset.bcTranscriptScrollBound === '1') return;
+  el.dataset.bcTranscriptScrollBound = '1';
+  el.addEventListener('scroll', onTranscriptBodyScroll, { passive: true });
+}
+
+function cancelTranscriptScrollRaf() {
+  if (_transcriptScrollRaf != null) {
+    cancelAnimationFrame(_transcriptScrollRaf);
+    _transcriptScrollRaf = null;
+  }
+}
+
+/**
+ * @param {'smooth' | 'instant'} mode smooth for new bubbles; instant (or rAF) while typing
+ */
+function scrollTranscriptToBottomIfFollowing(container, mode) {
+  if (!container || !_transcriptFollowBottom) return;
+  const top = container.scrollHeight;
+  if (mode === 'smooth' && typeof container.scrollTo === 'function') {
+    try {
+      container.scrollTo({ top, behavior: 'smooth' });
+    } catch {
+      container.scrollTop = top;
+    }
+  } else {
+    container.scrollTop = top;
+  }
+}
+
+/** Coalesce per-frame scrolls during typewriter effect. */
+function scheduleTranscriptScrollToBottomIfFollowing() {
+  if (!_transcriptFollowBottom) return;
+  if (_transcriptScrollRaf != null) return;
+  _transcriptScrollRaf = requestAnimationFrame(() => {
+    _transcriptScrollRaf = null;
+    if (!_transcriptFollowBottom) return;
+    const c = $('bc-transcript-body');
+    if (c && currentView === 'transcript') c.scrollTop = c.scrollHeight;
+  });
+}
+
 function abortTranscriptAsyncWork() {
   _transcriptSessionId++;
   if (transcriptTimerInterval) {
@@ -58,6 +129,11 @@ function abortTranscriptAsyncWork() {
   if (_transcriptLineTimeout) {
     clearTimeout(_transcriptLineTimeout);
     _transcriptLineTimeout = null;
+  }
+  cancelTranscriptScrollRaf();
+  if (_transcriptScrollSettleTimer) {
+    clearTimeout(_transcriptScrollSettleTimer);
+    _transcriptScrollSettleTimer = null;
   }
 }
 /** When true and phone is open, dock sits top-right and handset is scaled up (“bring to face”). */
@@ -177,7 +253,7 @@ function showView(view, opts = {}) {
   }
   currentView = view;
   if (view === 'home') { setScreenHeading('Home'); renderIconGrid(); }
-  else if (view === 'messaging') { setScreenHeading('Messages'); renderThreadList(); }
+  else if (view === 'messaging') { setScreenHeading(''); renderThreadList(); }
   else if (view === 'thread') { setScreenHeading('Thread'); renderThreadDetail(); }
   else if (view === 'contacts') { setScreenHeading('Contacts'); renderContacts(); }
   else if (view === 'dialpad') {
@@ -224,6 +300,8 @@ function popView() {
 }
 
 function goHome() { viewHistory = []; showView('home'); }
+
+export function resetBlackCherryView() { goHome(); }
 
 /* ── Icon grid ── */
 function renderIconGrid() {
@@ -661,6 +739,7 @@ function typeTextLine(element, text, speed, onDone, sessionId) {
       return;
     }
     element.textContent = text.substring(0, i + 1);
+    scheduleTranscriptScrollToBottomIfFollowing();
     i++;
     if (i >= text.length) {
       clearInterval(_transcriptTypingInterval);
@@ -687,7 +766,7 @@ export function appendToTranscript(actorId, lines) {
       ? 'transcript-bubble transcript-outgoing'
       : 'transcript-bubble transcript-incoming';
     container.appendChild(bubble);
-    container.scrollTop = container.scrollHeight;
+    scrollTranscriptToBottomIfFollowing(container, 'smooth');
     if (line.speaker !== 'player' && !line.isEnd) {
       typeTextLine(bubble, line.text, 28, () => {
         if (sessionId !== _transcriptSessionId) return;
@@ -700,6 +779,7 @@ export function appendToTranscript(actorId, lines) {
     } else {
       bubble.textContent = line.text;
       if (line.speaker === 'player') bubble.style.opacity = '0.85';
+      scrollTranscriptToBottomIfFollowing(container, 'smooth');
       if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
       _transcriptLineTimeout = setTimeout(() => {
         _transcriptLineTimeout = null;
@@ -762,6 +842,12 @@ function initiateCall(actorId) {
     s.blackCherry.recentCalls.unshift({ actorId, name, phone, simMs: getState().sim?.elapsedMs || 0 });
     s.blackCherry.recentCalls = s.blackCherry.recentCalls.slice(0, 20);
   });
+
+  try {
+    window.ActivityLog?.log?.('CALL_OUTBOUND', `Outbound call to ${name} (${phone})`);
+  } catch {
+    /* ignore */
+  }
 
   callTimer = setTimeout(() => {
     callTimer = null;
@@ -955,6 +1041,15 @@ export function triggerIncomingCall(actorId, callbacks) {
   }
 
   pushView('incoming');
+
+  try {
+    window.ActivityLog?.log?.(
+      'CALL_RECEIVE',
+      `Incoming call from ${name} — ${phone}`
+    );
+  } catch {
+    /* ignore */
+  }
 }
 
 function answerIncomingCall() {
@@ -1042,6 +1137,15 @@ export function openBlackCherryDock() {
   updatePhoneLine();
   goHome();
   dockRoot()?.removeAttribute('aria-hidden');
+}
+
+/** Open the handset to SMS thread with a contact (from CCR, etc.). */
+export function openBlackCherrySmsTo(actorId) {
+  if (!actorId || actorId === 'PLAYER_PRIMARY') return;
+  openBlackCherryDock();
+  viewHistory = [];
+  showView('contacts');
+  openThread(actorId);
 }
 
 export function peekBlackCherryFromCorner() {
@@ -1135,6 +1239,7 @@ function typeText(element, text, speed, onDone, sessionId) {
       return;
     }
     element.textContent = text.substring(0, i + 1);
+    scheduleTranscriptScrollToBottomIfFollowing();
     i++;
     if (i >= text.length) {
       clearInterval(_transcriptTypingInterval);
@@ -1154,6 +1259,8 @@ export function showLiveTranscript({ actorId, displayName, transcript, onComplet
   const sessionId = _transcriptSessionId;
   pushView('transcript');
   clearTranscriptOptions();
+  _transcriptFollowBottom = true;
+  bindTranscriptScrollFollow();
 
   const avatarEl = $('bc-transcript-avatar');
   const nameEl = $('bc-transcript-name');
@@ -1192,7 +1299,7 @@ export function showLiveTranscript({ actorId, displayName, transcript, onComplet
 
     if (container) {
       container.appendChild(bubble);
-      container.scrollTop = container.scrollHeight;
+      scrollTranscriptToBottomIfFollowing(container, 'smooth');
     }
 
     if (line.speaker !== 'player' && !line.isEnd) {
@@ -1207,6 +1314,7 @@ export function showLiveTranscript({ actorId, displayName, transcript, onComplet
     } else {
       bubble.textContent = line.text;
       if (line.speaker === 'player') bubble.style.opacity = '0.5';
+      if (container) scrollTranscriptToBottomIfFollowing(container, 'smooth');
       if (_transcriptLineTimeout) clearTimeout(_transcriptLineTimeout);
       _transcriptLineTimeout = setTimeout(() => {
         _transcriptLineTimeout = null;
@@ -1231,6 +1339,8 @@ export function initBlackCherry() {
     if (!s.blackCherry.recentCalls) s.blackCherry.recentCalls = [];
     if (!s.blackCherry.pendingRudenessEvents) s.blackCherry.pendingRudenessEvents = [];
   });
+
+  bindTranscriptScrollFollow();
 
   function isPointerInCornerHotspot(clientX, clientY) {
     const vw = window.innerWidth;

@@ -263,3 +263,181 @@
   color: #d8e3ff;
   padding: 12px;
 }
+
+/* ── CCR top-level navigation ────────────────────── */
+
+/* Send Message — communication picker (email vs phone) */
+.axis-msg-wrap {
+  position: relative;
+  display: inline-block;
+}
+.axis-msg-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 50;
+  margin-top: 2px;
+  min-width: 220px;
+  background: #f5f3ee;
+  border: 2px solid;
+  border-color: #fff #404040 #404040 #fff;
+  box-shadow: 2px 2px 4px rgba(0,0,0,.2);
+  padding: 6px;
+}
+.axis-msg-menu.is-open {
+  display: block;
+}
+.axis-msg-prompt {
+  font-size: 10px;
+  font-weight: bold;
+  color: #0a246a;
+  margin-bottom: 4px;
+}
+.axis-msg-opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 11px;
+  font-family: Tahoma, Arial, sans-serif;
+  padding: 4px 8px;
+  margin: 2px 0;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  cursor: pointer;
+}
+.axis-msg-opt:hover {
+  background: #e8e4d8;
+}
+
+/* ── CCR module panels ───────────────────────────── */
+
+.ccr-module {
+  padding: 8px;
+  overflow: auto;
+  max-height: min(420px, 70vh);
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  background: #efefef;
+}
+.ccr-toolbar {
+  margin-bottom: 8px;
+}
+.ccr-section-head {
+  background: linear-gradient(180deg, #2c5aa0, #1a3a70);
+  color: #fff;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 3px 8px;
+  margin-bottom: 4px;
+}
+.ccr-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+.ccr-tbl td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #d4d0c8;
+  vertical-align: top;
+}
+.ccr-tbl-hdr td {
+  background: #d4d0c8;
+  font-weight: bold;
+  font-size: 10px;
+  border-bottom: 1px solid #808080;
+}
+.ccr-row-active td { background: #fefde8; }
+.ccr-row-done td { background: #eef6ee; color: #555; }
+.ccr-row-cancelled td { background: #f5f0f0; color: #999; }
+.ccr-unack {
+  display: inline-block;
+  background: #cc0000;
+  color: #fff;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 0 4px;
+  margin-left: 4px;
+}
+.ccr-btn-sm {
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+}
+.ccr-btn-submit {
+  background: linear-gradient(180deg, #4a7cc4, #2c5aa0) !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+.ccr-btn-submit:disabled { opacity: .5; }
+
+/* ── Contract builder ────────────────────────────── */
+
+.ccr-builder {
+  background: #f5f3ee;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  padding: 6px;
+  margin-bottom: 10px;
+}
+.ccr-form { width: 100%; }
+.ccr-form td { padding: 3px 6px; font-size: 11px; }
+.ccr-label { width: 120px; font-weight: bold; white-space: nowrap; }
+.ccr-form select, .ccr-form input[type="text"] {
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  background: #fff;
+  padding: 1px 3px;
+}
+.ccr-form select { min-width: 200px; }
+.ccr-warn {
+  color: #8b6914;
+  background: #fff0c0;
+  border: 1px solid #cc9900;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  margin-top: 3px;
+  display: inline-block;
+}
+.ccr-err { color: #cc0000; font-weight: bold; font-size: 10px; }
+.ccr-ok { color: #006600; font-weight: bold; font-size: 10px; }
+
+.ccr-chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.ccr-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: #d8e8f8; border: 1px solid #8899bb;
+  padding: 1px 6px; font-size: 10px; color: #1a3060;
+}
+.ccr-chip-x { cursor: pointer; font-weight: bold; color: #990000; }
+.ccr-chip-x:hover { color: #ff0000; }
+
+.ccr-picker {
+  background: #f0ece0;
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  padding: 6px; margin: 4px 0;
+}
+.ccr-mod-price {
+  width: 70px;
+}
+
+.ccr-contact-role {
+  background: #e8e4d8;
+  padding: 3px 8px;
+  font-size: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #c0b088;
+}
+
+.ccr-rules-info {
+  background: #f5f3ee;
+  border: 1px solid #d4d0c8;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: #444;
+  line-height: 1.4;
+}

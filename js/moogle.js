@@ -443,6 +443,11 @@ export function runMoogleSearch(navigate, rootEl) {
       doc.getElementById('moogle-q-home')?.value ||
       '').trim();
   if (!q) return;
+  try {
+    window.ActivityLog?.log?.('WORLDNET_SEARCH', `Query: "${q}" via Moogle`);
+  } catch {
+    /* ignore */
+  }
   navigate('moogle_results', formatMoogleResultsSub(q), { pushHistory: true });
 }
 
