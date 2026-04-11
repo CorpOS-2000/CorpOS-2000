@@ -7,6 +7,7 @@ import { renderShopProductGridHtml } from './worldnet-shop.js';
 import { renderWebexWidgetSection } from './webex-widgets.js';
 import { deriveTemplateSlots, getAdPlacementById, layoutTemplateForCategory } from './worldnet-ad-schema.js';
 import { renderLiveThreadHtml } from './pipeline-live-comments.js';
+import { renderY2kSiteHtml } from './worldnet-y2k-renderer.js';
 
 /**
  * @param {object} pageDef
@@ -14,6 +15,7 @@ import { renderLiveThreadHtml } from './pipeline-live-comments.js';
  */
 export function renderPageDefinitionHtml(pageDef, ctx = {}) {
   if (!pageDef) return '<div class="iebody"><p>Missing page.</p></div>';
+  if (pageDef.style === 'y2k') return renderY2kSiteHtml(pageDef, ctx);
   if (pageDef.webExLayout?.cells?.length) {
     return renderWebExMirrorPage(pageDef, ctx);
   }

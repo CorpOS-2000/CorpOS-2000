@@ -69,6 +69,7 @@ import { initMediaPlayer } from './media-player.js';
 import { initFileExplorer } from './file-explorer.js';
 import { initWritepad } from './writepad.js';
 import { initDailyHerald } from './daily-herald.js';
+import { EventSystem } from '../engine/EventSystem.js';
 
 let newsItems = [];
 const CONTENT_TOAST_DEBOUNCE_MS = 700;
@@ -420,6 +421,13 @@ async function main() {
         queueContentSummary('actors');
         return;
       }
+      if (cat === 'events') {
+        loadJsonFile('events/events.json').then(defs => {
+          EventSystem.loadDefinitions(Array.isArray(defs) ? defs : []);
+          console.log('[EventSystem] Hot-reloaded event definitions.');
+        }).catch(e => console.warn('[EventSystem] Hot-reload failed:', e));
+        return;
+      }
       reloadContentCategoryFromDisk(cat, loadJsonFile).then(() => {
         if (cat === 'pages') wnetReload();
         queueContentSummary(cat);
@@ -503,6 +511,15 @@ async function main() {
     refreshInstallableAppVisibility();
     refreshTransferDialog();
   });
+
+  try {
+    const evtDefs = await loadJsonFile('events/events.json');
+    EventSystem.loadDefinitions(Array.isArray(evtDefs) ? evtDefs : []);
+  } catch (e) {
+    console.warn('[EventSystem] Could not load events.json:', e);
+  }
+  EventSystem.init();
+  window.EventSystem = EventSystem;
 
   renderProfilesFromState();
   syncSpeedButtons();

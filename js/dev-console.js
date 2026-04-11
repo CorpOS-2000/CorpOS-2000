@@ -281,6 +281,7 @@ export const DevConsole = {
       { speaker: 'dev', text: '4 — Change my name (updates Mom\'s surname too)', delay: 800 },
       { speaker: 'dev', text: '5 — Change my Social Security number', delay: 800 },
       { speaker: 'dev', text: '6 — Wipe my criminal record', delay: 800 },
+      { speaker: 'dev', text: '7 — Force fire a world event by ID', delay: 800 },
       { speaker: 'dev', text: '9 — End call', delay: 600 }
     ]);
 
@@ -291,6 +292,7 @@ export const DevConsole = {
       { label: '4 — Change name', action: () => this.option_ChangeName() },
       { label: '5 — Change SSN', action: () => this.option_ChangeSsn() },
       { label: '6 — Wipe criminal record', action: () => this.option_WipeRecord() },
+      { label: '7 — Force fire event', action: () => this.option_ForceEvent() },
       { label: '9 — End Call', action: () => this.endCall() }
     ]);
   },
@@ -599,6 +601,43 @@ export const DevConsole = {
       });
       setTimeout(() => this.showMenu(), 3200);
     }, 1400);
+  },
+
+  option_ForceEvent() {
+    clearTranscriptOptions();
+    appendToTranscript(ACTOR_ID, [
+      { speaker: 'player', text: 'Option 7. Fire an event.', delay: 400 },
+      { speaker: 'dev', text: 'Which event ID?', delay: 800 }
+    ]);
+
+    const registry = window.EventSystem?.getRegistry?.() || [];
+    if (!registry.length) {
+      appendToTranscript(ACTOR_ID, [
+        { speaker: 'dev', text: 'No event definitions loaded. Nothing to fire.', delay: 1200 }
+      ]);
+      setTimeout(() => this.showMenu(), 2400);
+      return;
+    }
+
+    const options = registry.map(def => ({
+      label: `${def.id} — ${def.title || '(untitled)'}`,
+      action: () => {
+        clearTranscriptOptions();
+        window.EventSystem.forceEvent(def.id);
+        appendToTranscript(ACTOR_ID, [
+          { speaker: 'dev', text: `Fired: ${def.id}`, delay: 600 }
+        ]);
+        ToastManager.fire({
+          key: TOAST_KEYS.GENERIC,
+          title: 'Event Fired',
+          message: def.title || def.id,
+          icon: '⚡'
+        });
+        setTimeout(() => this.showMenu(), 2200);
+      }
+    }));
+    options.push({ label: 'Cancel', action: () => this.showMenu() });
+    showTranscriptOptions(options);
   },
 
   endCall() {

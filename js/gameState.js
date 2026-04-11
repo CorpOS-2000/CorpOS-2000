@@ -663,6 +663,19 @@ export function migrateStateIfNeeded(st) {
     st.ccr.newsFeed = Array.isArray(st.ccr.newsFeed) ? st.ccr.newsFeed : [];
     if (st.ccr.nextSeq == null) st.ccr.nextSeq = 1;
   }
+  if ((st.meta.version || 0) < 18) {
+    st.meta.version = 18;
+    if (!Array.isArray(st.completedEvents)) st.completedEvents = [];
+    if (!st.corporateProfile || typeof st.corporateProfile !== 'object') {
+      st.corporateProfile = { notoriety: 0, reputation: 0 };
+    }
+    if (st.corporateProfile.notoriety == null) st.corporateProfile.notoriety = 0;
+    if (st.corporateProfile.reputation == null) st.corporateProfile.reputation = 0;
+    if (!st.eventSystem || typeof st.eventSystem !== 'object') {
+      st.eventSystem = { intervalLastFired: {} };
+    }
+    if (!st.eventSystem.intervalLastFired) st.eventSystem.intervalLastFired = {};
+  }
   if (!st.ccr || typeof st.ccr !== 'object') {
     st.ccr = { contracts: [], newsFeed: [], nextSeq: 1 };
   }

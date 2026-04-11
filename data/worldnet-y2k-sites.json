@@ -1,0 +1,1640 @@
+[
+  {
+    "pageId": "y2k-dotcom-now",
+    "url": "http://www.dotcom-now.com",
+    "title": "DotCom-Now",
+    "siteName": "DotCom-Now.com",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "IPO Readiness for the New Millennium",
+    "contentSeed": 101,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#006600", "font": "Verdana, Geneva, sans-serif",
+      "headerBg": "#006600", "linkColor": "#003399", "vlinkColor": "#660066",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "BusinessRing", "marquee": "*** IPO season is HERE! Let DotCom-Now prepare your filing! ***"
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to DotCom-Now, the premier online consultancy for companies preparing their Initial Public Offering. Since 1998, we have helped over 200 dot-com ventures navigate NASDAQ and NYSE listing requirements." },
+      { "type": "heading", "title": "Our Services" },
+      { "type": "text", "body": "IPO Readiness Assessment / Prospectus Writing / SEC Filing Preparation / Investor Relations Setup / Road Show Coordination / Post-IPO Compliance" },
+      { "type": "heading", "title": "Success Stories" },
+      { "type": "text", "body": "RapidMart went public in Q3 1999 with our guidance. PetFrenzy.com raised $42M in their first week of trading. TechVault Inc. achieved a 340% first-day premium." },
+      { "type": "contact", "label": "Request a Free Consultation" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-corptools",
+    "url": "http://www.corptools.net",
+    "title": "CorpTools",
+    "siteName": "CorpTools.net",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Enterprise Software Solutions for CorpOS 2000",
+    "contentSeed": 102,
+    "y2k": {
+      "bg": "#f0f0ff", "accent": "#0a246a", "font": "Tahoma, Arial, sans-serif",
+      "headerBg": "#0a246a", "hasHitCounter": true,
+      "marquee": "NEW! CorpTools Suite 2000 now available for download!",
+      "reviewCount": 5,
+      "products": [
+        { "name": "CorpTools Office Suite 2000", "price": "299.99", "desc": "Complete productivity package" },
+        { "name": "CorpTools Database Pro", "price": "199.99", "desc": "Enterprise database management" },
+        { "name": "CorpTools Scheduler", "price": "79.99", "desc": "Team calendar and scheduling" },
+        { "name": "CorpTools Fax Server", "price": "149.99", "desc": "Digital fax integration" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "CorpTools provides enterprise-grade productivity software designed exclusively for the CorpOS 2000 platform. Our suite includes document management, spreadsheet analysis, presentation builder, and workflow automation tools." },
+      { "type": "heading", "title": "Product Line" },
+      { "type": "products" },
+      { "type": "heading", "title": "What Our Clients Say" },
+      { "type": "reviews" }
+    ]
+  },
+  {
+    "pageId": "y2k-pacific-rim",
+    "url": "http://www.pacificrimventures.com",
+    "title": "Pacific Rim Ventures",
+    "siteName": "Pacific Rim Ventures",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Venture Capital for the Digital Economy",
+    "contentSeed": 103,
+    "y2k": {
+      "bg": "#f8f8ff", "accent": "#003366", "font": "Georgia, Times New Roman, serif",
+      "headerBg": "#003366", "hasHitCounter": true, "hasGuestbook": false,
+      "webring": "VCFirmRing"
+    },
+    "sections": [
+      { "type": "text", "body": "Pacific Rim Ventures is a $250M venture capital fund focused on early-stage technology companies in the Western United States. Founded in 1997 by former executives of Silicon Graphics and Netscape." },
+      { "type": "heading", "title": "Investment Focus" },
+      { "type": "text", "body": "We invest $2M-$15M in Series A and B rounds across: E-Commerce Infrastructure / Enterprise SaaS / Internet Advertising Technology / Digital Media Distribution / Wireless Data Services" },
+      { "type": "heading", "title": "Portfolio Companies" },
+      { "type": "text", "body": "RapidMart (e-commerce) / StreamCast Networks (media) / PixelForge (graphics) / NetVault Security (enterprise) / DataPipe Inc. (hosting) / Mobilon Wireless (telecom)" },
+      { "type": "contact", "label": "Submit Your Business Plan" }
+    ]
+  },
+  {
+    "pageId": "y2k-quickledger",
+    "url": "http://www.quickledger.net",
+    "title": "QuickLedger",
+    "siteName": "QuickLedger.net",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Online Accounting Made Simple",
+    "contentSeed": 104,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#336633", "font": "Arial, Helvetica, sans-serif",
+      "headerBg": "#336633", "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "Tax season special: First month FREE for new accounts!"
+    },
+    "sections": [
+      { "type": "text", "body": "QuickLedger brings professional accounting tools to your web browser. Track expenses, generate invoices, manage payroll, and prepare tax documents — all from your CorpOS desktop." },
+      { "type": "heading", "title": "Features" },
+      { "type": "text", "body": "Double-entry bookkeeping / Automatic bank reconciliation / Invoice generation and tracking / 1099 and W-2 preparation / Quarterly tax estimation / Multi-user access (up to 5 operators)" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-shieldstar",
+    "url": "http://www.shieldstar-insurance.com",
+    "title": "ShieldStar Insurance",
+    "siteName": "ShieldStar Insurance",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Protecting Your Business in the Digital Age",
+    "contentSeed": 105,
+    "y2k": {
+      "bg": "#f0f8ff", "accent": "#8b0000", "font": "Verdana, Geneva, sans-serif",
+      "headerBg": "#8b0000", "hasHitCounter": true
+    },
+    "sections": [
+      { "type": "text", "body": "ShieldStar Insurance offers comprehensive business liability coverage designed for the unique risks of internet commerce. From cyber liability to errors and omissions, we have you covered." },
+      { "type": "heading", "title": "Coverage Options" },
+      { "type": "text", "body": "General Business Liability / Cyber Incident Response / Professional Errors & Omissions / Federal Compliance Insurance / Data Breach Notification Coverage / Directors & Officers Liability" },
+      { "type": "faq", "items": [
+        { "q": "Do I need cyber insurance?", "a": "If your business operates on the WorldNet, the answer is almost certainly yes. Federal Mandate 2000-CR7 imposes strict data handling requirements." },
+        { "q": "What is the deductible?", "a": "Standard deductibles range from $500 to $5,000 depending on your coverage tier and claims history." },
+        { "q": "How fast can I get coverage?", "a": "Most policies can be bound within 48 hours of application approval." }
+      ]},
+      { "type": "contact", "label": "Get a Free Quote" }
+    ]
+  },
+  {
+    "pageId": "y2k-megamergers",
+    "url": "http://www.megamergers.com",
+    "title": "MegaMergers",
+    "siteName": "MegaMergers.com",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "business",
+    "siteTagline": "M&A Intelligence for the New Economy",
+    "contentSeed": 106,
+    "y2k": {
+      "bg": "#ffffff", "accent": "#990000", "font": "Georgia, serif",
+      "headerBg": "#990000", "hasHitCounter": true,
+      "articleCount": 8,
+      "sidebarLinks": [
+        { "label": "Top Deals", "url": "#" }, { "label": "Rumor Mill", "url": "#" },
+        { "label": "IPO Watch", "url": "#" }, { "label": "Archives", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "Breaking news and analysis on mergers, acquisitions, and corporate restructuring in the technology sector." },
+      { "type": "news" }
+    ]
+  },
+  {
+    "pageId": "y2k-pennywise",
+    "url": "http://www.pennywisecpa.net",
+    "title": "PennywiseCPA",
+    "siteName": "PennywiseCPA.net",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Your Online Tax Professional",
+    "contentSeed": 107,
+    "y2k": {
+      "bg": "#fafaf0", "accent": "#333399", "font": "Arial, sans-serif",
+      "headerBg": "#333399", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "AccountingRing", "marquee": "File your taxes online! E-file available now!"
+    },
+    "sections": [
+      { "type": "text", "body": "PennywiseCPA offers professional tax preparation services entirely online. Our team of certified public accountants handles everything from simple 1040s to complex business returns." },
+      { "type": "heading", "title": "Tax Services" },
+      { "type": "text", "body": "Individual Tax Returns ($49) / Small Business Returns ($149) / Corporate Tax Filing ($299) / Quarterly Estimated Taxes ($29/quarter) / Audit Representation ($199/hour)" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-career-launchpad",
+    "url": "http://www.careerlaunchpad.com",
+    "title": "CareerLaunchPad",
+    "siteName": "CareerLaunchPad.com",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Build Your Resume. Land Your Dream Job.",
+    "contentSeed": 108,
+    "y2k": {
+      "bg": "#fff8f0", "accent": "#cc6600", "font": "Verdana, sans-serif",
+      "headerBg": "#cc6600", "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "Over 10,000 resumes built! Join the career revolution!"
+    },
+    "sections": [
+      { "type": "text", "body": "CareerLaunchPad helps job seekers create professional resumes, practice interview skills, and connect with employers in the booming tech sector." },
+      { "type": "heading", "title": "Resume Templates" },
+      { "type": "text", "body": "Choose from our library of 50+ professionally designed resume templates optimized for both human readers and the new automated applicant tracking systems." },
+      { "type": "classifieds" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-realestate-now",
+    "url": "http://www.realestatenow.net",
+    "title": "RealEstateNow",
+    "siteName": "RealEstateNow.net",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "business",
+    "siteTagline": "Find Your Dream Property Online",
+    "contentSeed": 109,
+    "y2k": {
+      "bg": "#f8fff8", "accent": "#006633", "font": "Arial, sans-serif",
+      "headerBg": "#006633", "hasHitCounter": true,
+      "navLinks": [
+        { "label": "Search", "url": "#" }, { "label": "Sell", "url": "#" },
+        { "label": "Agents", "url": "#" }, { "label": "Mortgage Calc", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "Search over 250,000 residential and commercial property listings nationwide. RealEstateNow brings the MLS to your desktop." },
+      { "type": "search_box", "label": "Search Properties" },
+      { "type": "heading", "title": "Featured Listings" },
+      { "type": "classifieds" },
+      { "type": "contact", "label": "Contact an Agent" }
+    ]
+  },
+  {
+    "pageId": "y2k-corpnews",
+    "url": "http://www.corpnews.net",
+    "title": "CorpNews",
+    "siteName": "CorpNews.net",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "news",
+    "siteTagline": "Corporate News Wire — Real-Time Business Intelligence",
+    "contentSeed": 201,
+    "y2k": {
+      "bg": "#ffffff", "accent": "#003366", "font": "Georgia, serif",
+      "headerBg": "#003366", "hasHitCounter": true,
+      "articleCount": 10,
+      "marquee": "BREAKING: Dot-com valuations reach all-time high | Federal Reserve holds rates steady | RapidGate investigation continues",
+      "sidebarLinks": [
+        { "label": "Markets", "url": "#" }, { "label": "Tech", "url": "#" },
+        { "label": "Finance", "url": "#" }, { "label": "World", "url": "#" },
+        { "label": "Opinion", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "CorpNews delivers real-time business intelligence to operators worldwide. Covering markets, technology, policy, and the companies shaping the new economy." },
+      { "type": "news" }
+    ]
+  },
+  {
+    "pageId": "y2k-buzzboard",
+    "url": "http://www.buzzboard.net",
+    "title": "BuzzBoard",
+    "siteName": "BuzzBoard.net",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "news",
+    "siteTagline": "Celebrity Gossip and Entertainment Buzz",
+    "contentSeed": 202,
+    "y2k": {
+      "bg": "#fff0f5", "accent": "#cc0066", "font": "Verdana, sans-serif",
+      "headerBg": "#cc0066", "hasHitCounter": true, "hasGuestbook": true,
+      "articleCount": 8,
+      "marquee": "HOT! Who was spotted at the CorpOS launch party? Click to find out!",
+      "sidebarLinks": [
+        { "label": "Hot Gossip", "url": "#" }, { "label": "TV", "url": "#" },
+        { "label": "Music", "url": "#" }, { "label": "Movies", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "blink_badge", "text": "EXCLUSIVE SCOOPS!" },
+      { "type": "news" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-sportswire",
+    "url": "http://www.sportswire2000.com",
+    "title": "SportsWire 2000",
+    "siteName": "SportsWire2000.com",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "news",
+    "siteTagline": "Scores, Stats, and Analysis — 24/7",
+    "contentSeed": 203,
+    "y2k": {
+      "bg": "#f0fff0", "accent": "#006600", "font": "Arial, sans-serif",
+      "headerBg": "#006600", "hasHitCounter": true,
+      "articleCount": 8,
+      "marquee": "FINAL: Lakers 102, Blazers 96 | Yankees lead ALCS 3-1 | NFL Week 7 preview",
+      "sidebarLinks": [
+        { "label": "NFL", "url": "#" }, { "label": "NBA", "url": "#" },
+        { "label": "MLB", "url": "#" }, { "label": "NHL", "url": "#" },
+        { "label": "NCAA", "url": "#" }, { "label": "Boxing", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "Your source for real-time scores, standings, and expert analysis across all major professional and collegiate sports." },
+      { "type": "news" }
+    ]
+  },
+  {
+    "pageId": "y2k-techpulse",
+    "url": "http://www.techpulsedaily.com",
+    "title": "TechPulse Daily",
+    "siteName": "TechPulseDaily.com",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "news",
+    "siteTagline": "Technology News for the Connected World",
+    "contentSeed": 204,
+    "y2k": {
+      "bg": "#f0f0ff", "accent": "#333399", "font": "Tahoma, sans-serif",
+      "headerBg": "#333399", "hasHitCounter": true,
+      "articleCount": 10,
+      "marquee": "AMD Athlon breaks 1GHz barrier | Palm VII gains wireless web | Napster usage explodes",
+      "sidebarLinks": [
+        { "label": "Hardware", "url": "#" }, { "label": "Software", "url": "#" },
+        { "label": "Internet", "url": "#" }, { "label": "Reviews", "url": "#" },
+        { "label": "Downloads", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "TechPulse Daily covers the latest in hardware, software, internet services, and the companies building the future of computing." },
+      { "type": "news" }
+    ]
+  },
+  {
+    "pageId": "y2k-conspiracy-corner",
+    "url": "http://www.conspiracycorner.net",
+    "title": "Conspiracy Corner",
+    "siteName": "ConspiracyCorner.net",
+    "style": "y2k",
+    "y2kTemplate": "forum",
+    "category": "news",
+    "siteTagline": "THEY Don't Want You to Know...",
+    "contentSeed": 205,
+    "y2k": {
+      "bg": "#1a1a1a", "textColor": "#00ff00", "accent": "#00ff00", "font": "Courier New, monospace",
+      "headerBg": "#003300", "linkColor": "#00ffff", "vlinkColor": "#008080",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 8, "repliesPerThread": 5,
+      "marquee": "WAKE UP! The truth about RapidGate... CorpOS is watching... Mandate 2000-CR7 is REAL surveillance..."
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome, truth seeker. This is one of the last free spaces on the WorldNet. Share what you know. Question everything. Trust no one — especially not CorpOS." },
+      { "type": "blink_badge", "text": "THE GOVERNMENT IS READING YOUR JEEMAIL" },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-radiowave",
+    "url": "http://www.radiowaveonline.net",
+    "title": "RadioWave Online",
+    "siteName": "RadioWaveOnline.net",
+    "style": "y2k",
+    "y2kTemplate": "fansite",
+    "category": "news",
+    "siteTagline": "Internet Radio — Broadcasting to the World",
+    "contentSeed": 206,
+    "y2k": {
+      "bg": "#1a0033", "textColor": "#ffffff", "accent": "#cc00ff", "font": "Verdana, sans-serif",
+      "headerBg": "#660099", "linkColor": "#ff99ff", "vlinkColor": "#cc66cc",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "NOW PLAYING: DJ TechnoKid's Millennium Mix | Next up: The Evening Chill Session"
+    },
+    "sections": [
+      { "type": "text", "body": "RadioWave Online is the WorldNet's #1 internet radio station. Streaming 24/7 on your 56k connection. Genres: Electronic, Rock, Pop, Hip-Hop, and the Late Night Ambient Hour." },
+      { "type": "text", "body": "Current listeners: 847 | Peak today: 1,203 | Genre: Electronic/Dance" },
+      { "type": "heading", "title": "Request Line" },
+      { "type": "contact", "label": "Send a Song Request" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-weather2k",
+    "url": "http://www.weatherchannel2k.com",
+    "title": "WeatherChannel2K",
+    "siteName": "WeatherChannel2K.com",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "news",
+    "siteTagline": "Your Local Forecast — Anywhere in the World",
+    "contentSeed": 207,
+    "y2k": {
+      "bg": "#e8f4ff", "accent": "#003399", "font": "Arial, sans-serif",
+      "headerBg": "#003399", "hasHitCounter": true,
+      "marquee": "Partly cloudy, high near 72F | Extended forecast: Mild week ahead"
+    },
+    "sections": [
+      { "type": "search_box", "label": "Enter ZIP Code" },
+      { "type": "heading", "title": "Today's Forecast" },
+      { "type": "text", "body": "Temperature: 68F / 20C | Humidity: 45% | Wind: NW 8 mph | Barometer: 30.12 in | Visibility: 10 miles | UV Index: 3 (Moderate)" },
+      { "type": "heading", "title": "5-Day Outlook" },
+      { "type": "text", "body": "Mon: Sunny, 74F | Tue: Partly Cloudy, 70F | Wed: Cloudy, 65F | Thu: Showers, 61F | Fri: Clearing, 68F" },
+      { "type": "text", "body": "Severe weather alerts: None at this time. Last updated: 02/14/2000 9:00 AM EST" }
+    ]
+  },
+  {
+    "pageId": "y2k-amazone",
+    "url": "http://www.amazone.com",
+    "title": "Amazone",
+    "siteName": "Amazone.com",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Earth's Biggest Bookstore",
+    "contentSeed": 301,
+    "y2k": {
+      "bg": "#ffffff", "accent": "#003399", "font": "Verdana, sans-serif",
+      "headerBg": "#003399", "hasHitCounter": true,
+      "reviewCount": 8,
+      "marquee": "FREE SHIPPING on orders over $25! | New releases updated daily!",
+      "products": [
+        { "name": "HTML for Dummies (3rd Ed.)", "price": "24.99", "desc": "The complete guide to building web pages" },
+        { "name": "The Millionaire Next Door", "price": "14.95", "desc": "Surprising secrets of America's wealthy" },
+        { "name": "CorpOS 2000 Administration Guide", "price": "49.99", "desc": "Official system administration handbook" },
+        { "name": "The Cluetrain Manifesto", "price": "16.95", "desc": "The end of business as usual" },
+        { "name": "Who Moved My Cheese?", "price": "19.99", "desc": "An amazing way to deal with change" },
+        { "name": "Tuesdays with Morrie", "price": "11.95", "desc": "An old man, a young man, and life's greatest lesson" },
+        { "name": "Webmaster in a Nutshell", "price": "29.99", "desc": "Quick reference for web developers" },
+        { "name": "Rich Dad Poor Dad", "price": "15.95", "desc": "What the rich teach their kids about money" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to Amazone.com, the world's largest online bookstore. Over 4 million titles in stock. Fast shipping, easy returns, and secure online ordering." },
+      { "type": "products" },
+      { "type": "reviews" }
+    ]
+  },
+  {
+    "pageId": "y2k-discount-electronics",
+    "url": "http://www.discountelectronicsdirect.com",
+    "title": "Discount Electronics Direct",
+    "siteName": "DiscountElectronicsDirect.com",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Factory-Direct Savings on PCs and Peripherals",
+    "contentSeed": 302,
+    "y2k": {
+      "bg": "#fff8f0", "accent": "#cc3300", "font": "Arial, sans-serif",
+      "headerBg": "#cc3300", "hasHitCounter": true,
+      "reviewCount": 6,
+      "marquee": "BLOWOUT SALE! Pentium III systems starting at $799! | Free mouse with every order!",
+      "products": [
+        { "name": "Pentium III 500MHz Desktop", "price": "899.99", "desc": "128MB RAM, 10GB HDD, CD-ROM" },
+        { "name": "17\" CRT Monitor", "price": "299.99", "desc": "0.26mm dot pitch, 1024x768" },
+        { "name": "56K V.90 Modem", "price": "49.99", "desc": "US Robotics compatible" },
+        { "name": "HP DeskJet 840C Printer", "price": "129.99", "desc": "Color inkjet, 600dpi" },
+        { "name": "256MB RAM Upgrade", "price": "89.99", "desc": "PC100 SDRAM DIMM" },
+        { "name": "Iomega Zip 250 Drive", "price": "99.99", "desc": "250MB removable storage" }
+      ]
+    },
+    "sections": [
+      { "type": "blink_badge", "text": "SALE ENDS SOON!" },
+      { "type": "text", "body": "Shop factory-direct and save up to 40% on name-brand computers, monitors, printers, and accessories. All products ship with a 1-year warranty." },
+      { "type": "products" },
+      { "type": "reviews" }
+    ]
+  },
+  {
+    "pageId": "y2k-cdwarehouse",
+    "url": "http://www.cdwarehouse.net",
+    "title": "CD Warehouse",
+    "siteName": "CDWarehouse.net",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Every Album. Every Artist. Delivered to Your Door.",
+    "contentSeed": 303,
+    "y2k": {
+      "bg": "#1a1a2e", "textColor": "#ffffff", "accent": "#e94560", "font": "Verdana, sans-serif",
+      "headerBg": "#e94560", "linkColor": "#00ccff", "vlinkColor": "#cc66ff",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "reviewCount": 6,
+      "marquee": "New releases this week! | Bargain bin: CDs under $5.99!",
+      "products": [
+        { "name": "Santana - Supernatural", "price": "13.99", "desc": "Grammy winner 2000" },
+        { "name": "TLC - FanMail", "price": "12.99", "desc": "Multi-platinum R&B" },
+        { "name": "Rage Against the Machine - Battle of LA", "price": "14.99", "desc": "Political rock" },
+        { "name": "Backstreet Boys - Millennium", "price": "11.99", "desc": "Pop phenomenon" },
+        { "name": "Moby - Play", "price": "13.99", "desc": "Electronic masterpiece" },
+        { "name": "Red Hot Chili Peppers - Californication", "price": "14.99", "desc": "Alt-rock classic" }
+      ]
+    },
+    "sections": [
+      { "type": "search_box", "label": "Search Albums" },
+      { "type": "products" },
+      { "type": "reviews" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-bookbarn",
+    "url": "http://www.bookbarn.com",
+    "title": "BookBarn",
+    "siteName": "BookBarn.com",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Used & Rare Books — Millions in Stock",
+    "contentSeed": 304,
+    "y2k": {
+      "bg": "#faf0e6", "accent": "#8b4513", "font": "Georgia, serif",
+      "headerBg": "#8b4513", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "BookLoversRing",
+      "reviewCount": 5,
+      "products": [
+        { "name": "Dune (1965, Hardcover)", "price": "28.00", "desc": "First edition, good condition" },
+        { "name": "The Hobbit (1966 reprint)", "price": "15.00", "desc": "Paperback, fair condition" },
+        { "name": "Neuromancer (1984)", "price": "8.50", "desc": "Mass market paperback" },
+        { "name": "1984 by George Orwell", "price": "6.99", "desc": "Penguin edition" },
+        { "name": "Hitchhiker's Guide (signed)", "price": "45.00", "desc": "Signed first UK edition" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "BookBarn is the WorldNet's largest marketplace for used and rare books. Search our catalog of over 3 million titles from independent booksellers worldwide." },
+      { "type": "search_box", "label": "Search Books" },
+      { "type": "products" },
+      { "type": "reviews" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-gadgetgalaxy",
+    "url": "http://www.gadgetgalaxy.net",
+    "title": "Gadget Galaxy",
+    "siteName": "GadgetGalaxy.net",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "The Coolest Tech Toys on the Net",
+    "contentSeed": 305,
+    "y2k": {
+      "bg": "#0a0a2e", "textColor": "#ffffff", "accent": "#00ccff", "font": "Verdana, sans-serif",
+      "headerBg": "#0066cc", "linkColor": "#00ffcc", "vlinkColor": "#cc99ff",
+      "hasHitCounter": true,
+      "reviewCount": 6,
+      "marquee": "NEW! Diamond Rio MP3 Player in stock! | Palm Vx now available!",
+      "products": [
+        { "name": "Diamond Rio PMP300", "price": "199.99", "desc": "Portable MP3 player, 32MB" },
+        { "name": "Palm Vx Handheld", "price": "299.99", "desc": "Sleek PDA, 8MB" },
+        { "name": "Lego Mindstorms RIS", "price": "199.99", "desc": "Programmable robot kit" },
+        { "name": "Sony Aibo ERS-110", "price": "2499.99", "desc": "Robotic dog companion" },
+        { "name": "TiVo Series 1", "price": "499.99", "desc": "Digital video recorder" }
+      ]
+    },
+    "sections": [
+      { "type": "blink_badge", "text": "HOT NEW GADGETS!" },
+      { "type": "products" },
+      { "type": "reviews" }
+    ]
+  },
+  {
+    "pageId": "y2k-fashionfrenzy",
+    "url": "http://www.fashionfrenzy2000.com",
+    "title": "FashionFrenzy 2000",
+    "siteName": "FashionFrenzy2000.com",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Millennium Style — Shop the Latest Trends",
+    "contentSeed": 306,
+    "y2k": {
+      "bg": "#fff0f5", "accent": "#cc3399", "font": "Arial, sans-serif",
+      "headerBg": "#cc3399", "hasHitCounter": true, "hasGuestbook": true,
+      "reviewCount": 5,
+      "marquee": "Y2K Collection now live! | Free returns on all orders!",
+      "products": [
+        { "name": "Butterfly Clip Set (12pc)", "price": "8.99", "desc": "Assorted metallic colors" },
+        { "name": "Low-Rise Flared Jeans", "price": "39.99", "desc": "Dark wash, boot cut" },
+        { "name": "Platform Sneakers", "price": "54.99", "desc": "4-inch platform, white" },
+        { "name": "Velour Track Suit", "price": "79.99", "desc": "Hot pink, matching set" },
+        { "name": "Frosted Lip Gloss Kit", "price": "12.99", "desc": "6 shades of shimmer" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "FashionFrenzy 2000 brings the hottest millennium fashion trends straight to your mailbox. From platform sneakers to butterfly clips, we have everything you need to ring in the new century in style." },
+      { "type": "products" },
+      { "type": "reviews" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-bidbattle",
+    "url": "http://www.bidbattle.net",
+    "title": "BidBattle",
+    "siteName": "BidBattle.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "shopping",
+    "siteTagline": "Online Auctions — Bid. Win. Save.",
+    "contentSeed": 307,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#cc6600", "font": "Verdana, sans-serif",
+      "headerBg": "#cc6600", "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 6, "repliesPerThread": 3, "profileCount": 6,
+      "marquee": "NEW LISTINGS EVERY HOUR! | Beanie Babies auction ending soon!"
+    },
+    "sections": [
+      { "type": "text", "body": "BidBattle is the WorldNet's fastest-growing auction platform. List your items for free and let buyers compete for the best price. Secure escrow payments through First National CorpBank." },
+      { "type": "heading", "title": "Hot Auctions" },
+      { "type": "classifieds" },
+      { "type": "heading", "title": "Seller Discussion" },
+      { "type": "forum" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-petplanet",
+    "url": "http://www.petplanet.net",
+    "title": "PetPlanet",
+    "siteName": "PetPlanet.net",
+    "style": "y2k",
+    "y2kTemplate": "shop",
+    "category": "shopping",
+    "siteTagline": "Everything for Your Furry (and Scaly) Friends",
+    "contentSeed": 308,
+    "y2k": {
+      "bg": "#fff8e8", "accent": "#996633", "font": "Comic Sans MS, Arial, sans-serif",
+      "headerBg": "#996633", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "PetLoversRing",
+      "reviewCount": 5,
+      "marquee": "FREE pet food sample with first order! | New: Aquarium supplies section!",
+      "products": [
+        { "name": "Premium Dog Kibble (20lb)", "price": "24.99", "desc": "All-natural ingredients" },
+        { "name": "Cat Tree Deluxe", "price": "79.99", "desc": "6-tier, carpet covered" },
+        { "name": "Hamster Habitrail", "price": "34.99", "desc": "Modular tube system" },
+        { "name": "Aquarium Starter Kit (10gal)", "price": "49.99", "desc": "Filter, heater, light included" },
+        { "name": "Parrot Perch Set", "price": "19.99", "desc": "Natural wood, 3 sizes" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "PetPlanet is your one-stop shop for pet supplies, toys, food, and accessories. We stock products for dogs, cats, birds, fish, reptiles, and small animals." },
+      { "type": "products" },
+      { "type": "reviews" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-intek",
+    "url": "http://www.intek-corp.com",
+    "title": "Intek Corporation",
+    "siteName": "Intek Corporation",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "technology",
+    "siteTagline": "Powering the Workstations of Tomorrow",
+    "contentSeed": 401,
+    "y2k": {
+      "bg": "#f0f0f8", "accent": "#003399", "font": "Tahoma, Arial, sans-serif",
+      "headerBg": "#003399", "hasHitCounter": true,
+      "navLinks": [
+        { "label": "Products", "url": "#" }, { "label": "Support", "url": "#" },
+        { "label": "Drivers", "url": "#" }, { "label": "About", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "Intek Corporation is the leading manufacturer of CorpOS-certified workstations and server hardware. Our processors power 78% of all CorpOS 2000 installations worldwide." },
+      { "type": "heading", "title": "Latest Products" },
+      { "type": "text", "body": "Intek WorkStation Pro 2000: Pentium III 800MHz, 256MB ECC RAM, 20GB SCSI, Intek Graphics Pro 3D / Intek NetServer 4000: Dual Pentium III Xeon, 1GB RAM, RAID-5, Gigabit Ethernet" },
+      { "type": "heading", "title": "Driver Downloads" },
+      { "type": "text", "body": "Video Driver v4.12 (12/15/1999) — Fixes flickering in WorldNet Explorer / Network Driver v2.8 (01/20/2000) — Improved 100Mbps stability / SCSI Controller v1.6 (02/01/2000) — Y2K compatibility patch" },
+      { "type": "contact", "label": "Technical Support Request" }
+    ]
+  },
+  {
+    "pageId": "y2k-freewebhost",
+    "url": "http://www.freewebhost2k.net",
+    "title": "FreeWebHost2K",
+    "siteName": "FreeWebHost2K.net",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "technology",
+    "siteTagline": "Free Web Hosting — 10MB Space — No Credit Card Required!",
+    "contentSeed": 402,
+    "y2k": {
+      "bg": "#ffffcc", "accent": "#ff6600", "font": "Comic Sans MS, Arial, sans-serif",
+      "headerBg": "#ff6600", "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "FREE HOSTING! 10MB space + email forwarding! Sign up now!"
+    },
+    "sections": [
+      { "type": "text", "body": "FreeWebHost2K gives you everything you need to build your own website — completely FREE! 10MB of web space, email forwarding, a site counter, and our easy-to-use web page builder." },
+      { "type": "heading", "title": "Features" },
+      { "type": "text", "body": "10MB Storage / FTP Access / Email Forwarding / Hit Counter / Guestbook Script / 20 Free Backgrounds / Banner Exchange Program / Your URL: yourname.freewebhost2k.net" },
+      { "type": "heading", "title": "Recently Created Sites" },
+      { "type": "profiles" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-hackerhaven",
+    "url": "http://www.hackerhaven.net",
+    "title": "Hacker Haven",
+    "siteName": "HackerHaven.net",
+    "style": "y2k",
+    "y2kTemplate": "forum",
+    "category": "technology",
+    "siteTagline": "Security Research and Discussion",
+    "contentSeed": 403,
+    "y2k": {
+      "bg": "#0d0d0d", "textColor": "#00ff00", "accent": "#00ff00", "font": "Courier New, monospace",
+      "headerBg": "#003300", "linkColor": "#00ccff", "vlinkColor": "#009999",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 10, "repliesPerThread": 6,
+      "marquee": "Defcon 8 registration open | New advisory: IIS buffer overflow | IRC: #hackerhaven on EFnet"
+    },
+    "sections": [
+      { "type": "text", "body": "HackerHaven is a community for security researchers, systems administrators, and anyone interested in how things work (and how they break). Responsible disclosure encouraged." },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-pixelperfect",
+    "url": "http://www.pixelperfect.net",
+    "title": "PixelPerfect",
+    "siteName": "PixelPerfect.net",
+    "style": "y2k",
+    "y2kTemplate": "education",
+    "category": "technology",
+    "siteTagline": "Web Design Tutorials for Everyone",
+    "contentSeed": 404,
+    "y2k": {
+      "bg": "#f5f5ff", "accent": "#6633cc", "font": "Verdana, sans-serif",
+      "headerBg": "#6633cc", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "WebDesignRing"
+    },
+    "sections": [
+      { "type": "text", "body": "Learn HTML, CSS, JavaScript, and web design best practices with our free tutorials. From beginner to advanced, PixelPerfect has lessons for every skill level." },
+      { "type": "heading", "title": "Tutorial Index" },
+      { "type": "links", "items": [
+        { "label": "HTML Basics: Your First Web Page", "url": "#" },
+        { "label": "Tables and Frames: Layout Techniques", "url": "#" },
+        { "label": "Adding Images and Backgrounds", "url": "#" },
+        { "label": "Introduction to JavaScript", "url": "#" },
+        { "label": "Animated GIFs: How to Make Them", "url": "#" },
+        { "label": "CSS: The Future of Web Styling", "url": "#" },
+        { "label": "FTP: Uploading Your Site", "url": "#" },
+        { "label": "Making Your Site Search Engine Friendly", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Free Resources" },
+      { "type": "text", "body": "Download free backgrounds, button sets, divider bars, animated GIFs, and Java applets for your homepage." },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-driverdump",
+    "url": "http://www.driverdump.com",
+    "title": "DriverDump",
+    "siteName": "DriverDump.com",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "technology",
+    "siteTagline": "Every Driver for Every Device",
+    "contentSeed": 405,
+    "y2k": {
+      "bg": "#f0f0f0", "accent": "#003366", "font": "Tahoma, sans-serif",
+      "headerBg": "#003366", "hasHitCounter": true,
+      "marquee": "NEW: CorpOS 2000 driver pack v3.1 | Updated USB support drivers"
+    },
+    "sections": [
+      { "type": "text", "body": "DriverDump maintains the largest free collection of hardware drivers on the WorldNet. Compatible with CorpOS 2000, CorpOS 98, and CorpOS NT 4.0." },
+      { "type": "search_box", "label": "Search Drivers" },
+      { "type": "heading", "title": "Popular Downloads" },
+      { "type": "links", "items": [
+        { "label": "Intek Graphics Pro 3D Driver v4.12", "url": "#" },
+        { "label": "US Robotics 56K V.90 Modem Driver", "url": "#" },
+        { "label": "Creative SoundBlaster Live! Driver", "url": "#" },
+        { "label": "HP DeskJet 840C Printer Driver", "url": "#" },
+        { "label": "3Com EtherLink III NIC Driver", "url": "#" },
+        { "label": "Adaptec SCSI Controller Driver v1.6", "url": "#" }
+      ]},
+      { "type": "text", "body": "All drivers are scanned for viruses before upload. Download at your own risk. DriverDump is not affiliated with any hardware manufacturer." }
+    ]
+  },
+  {
+    "pageId": "y2k-linuxunderground",
+    "url": "http://www.linuxunderground.net",
+    "title": "Linux Underground",
+    "siteName": "LinuxUnderground.net",
+    "style": "y2k",
+    "y2kTemplate": "forum",
+    "category": "technology",
+    "siteTagline": "Free as in Freedom",
+    "contentSeed": 406,
+    "y2k": {
+      "bg": "#1a1a1a", "textColor": "#c0c0c0", "accent": "#ffcc00", "font": "Courier New, monospace",
+      "headerBg": "#333333", "linkColor": "#ffcc00", "vlinkColor": "#cc9900",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 8, "repliesPerThread": 5,
+      "marquee": "Kernel 2.4 preview available | WINE 0.9 runs CorpOS apps | Free as in beer AND freedom"
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to the Linux Underground — a community of open source enthusiasts, kernel hackers, and free software advocates. CorpOS may rule the desktop, but the servers run Linux." },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-cybercafe",
+    "url": "http://www.cybercafe.net",
+    "title": "CyberCafe",
+    "siteName": "CyberCafe.net",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "technology",
+    "siteTagline": "Your Guide to the WorldNet",
+    "contentSeed": 407,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#006699", "font": "Verdana, sans-serif",
+      "headerBg": "#006699", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "NetGuidesRing"
+    },
+    "sections": [
+      { "type": "text", "body": "CyberCafe is your friendly neighborhood guide to the WorldNet. Whether you just got your first 56k modem or you are an experienced surfer, we have tips and links for everyone." },
+      { "type": "heading", "title": "Beginner's Corner" },
+      { "type": "faq", "items": [
+        { "q": "What is the WorldNet?", "a": "The WorldNet is the global network of interconnected computers accessible through CorpOS 2000's WorldNet Explorer browser." },
+        { "q": "What is a URL?", "a": "A URL (Uniform Resource Locator) is the address of a website. Type it in the address bar of your browser to visit a site." },
+        { "q": "What is JeeMail?", "a": "JeeMail is Wahoo's free electronic mail service. You can send and receive messages from anyone with an email address." },
+        { "q": "Is the WorldNet safe?", "a": "Generally yes, but be careful about sharing personal information. CorpOS monitors all network traffic per Federal Mandate 2000-CR7." }
+      ]},
+      { "type": "heading", "title": "Recommended Sites" },
+      { "type": "links", "items": [
+        { "label": "Wahoo! Search Portal", "url": "http://www.wahoo.net" },
+        { "label": "Moogle Search Engine", "url": "http://www.moogle.com" },
+        { "label": "JeeMail Free Email", "url": "http://mail.jeemail.net" },
+        { "label": "99669.net Directory", "url": "http://www.99669.net" }
+      ]},
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-dialupnation",
+    "url": "http://www.dialupnation.com",
+    "title": "DialUp Nation",
+    "siteName": "DialUpNation.com",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "technology",
+    "siteTagline": "Reliable Internet Access — Nationwide Coverage",
+    "contentSeed": 408,
+    "y2k": {
+      "bg": "#e8f0ff", "accent": "#003399", "font": "Arial, sans-serif",
+      "headerBg": "#003399", "hasHitCounter": true,
+      "marquee": "Now offering 56K V.90 in all 50 states! | First month $9.99!"
+    },
+    "sections": [
+      { "type": "text", "body": "DialUp Nation provides reliable dial-up internet access through over 12,000 local access numbers. Never a busy signal. Never a long-distance charge. Unlimited access for just $19.95/month." },
+      { "type": "heading", "title": "Plans" },
+      { "type": "text", "body": "Basic (10 hrs/month): $9.95 | Standard (Unlimited): $19.95 | Family (5 accounts): $29.95 | Business (static IP): $49.95" },
+      { "type": "heading", "title": "Features" },
+      { "type": "text", "body": "5 Email Addresses / 10MB Web Space / 24/7 Technical Support / Free Setup Software / CorpOS 2000 Compatible / V.90 56K Access" },
+      { "type": "register" }
+    ]
+  },
+  {
+    "pageId": "y2k-gameclan99",
+    "url": "http://www.gameclan99.net",
+    "title": "GameClan99",
+    "siteName": "GameClan99.net",
+    "style": "y2k",
+    "y2kTemplate": "fansite",
+    "category": "entertainment",
+    "siteTagline": "[GC99] — Frag or Be Fragged",
+    "contentSeed": 501,
+    "y2k": {
+      "bg": "#0a0a0a", "textColor": "#ff6600", "accent": "#ff6600", "font": "Impact, Arial, sans-serif",
+      "headerBg": "#330000", "linkColor": "#ffcc00", "vlinkColor": "#cc9900",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "[GC99] RECRUITING! Must have 56k+ and Quake III Arena | LAN party this Saturday!"
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to GameClan99, the most feared clan on the WorldNet. We dominate Quake III Arena, Unreal Tournament, and StarCraft. Think you can hang? Apply below." },
+      { "type": "heading", "title": "Clan Roster" },
+      { "type": "profiles" },
+      { "type": "heading", "title": "Match Results" },
+      { "type": "forum" },
+      { "type": "heading", "title": "Apply to Join" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-moviemania",
+    "url": "http://www.moviemania2000.com",
+    "title": "MovieMania 2000",
+    "siteName": "MovieMania2000.com",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "entertainment",
+    "siteTagline": "Reviews, Trailers, and Box Office News",
+    "contentSeed": 502,
+    "y2k": {
+      "bg": "#1a0a2e", "textColor": "#ffffff", "accent": "#ffcc00", "font": "Verdana, sans-serif",
+      "headerBg": "#330066", "linkColor": "#ffcc00", "vlinkColor": "#cc9900",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "articleCount": 8,
+      "sidebarLinks": [
+        { "label": "Reviews", "url": "#" }, { "label": "Trailers", "url": "#" },
+        { "label": "Box Office", "url": "#" }, { "label": "Coming Soon", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "MovieMania 2000 is your complete guide to movies in theaters and on video. Read our reviews, watch trailers (requires RealPlayer), and track the box office numbers." },
+      { "type": "blink_badge", "text": "NOW SHOWING: The Matrix, Fight Club, American Beauty" },
+      { "type": "news" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-fanfiction",
+    "url": "http://www.fanfictionhub.net",
+    "title": "FanFiction Hub",
+    "siteName": "FanFictionHub.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "entertainment",
+    "siteTagline": "Write. Share. Imagine.",
+    "contentSeed": 503,
+    "y2k": {
+      "bg": "#fff0ff", "accent": "#993399", "font": "Georgia, serif",
+      "headerBg": "#993399", "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 8, "repliesPerThread": 4, "profileCount": 10,
+      "webring": "FanFicRing"
+    },
+    "sections": [
+      { "type": "text", "body": "FanFiction Hub is the WorldNet's largest archive of fan-written stories. Browse thousands of stories across hundreds of fandoms, or upload your own creations." },
+      { "type": "heading", "title": "Popular Fandoms" },
+      { "type": "links", "items": [
+        { "label": "Star Wars (2,341 stories)", "url": "#" },
+        { "label": "Star Trek (1,876 stories)", "url": "#" },
+        { "label": "Harry Potter (1,203 stories)", "url": "#" },
+        { "label": "The X-Files (987 stories)", "url": "#" },
+        { "label": "Buffy the Vampire Slayer (756 stories)", "url": "#" },
+        { "label": "Pokemon (634 stories)", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Recently Updated" },
+      { "type": "forum" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-comicbookcrypt",
+    "url": "http://www.comicbookcrypt.net",
+    "title": "Comic Book Crypt",
+    "siteName": "ComicBookCrypt.net",
+    "style": "y2k",
+    "y2kTemplate": "fansite",
+    "category": "entertainment",
+    "siteTagline": "Reviews, News, and Discussion for Comic Fans",
+    "contentSeed": 504,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#cc0000", "font": "Verdana, sans-serif",
+      "headerBg": "#cc0000", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "ComicFansRing"
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to the Comic Book Crypt! Your underground source for comic book reviews, creator interviews, and release date tracking. Pull list management coming soon!" },
+      { "type": "heading", "title": "This Week's Picks" },
+      { "type": "reviews" },
+      { "type": "heading", "title": "Discussion Board" },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-jokesrus",
+    "url": "http://www.jokesrus.net",
+    "title": "JokesRUs",
+    "siteName": "JokesRUs.net",
+    "style": "y2k",
+    "y2kTemplate": "personal",
+    "category": "entertainment",
+    "siteTagline": "The Funniest Site on the WorldNet!",
+    "contentSeed": 505,
+    "y2k": {
+      "bg": "#ffff99", "accent": "#ff3300", "font": "Comic Sans MS, Arial, sans-serif",
+      "headerBg": "#ff3300", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "HumorRing",
+      "marquee": "HAHAHAHA! New jokes added daily! Send us YOUR best joke!"
+    },
+    "sections": [
+      { "type": "text", "body": "Welcome to JokesRUs, the WorldNet's premier humor destination! We have thousands of jokes organized by category. Warning: May cause uncontrollable laughter and coworker stares." },
+      { "type": "heading", "title": "Joke of the Day" },
+      { "type": "text", "body": "A software engineer, a hardware engineer, and a CorpOS administrator walk into a bar. The software engineer says 'I'll have a beer.' The hardware engineer says 'I'll have a beer.' The CorpOS admin says 'I'll have whatever they ordered but it will take 6-8 weeks to process.'" },
+      { "type": "heading", "title": "Categories" },
+      { "type": "links", "items": [
+        { "label": "Tech Jokes (342)", "url": "#" },
+        { "label": "Office Humor (278)", "url": "#" },
+        { "label": "Y2K Jokes (156)", "url": "#" },
+        { "label": "Internet Jokes (203)", "url": "#" },
+        { "label": "One-Liners (445)", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Submit Your Joke" },
+      { "type": "contact", "label": "Send Us a Joke" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-celebritywatch",
+    "url": "http://www.celebritywatch.net",
+    "title": "CelebrityWatch",
+    "siteName": "CelebrityWatch.net",
+    "style": "y2k",
+    "y2kTemplate": "news",
+    "category": "entertainment",
+    "siteTagline": "All the Stars. All the Gossip. All the Time.",
+    "contentSeed": 506,
+    "y2k": {
+      "bg": "#fff0f5", "accent": "#cc0066", "font": "Verdana, sans-serif",
+      "headerBg": "#cc0066", "hasHitCounter": true,
+      "articleCount": 8,
+      "sidebarLinks": [
+        { "label": "Hollywood", "url": "#" }, { "label": "Music", "url": "#" },
+        { "label": "Fashion", "url": "#" }, { "label": "Scandal", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "blink_badge", "text": "EXCLUSIVE PHOTOS!" },
+      { "type": "news" }
+    ]
+  },
+  {
+    "pageId": "y2k-flasharcade",
+    "url": "http://www.flasharcade.net",
+    "title": "Flash Arcade",
+    "siteName": "FlashArcade.net",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "entertainment",
+    "siteTagline": "Free Online Games — No Download Required!",
+    "contentSeed": 507,
+    "y2k": {
+      "bg": "#0a0a2e", "textColor": "#ffffff", "accent": "#ff6600", "font": "Verdana, sans-serif",
+      "headerBg": "#ff6600", "linkColor": "#00ccff", "vlinkColor": "#cc66ff",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "Over 500 free games! | New: Multiplayer Tic-Tac-Toe! | Requires Shockwave Flash 5"
+    },
+    "sections": [
+      { "type": "text", "body": "FlashArcade is the WorldNet's largest collection of free browser games. All games run in Shockwave Flash — no downloads needed!" },
+      { "type": "heading", "title": "Popular Games" },
+      { "type": "links", "items": [
+        { "label": "Snake 2000 (Action)", "url": "#" },
+        { "label": "Asteroid Blaster (Arcade)", "url": "#" },
+        { "label": "Solitaire Deluxe (Card)", "url": "#" },
+        { "label": "Tower Defense (Strategy)", "url": "#" },
+        { "label": "Dress Up: Millennium Edition (Kids)", "url": "#" },
+        { "label": "Quiz Master 2000 (Trivia)", "url": "#" },
+        { "label": "Pipe Dream (Puzzle)", "url": "#" },
+        { "label": "Racing Championship (Sports)", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Top Scores" },
+      { "type": "profiles" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-animefanatics",
+    "url": "http://www.animefanatics.net",
+    "title": "Anime Fanatics",
+    "siteName": "AnimeFanatics.net",
+    "style": "y2k",
+    "y2kTemplate": "fansite",
+    "category": "entertainment",
+    "siteTagline": "The Ultimate Anime Resource",
+    "contentSeed": 508,
+    "y2k": {
+      "bg": "#fff0f5", "accent": "#cc0066", "font": "Verdana, sans-serif",
+      "headerBg": "#6600cc", "linkColor": "#cc0066", "vlinkColor": "#993399",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "AnimeWebRing",
+      "marquee": "NEW! Cowboy Bebop episode guide | Dragon Ball Z power level calculator!"
+    },
+    "sections": [
+      { "type": "text", "body": "AnimeFanatics is the WorldNet's premiere destination for anime news, reviews, and community. We cover all the latest series from Japan plus classic titles." },
+      { "type": "heading", "title": "Series Database" },
+      { "type": "links", "items": [
+        { "label": "Cowboy Bebop (1998)", "url": "#" },
+        { "label": "Neon Genesis Evangelion (1995)", "url": "#" },
+        { "label": "Dragon Ball Z (1989-1996)", "url": "#" },
+        { "label": "Sailor Moon (1992-1997)", "url": "#" },
+        { "label": "Pokemon (1997-ongoing)", "url": "#" },
+        { "label": "Trigun (1998)", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Community Forum" },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-geosites",
+    "url": "http://www.geosites.net",
+    "title": "GeoSites",
+    "siteName": "GeoSites.net",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "community",
+    "siteTagline": "Free Homepages for Everyone!",
+    "contentSeed": 601,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#009900", "font": "Arial, sans-serif",
+      "headerBg": "#009900", "hasHitCounter": true, "hasGuestbook": true,
+      "marquee": "Over 1 million homepages hosted! | Join the world's largest community!"
+    },
+    "sections": [
+      { "type": "text", "body": "GeoSites gives everyone a free homepage on the WorldNet. Choose your neighborhood, pick a theme, and start building! No HTML knowledge required." },
+      { "type": "heading", "title": "Neighborhoods" },
+      { "type": "links", "items": [
+        { "label": "SiliconValley — Computers & Technology", "url": "#" },
+        { "label": "Hollywood — Entertainment & Movies", "url": "#" },
+        { "label": "WallStreet — Business & Finance", "url": "#" },
+        { "label": "TimesSquare — Chat & Community", "url": "#" },
+        { "label": "Area51 — Sci-Fi & Paranormal", "url": "#" },
+        { "label": "Heartland — Family & Home", "url": "#" },
+        { "label": "EnchantedForest — Kids & Teens", "url": "#" },
+        { "label": "CapitolHill — Government & Politics", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Featured Homepages" },
+      { "type": "profiles" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-webringcentral",
+    "url": "http://www.webringcentral.net",
+    "title": "WebRing Central",
+    "siteName": "WebRingCentral.net",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "community",
+    "siteTagline": "Connecting the WorldNet — One Ring at a Time",
+    "contentSeed": 602,
+    "y2k": {
+      "bg": "#f0f0ff", "accent": "#003366", "font": "Verdana, sans-serif",
+      "headerBg": "#003366", "hasHitCounter": true,
+      "marquee": "Over 5,000 web rings and growing! | Create your own ring today!"
+    },
+    "sections": [
+      { "type": "text", "body": "WebRing Central is the directory of web rings on the WorldNet. A web ring is a collection of related websites linked together in a circular navigation structure. Find a ring to join, or start your own!" },
+      { "type": "heading", "title": "Popular Web Rings" },
+      { "type": "links", "items": [
+        { "label": "BusinessRing — 342 sites", "url": "#" },
+        { "label": "AnimeWebRing — 567 sites", "url": "#" },
+        { "label": "ComicFansRing — 234 sites", "url": "#" },
+        { "label": "BookLoversRing — 445 sites", "url": "#" },
+        { "label": "HumorRing — 312 sites", "url": "#" },
+        { "label": "PetLoversRing — 198 sites", "url": "#" },
+        { "label": "WebDesignRing — 276 sites", "url": "#" },
+        { "label": "AccountingRing — 89 sites", "url": "#" },
+        { "label": "FanFicRing — 456 sites", "url": "#" },
+        { "label": "NetGuidesRing — 167 sites", "url": "#" }
+      ]},
+      { "type": "search_box", "label": "Search Web Rings" },
+      { "type": "register" }
+    ]
+  },
+  {
+    "pageId": "y2k-classmatesfinder",
+    "url": "http://www.classmatesfinder.net",
+    "title": "ClassmatesFinder",
+    "siteName": "ClassmatesFinder.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "community",
+    "siteTagline": "Reconnect with Your Classmates!",
+    "contentSeed": 603,
+    "y2k": {
+      "bg": "#f0f8ff", "accent": "#003366", "font": "Arial, sans-serif",
+      "headerBg": "#003366", "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 12, "threadCount": 5, "repliesPerThread": 3
+    },
+    "sections": [
+      { "type": "text", "body": "ClassmatesFinder helps you reconnect with friends from high school and college. Search our database of over 30 million registered alumni and plan your next reunion." },
+      { "type": "search_box", "label": "Find Your School" },
+      { "type": "heading", "title": "Recently Registered Members" },
+      { "type": "profiles" },
+      { "type": "heading", "title": "Reunion Planning Board" },
+      { "type": "forum" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-penpalplanet",
+    "url": "http://www.penpalplanet.net",
+    "title": "PenPal Planet",
+    "siteName": "PenPalPlanet.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "community",
+    "siteTagline": "Make Friends Around the World",
+    "contentSeed": 604,
+    "y2k": {
+      "bg": "#f0fff0", "accent": "#006633", "font": "Georgia, serif",
+      "headerBg": "#006633", "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 12, "threadCount": 4, "repliesPerThread": 3,
+      "webring": "FriendshipRing"
+    },
+    "sections": [
+      { "type": "text", "body": "PenPal Planet connects people from around the world through the magic of email. Find a pen pal who shares your interests and start a conversation that could last a lifetime." },
+      { "type": "heading", "title": "Browse Pen Pals" },
+      { "type": "profiles" },
+      { "type": "heading", "title": "Discussion" },
+      { "type": "forum" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-forumcity",
+    "url": "http://www.forumcity.net",
+    "title": "ForumCity",
+    "siteName": "ForumCity.net",
+    "style": "y2k",
+    "y2kTemplate": "forum",
+    "category": "community",
+    "siteTagline": "Free Forums for Everyone",
+    "contentSeed": 605,
+    "y2k": {
+      "bg": "#f5f5f5", "accent": "#333399", "font": "Tahoma, sans-serif",
+      "headerBg": "#333399", "hasHitCounter": true, "hasGuestbook": true,
+      "threadCount": 12, "repliesPerThread": 5
+    },
+    "sections": [
+      { "type": "text", "body": "ForumCity offers free hosted discussion boards for any topic. Create your own forum in minutes, or join one of our thousands of existing communities." },
+      { "type": "heading", "title": "Active Forums" },
+      { "type": "forum" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-chatzone",
+    "url": "http://www.chatzone2000.net",
+    "title": "ChatZone 2000",
+    "siteName": "ChatZone2000.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "community",
+    "siteTagline": "Live Chat Rooms — Meet People Now!",
+    "contentSeed": 606,
+    "y2k": {
+      "bg": "#1a1a2e", "textColor": "#ffffff", "accent": "#00ccff", "font": "Verdana, sans-serif",
+      "headerBg": "#003366", "linkColor": "#00ccff", "vlinkColor": "#9999ff",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 10, "threadCount": 4, "repliesPerThread": 3,
+      "marquee": "847 users online now! | New: Private messaging feature!"
+    },
+    "sections": [
+      { "type": "text", "body": "ChatZone 2000 is the WorldNet's most popular Java-based chat service. Join a public room or create your own private chat. Requires Wahoo account." },
+      { "type": "heading", "title": "Chat Rooms" },
+      { "type": "chat_placeholder" },
+      { "type": "heading", "title": "Online Members" },
+      { "type": "profiles" },
+      { "type": "heading", "title": "Message Board" },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-astromatch",
+    "url": "http://www.astromatch.net",
+    "title": "AstroMatch",
+    "siteName": "AstroMatch.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "community",
+    "siteTagline": "Love Written in the Stars",
+    "contentSeed": 607,
+    "y2k": {
+      "bg": "#0a001a", "textColor": "#ffffff", "accent": "#cc99ff", "font": "Georgia, serif",
+      "headerBg": "#330066", "linkColor": "#ffcc00", "vlinkColor": "#cc9900",
+      "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 12, "threadCount": 4, "repliesPerThread": 3,
+      "marquee": "Find your cosmic match! | Free compatibility reading with registration!"
+    },
+    "sections": [
+      { "type": "text", "body": "AstroMatch uses ancient astrological wisdom combined with modern matching algorithms to help you find your perfect cosmic partner. Enter your birthday and discover your compatibility." },
+      { "type": "heading", "title": "Today's Horoscope" },
+      { "type": "text", "body": "Aries: Bold moves bring rewards today. Taurus: Financial news improves your outlook. Gemini: Communication is key in all relationships. Cancer: Home matters need attention. Leo: Your creative energy peaks. Virgo: Details matter more than ever." },
+      { "type": "heading", "title": "Recent Members" },
+      { "type": "profiles" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-fedcompliance",
+    "url": "http://www.fedcompliancedigest.gov.net",
+    "title": "Federal Compliance Digest",
+    "siteName": "FedComplianceDigest.gov.net",
+    "style": "y2k",
+    "y2kTemplate": "gov",
+    "category": "government",
+    "siteTagline": "Official Regulatory Guidance — Mandate 2000-CR7",
+    "contentSeed": 701,
+    "y2k": {
+      "bg": "#f8f8f8", "accent": "#003366", "font": "Times New Roman, serif",
+      "headerBg": "#003366", "hasHitCounter": true
+    },
+    "sections": [
+      { "type": "text", "body": "The Federal Compliance Digest provides official guidance on commercial internet monitoring requirements under Federal Mandate 2000-CR7. All operators are required to maintain awareness of current regulations." },
+      { "type": "heading", "title": "Frequently Asked Questions" },
+      { "type": "faq", "items": [
+        { "q": "What is Mandate 2000-CR7?", "a": "Federal Mandate 2000-CR7 establishes monitoring and compliance requirements for all commercial internet operators. Full text available at focs.gov.net." },
+        { "q": "Am I required to comply?", "a": "All registered operators and businesses using CorpOS-certified systems must maintain compliance. Non-compliance may result in fines, license review, or federal audit." },
+        { "q": "How do I check my compliance status?", "a": "Log into the CorpOS Operator Portal at corpos.gov.net with your operator credentials. Your compliance score is displayed on the dashboard." },
+        { "q": "What triggers a federal audit?", "a": "Audits may be triggered by: elevated notoriety scores, insufficient operating funds, failure to file quarterly reports, or random selection." },
+        { "q": "Where can I get help with compliance?", "a": "Contact the Compliance Monitor hotline at 1-800-COMPLY or submit a request through the CorpOS Operator Portal." }
+      ]},
+      { "type": "contact", "label": "Submit a Compliance Question" }
+    ]
+  },
+  {
+    "pageId": "y2k-publicrecords",
+    "url": "http://www.publicrecords.gov.net",
+    "title": "Public Records Online",
+    "siteName": "PublicRecords.gov.net",
+    "style": "y2k",
+    "y2kTemplate": "gov",
+    "category": "government",
+    "siteTagline": "Federal and State Public Records Database",
+    "contentSeed": 702,
+    "y2k": {
+      "bg": "#f0f0f0", "accent": "#003366", "font": "Times New Roman, serif",
+      "headerBg": "#003366", "hasHitCounter": true
+    },
+    "sections": [
+      { "type": "text", "body": "The Public Records Online portal provides access to federal and state public records, including business registrations, property records, court filings, and vital statistics." },
+      { "type": "search_box", "label": "Search Public Records" },
+      { "type": "heading", "title": "Available Databases" },
+      { "type": "links", "items": [
+        { "label": "Business Entity Search", "url": "#" },
+        { "label": "Property Records", "url": "#" },
+        { "label": "Court Case Lookup", "url": "#" },
+        { "label": "UCC Filings", "url": "#" },
+        { "label": "Vital Statistics", "url": "#" },
+        { "label": "Professional Licenses", "url": "#" }
+      ]},
+      { "type": "text", "body": "Note: Some records may require operator authentication. Access fees may apply for certified copies." }
+    ]
+  },
+  {
+    "pageId": "y2k-voterinfo",
+    "url": "http://www.voterinfo2000.net",
+    "title": "VoterInfo 2000",
+    "siteName": "VoterInfo2000.net",
+    "style": "y2k",
+    "y2kTemplate": "gov",
+    "category": "government",
+    "siteTagline": "Your Guide to Election 2000",
+    "contentSeed": 703,
+    "y2k": {
+      "bg": "#f8f0f0", "accent": "#660000", "font": "Times New Roman, serif",
+      "headerBg": "#003366", "hasHitCounter": true,
+      "marquee": "Election Day: November 7, 2000 | Register to vote! | Know your candidates!"
+    },
+    "sections": [
+      { "type": "text", "body": "VoterInfo 2000 is your nonpartisan guide to the upcoming presidential election. Learn about the candidates, find your polling place, and understand the issues." },
+      { "type": "heading", "title": "Presidential Candidates" },
+      { "type": "text", "body": "Republican: George W. Bush (TX) / Democrat: Al Gore (TN) / Green: Ralph Nader (CT) / Reform: Pat Buchanan (VA)" },
+      { "type": "heading", "title": "Key Issues" },
+      { "type": "text", "body": "Economy & Budget Surplus / Social Security Reform / Education / Healthcare / Technology & Internet Regulation / National Defense" },
+      { "type": "search_box", "label": "Find Your Polling Place (Enter ZIP)" }
+    ]
+  },
+  {
+    "pageId": "y2k-citypermits",
+    "url": "http://www.citypermits.gov.net",
+    "title": "CityPermits",
+    "siteName": "CityPermits.gov.net",
+    "style": "y2k",
+    "y2kTemplate": "gov",
+    "category": "government",
+    "siteTagline": "Municipal Permits and Licensing Portal",
+    "contentSeed": 704,
+    "y2k": {
+      "bg": "#f8f8f0", "accent": "#003333", "font": "Times New Roman, serif",
+      "headerBg": "#003333", "hasHitCounter": true
+    },
+    "sections": [
+      { "type": "text", "body": "The CityPermits online portal allows residents and businesses to apply for municipal permits and licenses. Available 24/7 for your convenience." },
+      { "type": "heading", "title": "Available Permits" },
+      { "type": "links", "items": [
+        { "label": "Business License Application", "url": "#" },
+        { "label": "Building Permit", "url": "#" },
+        { "label": "Special Event Permit", "url": "#" },
+        { "label": "Vendor License", "url": "#" },
+        { "label": "Signage Permit", "url": "#" },
+        { "label": "Home Occupation Permit", "url": "#" }
+      ]},
+      { "type": "faq", "items": [
+        { "q": "How long does processing take?", "a": "Standard processing is 5-10 business days. Expedited processing (additional $50 fee) is 2-3 business days." },
+        { "q": "Do I need a business license to sell online?", "a": "Yes. All commercial operators must hold a valid business license. Apply through the Federal Business Registration portal at fedbizreg.gov." }
+      ]},
+      { "type": "contact", "label": "Contact the Permits Office" }
+    ]
+  },
+  {
+    "pageId": "y2k-onlineu",
+    "url": "http://www.onlineu.edu.net",
+    "title": "OnlineU",
+    "siteName": "OnlineU.edu.net",
+    "style": "y2k",
+    "y2kTemplate": "education",
+    "category": "education",
+    "siteTagline": "Distance Learning for the Digital Age",
+    "contentSeed": 801,
+    "y2k": {
+      "bg": "#f0f0ff", "accent": "#003366", "font": "Georgia, serif",
+      "headerBg": "#003366", "hasHitCounter": true, "hasGuestbook": true
+    },
+    "sections": [
+      { "type": "text", "body": "OnlineU offers accredited degree programs and professional certificates entirely online. Study at your own pace from any CorpOS workstation. Financial aid available." },
+      { "type": "heading", "title": "Programs" },
+      { "type": "links", "items": [
+        { "label": "B.S. in Computer Science", "url": "#" },
+        { "label": "B.A. in Business Administration", "url": "#" },
+        { "label": "M.B.A. (Online)", "url": "#" },
+        { "label": "Certificate: Web Development", "url": "#" },
+        { "label": "Certificate: Network Administration", "url": "#" },
+        { "label": "Certificate: Project Management", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Student Testimonials" },
+      { "type": "reviews" },
+      { "type": "register" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-encyclone",
+    "url": "http://www.encyclone.com",
+    "title": "EncycloNet",
+    "siteName": "EncycloNet.com",
+    "style": "y2k",
+    "y2kTemplate": "portal",
+    "category": "education",
+    "siteTagline": "The Free Online Encyclopedia",
+    "contentSeed": 802,
+    "y2k": {
+      "bg": "#ffffff", "accent": "#336633", "font": "Georgia, serif",
+      "headerBg": "#336633", "hasHitCounter": true,
+      "marquee": "Over 50,000 articles and growing! | Volunteers welcome!"
+    },
+    "sections": [
+      { "type": "text", "body": "EncycloNet is a volunteer-maintained online encyclopedia aiming to provide free, accurate information on every topic imaginable. Browse by category or search our database." },
+      { "type": "search_box", "label": "Search EncycloNet" },
+      { "type": "heading", "title": "Featured Articles" },
+      { "type": "links", "items": [
+        { "label": "History of the Internet", "url": "#" },
+        { "label": "Year 2000 Problem (Y2K)", "url": "#" },
+        { "label": "The Dot-Com Bubble", "url": "#" },
+        { "label": "CorpOS Operating System", "url": "#" },
+        { "label": "Federal Mandate 2000-CR7", "url": "#" },
+        { "label": "RapidGate Scandal", "url": "#" },
+        { "label": "Electronic Commerce", "url": "#" },
+        { "label": "Search Engine Technology", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Categories" },
+      { "type": "links", "items": [
+        { "label": "Science & Technology", "url": "#" },
+        { "label": "History & Geography", "url": "#" },
+        { "label": "Arts & Culture", "url": "#" },
+        { "label": "Business & Economics", "url": "#" },
+        { "label": "Society & Law", "url": "#" }
+      ]}
+    ]
+  },
+  {
+    "pageId": "y2k-tutorialworld",
+    "url": "http://www.tutorialworld.net",
+    "title": "TutorialWorld",
+    "siteName": "TutorialWorld.net",
+    "style": "y2k",
+    "y2kTemplate": "education",
+    "category": "education",
+    "siteTagline": "Learn Anything — Step by Step",
+    "contentSeed": 803,
+    "y2k": {
+      "bg": "#fffff0", "accent": "#996600", "font": "Verdana, sans-serif",
+      "headerBg": "#996600", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "TutorialRing"
+    },
+    "sections": [
+      { "type": "text", "body": "TutorialWorld offers free step-by-step tutorials on computers, software, the internet, and more. Written in plain language for beginners." },
+      { "type": "heading", "title": "Popular Tutorials" },
+      { "type": "links", "items": [
+        { "label": "How to Set Up Your CorpOS Desktop", "url": "#" },
+        { "label": "Getting Started with JeeMail", "url": "#" },
+        { "label": "Building Your First Website", "url": "#" },
+        { "label": "Understanding Internet Security", "url": "#" },
+        { "label": "Using WorldNet Explorer 5.0", "url": "#" },
+        { "label": "Introduction to Spreadsheets", "url": "#" },
+        { "label": "Digital Photography Basics", "url": "#" },
+        { "label": "How Modems Work", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Submit a Tutorial" },
+      { "type": "contact", "label": "Suggest a Topic" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-y2kprep",
+    "url": "http://www.y2kprep.net",
+    "title": "Y2K Prep",
+    "siteName": "Y2KPrep.net",
+    "style": "y2k",
+    "y2kTemplate": "personal",
+    "category": "education",
+    "siteTagline": "Were You Prepared? — A Y2K Bug Archive",
+    "contentSeed": 804,
+    "y2k": {
+      "bg": "#ffffe0", "accent": "#cc0000", "font": "Courier New, monospace",
+      "headerBg": "#cc0000", "hasHitCounter": true, "hasGuestbook": true,
+      "webring": "Y2KRing",
+      "marquee": "The millennium bug was REAL! This site archives all Y2K preparedness resources."
+    },
+    "sections": [
+      { "type": "text", "body": "Y2KPrep.net was originally created in 1998 to help people prepare for the Year 2000 computer bug. Now that we survived, this site serves as an archive of one of the biggest technology scares in history." },
+      { "type": "heading", "title": "What Was the Y2K Bug?" },
+      { "type": "text", "body": "The Year 2000 Problem was a computer flaw caused by storing years as two digits. When clocks rolled from 99 to 00, many feared systems would fail catastrophically. Governments and corporations spent an estimated $300 billion on remediation." },
+      { "type": "heading", "title": "Archive" },
+      { "type": "links", "items": [
+        { "label": "Original Y2K FAQ (1998)", "url": "#" },
+        { "label": "Government Advisory Bulletins", "url": "#" },
+        { "label": "Y2K Survival Supply Lists", "url": "#" },
+        { "label": "News Coverage Archive", "url": "#" },
+        { "label": "Personal Y2K Stories", "url": "#" }
+      ]},
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-webmd2k",
+    "url": "http://www.webmd2k.net",
+    "title": "WebMD2K",
+    "siteName": "WebMD2K.net",
+    "style": "y2k",
+    "y2kTemplate": "corporate",
+    "category": "health",
+    "siteTagline": "Health Information You Can Trust",
+    "contentSeed": 901,
+    "y2k": {
+      "bg": "#f0fff0", "accent": "#006633", "font": "Verdana, sans-serif",
+      "headerBg": "#006633", "hasHitCounter": true,
+      "navLinks": [
+        { "label": "Conditions", "url": "#" }, { "label": "Medications", "url": "#" },
+        { "label": "Symptom Checker", "url": "#" }, { "label": "Find a Doctor", "url": "#" }
+      ]
+    },
+    "sections": [
+      { "type": "text", "body": "WebMD2K provides doctor-reviewed health information for consumers. Search our database of conditions, medications, and treatments. This site is for informational purposes only and does not constitute medical advice." },
+      { "type": "search_box", "label": "Search Health Topics" },
+      { "type": "heading", "title": "Health News" },
+      { "type": "text", "body": "New Study Links Screen Time to Eye Strain | Flu Season Tips: When to See a Doctor | Y2K Anxiety: Mental Health Resources | FDA Approves New Allergy Medication" },
+      { "type": "heading", "title": "Popular Topics" },
+      { "type": "links", "items": [
+        { "label": "Common Cold & Flu", "url": "#" },
+        { "label": "Back Pain Relief", "url": "#" },
+        { "label": "Stress Management", "url": "#" },
+        { "label": "Healthy Eating Guide", "url": "#" },
+        { "label": "Exercise Basics", "url": "#" },
+        { "label": "Sleep Better Tonight", "url": "#" }
+      ]}
+    ]
+  },
+  {
+    "pageId": "y2k-fitnessfirst",
+    "url": "http://www.fitnessfirst2000.net",
+    "title": "FitnessFirst",
+    "siteName": "FitnessFirst2000.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "health",
+    "siteTagline": "Get Fit for the New Millennium!",
+    "contentSeed": 902,
+    "y2k": {
+      "bg": "#fff8f0", "accent": "#cc6600", "font": "Arial, sans-serif",
+      "headerBg": "#cc6600", "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 8, "threadCount": 5, "repliesPerThread": 3,
+      "webring": "FitnessRing"
+    },
+    "sections": [
+      { "type": "text", "body": "FitnessFirst 2000 is your online fitness community. Find workout routines, nutrition plans, and motivation from fellow fitness enthusiasts." },
+      { "type": "heading", "title": "Workout of the Week" },
+      { "type": "text", "body": "Monday: Chest & Triceps / Tuesday: Back & Biceps / Wednesday: Cardio / Thursday: Shoulders & Abs / Friday: Legs / Saturday: Full Body / Sunday: Rest" },
+      { "type": "heading", "title": "Community" },
+      { "type": "profiles" },
+      { "type": "forum" },
+      { "type": "guestbook" }
+    ]
+  },
+  {
+    "pageId": "y2k-recipesonline",
+    "url": "http://www.recipesonline.net",
+    "title": "RecipesOnline",
+    "siteName": "RecipesOnline.net",
+    "style": "y2k",
+    "y2kTemplate": "community",
+    "category": "food",
+    "siteTagline": "Share and Discover Great Recipes",
+    "contentSeed": 903,
+    "y2k": {
+      "bg": "#fff8e8", "accent": "#993300", "font": "Georgia, serif",
+      "headerBg": "#993300", "hasHitCounter": true, "hasGuestbook": true,
+      "profileCount": 8, "threadCount": 5, "repliesPerThread": 3,
+      "webring": "FoodLoversRing",
+      "marquee": "Recipe of the Day: Mom's Famous Chili | Submit YOUR recipe!"
+    },
+    "sections": [
+      { "type": "text", "body": "RecipesOnline is a community-driven recipe sharing site. Browse thousands of recipes submitted by home cooks from around the world, or share your own favorites." },
+      { "type": "heading", "title": "Categories" },
+      { "type": "links", "items": [
+        { "label": "Appetizers (234 recipes)", "url": "#" },
+        { "label": "Main Dishes (567 recipes)", "url": "#" },
+        { "label": "Desserts (445 recipes)", "url": "#" },
+        { "label": "Vegetarian (189 recipes)", "url": "#" },
+        { "label": "Quick & Easy (312 recipes)", "url": "#" },
+        { "label": "Holiday Specials (98 recipes)", "url": "#" }
+      ]},
+      { "type": "heading", "title": "Community Discussion" },
+      { "type": "forum" },
+      { "type": "heading", "title": "Submit a Recipe" },
+      { "type": "contact", "label": "Send Us Your Recipe" },
+      { "type": "guestbook" }
+    ]
+  }
+]

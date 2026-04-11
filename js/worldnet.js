@@ -41,6 +41,7 @@ import { mountReviewBomberFeed, teardownReviewBomberFeed } from './review-bomber
 import { mountYourspace, teardownYourspace } from './yourspace-feed.js';
 import { mountMytube, teardownMytube } from './mytube-feed.js';
 import { mountPipelineLiveComments, teardownPipelineLiveComments } from './pipeline-live-comments.js';
+import { mountY2kForms, teardownY2kForms } from './worldnet-y2k-forms.js';
 import {
   renderMoogleAbout,
   renderMoogleDirectory,
@@ -1131,12 +1132,16 @@ function navigate(key, sub = '', opts = {}) {
   teardownMytube();
   teardownPipelineLiveComments();
   teardownMoogleMaps();
+  teardownY2kForms();
   if (currentPageKey === 'reviewbomber') void mountReviewBomberFeed(content);
   if (currentPageKey === 'yourspace') void mountYourspace(content, currentSubPath);
   if (currentPageKey === 'mytube') void mountMytube(content, currentSubPath);
   if (currentPageKey === 'pipeline_page') {
     const pageDef = getState().contentRegistry?.pages?.find((p) => p.pageId === currentSubPath);
-    if (pageDef) mountPipelineLiveComments(content, pageDef);
+    if (pageDef) {
+      mountPipelineLiveComments(content, pageDef);
+      if (pageDef.style === 'y2k') mountY2kForms(content, pageDef);
+    }
   }
   if (currentPageKey === 'bizreg') mountBizRegForm(content);
   if (currentPageKey === 'ssa') mountSsaPage(content);

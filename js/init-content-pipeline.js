@@ -66,6 +66,17 @@ export async function initContentPipeline(loadJsonFile) {
     }
   }
 
+  if (disk && loadJsonFile) {
+    let y2kSites = [];
+    try { y2kSites = await loadJsonFile('worldnet-y2k-sites.json'); } catch { /* optional */ }
+    if (Array.isArray(y2kSites) && y2kSites.length) {
+      const existing = Array.isArray(disk.pages) ? disk.pages : [];
+      const existingIds = new Set(existing.map(p => p?.pageId));
+      const merged = [...existing, ...y2kSites.filter(s => s?.pageId && !existingIds.has(s.pageId))];
+      disk.pages = merged;
+    }
+  }
+
   patchState((st) => {
     migrateStateIfNeeded(st);
     ensureContentRegistry(st);

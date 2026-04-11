@@ -1,0 +1,162 @@
+/* ── Y2K WorldNet Sites ──────────────────────────────────────────── */
+
+.y2k-page {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0;
+}
+.y2k-page table {
+  font-size: inherit;
+}
+.y2k-page a {
+  text-decoration: underline;
+}
+.y2k-page a:hover {
+  text-decoration: none;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+.y2k-header {
+  padding: 12px 10px;
+  border-bottom: 3px ridge #c0c0c0;
+  text-align: center;
+}
+
+/* ── Navigation bar ───────────────────────────────────────────── */
+.y2k-nav {
+  background: #d4d0c8;
+  padding: 4px 8px;
+  border-bottom: 2px groove #a0a0a0;
+  font-size: 11px;
+}
+.y2k-nav a,
+.y2k-nav-link {
+  color: #003399 !important;
+  margin: 0 2px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 11px;
+}
+.y2k-nav a:hover,
+.y2k-nav-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────── */
+.y2k-marquee {
+  background: #003399;
+  color: #ffff00;
+  padding: 3px 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  border: 1px solid #001a66;
+}
+.y2k-marquee-inner {
+  display: inline-block;
+  white-space: nowrap;
+  animation: y2k-scroll 16s linear infinite;
+  padding-left: 100%;
+}
+@keyframes y2k-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ── Hit counter ──────────────────────────────────────────────── */
+.y2k-hitcounter {
+  display: inline-flex;
+  gap: 1px;
+  border: 2px inset #808080;
+  background: #000;
+  padding: 2px;
+}
+.y2k-hc-digit {
+  display: inline-block;
+  width: 12px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  background: #001a00;
+  color: #00ff00;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid #003300;
+}
+
+/* ── Guest book ───────────────────────────────────────────────── */
+.y2k-guestbook {
+  margin: 10px 0;
+}
+.y2k-guestbook table {
+  width: 100%;
+}
+.y2k-guestbook input,
+.y2k-guestbook textarea {
+  border: 2px inset #c0c0c0;
+  background: #fff;
+}
+
+/* ── Web ring ─────────────────────────────────────────────────── */
+.y2k-webring {
+  margin: 10px 0;
+  text-align: center;
+}
+.y2k-webring table {
+  margin: 0 auto;
+}
+.y2k-webring a {
+  font-size: 11px;
+}
+
+/* ── Forum table ──────────────────────────────────────────────── */
+.y2k-forum-table {
+  margin: 8px 0;
+}
+.y2k-forum-table td,
+.y2k-forum-table th {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+.y2k-forum-table a {
+  color: #003366;
+}
+
+/* ── Blink animation ──────────────────────────────────────────── */
+.y2k-blink {
+  animation: y2k-blink-anim 1s step-end infinite;
+}
+@keyframes y2k-blink-anim {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── Under construction ───────────────────────────────────────── */
+.y2k-construction {
+  background: #ffff00;
+  color: #000;
+  border: 3px dashed #ff0000;
+  padding: 8px;
+  text-align: center;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.y2k-footer {
+  text-align: center;
+  padding: 6px 0;
+  margin-top: 8px;
+}
+.y2k-footer a {
+  font-size: 10px;
+}
+
+/* ── Beveled section borders ──────────────────────────────────── */
+.y2k-page hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff);
+}

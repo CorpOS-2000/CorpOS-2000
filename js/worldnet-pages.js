@@ -17,16 +17,16 @@ export const worldnetPages = {
   </div>
   <div style="font-size:10px;color:#888;text-align:center;">Search 1,420,000,000 web pages</div>
 </div>
-<div class="ad">📢 <b>FEATURED:</b> CorpOS 2000 Certified Business Tools — <a data-nav="corptools">Click Here</a></div>
+<div class="ad">📢 <b>FEATURED:</b> CorpOS 2000 Certified Business Tools — <a data-wnet-nav="http://www.corptools.net">Click Here</a></div>
 <div style="max-width:100%;">
 <div class="cgrid">
-  <div class="cat"><div class="cat-t">💼 Business & Finance</div><a data-nav="bizreg">Register a Business</a><a data-nav="bank">First National Bank</a><a data-nav="bank_meridian">Meridian Savings</a><a data-nav="bank_harbor">Harbor Credit Union</a><a data-nav="bank_pacific">Pacific Rim Financial</a><a data-nav="stocks">Stock Market</a><a data-nav="realestate">Real Estate</a></div>
-  <div class="cat"><div class="cat-t">📰 News & Media</div><a data-nav="herald">Daily Herald Online</a><a data-nav="corpnews">CorpNet News</a><a data-nav="markets">Market Watch</a><a data-nav="stub">Weather</a></div>
-  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-nav="amazone">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-nav="suppliers">B2B Suppliers</a><a data-nav="stub">Tech Deals</a></div>
-  <div class="cat"><div class="cat-t">👥 People & Jobs</div><a data-nav="hiring">Job Listings</a><a data-nav="staffing">Staffing Agency</a><a data-nav="yourspace">yourspace.net</a><a data-nav="stub">Business Network</a><a data-nav="stub">People Search</a></div>
-  <div class="cat"><div class="cat-t">⚖️ Government</div><a data-nav="ssa">SSA — ID Services</a><a data-nav="bizreg">Business Registry</a><a data-nav="web_registry">World Wide Web Registry</a><a data-nav="net99669">99669.net — Site Directory</a><a data-nav="fra">Federal Revenue Auth.</a><a data-nav="stub">Permits & Licenses</a></div>
-  <div class="cat"><div class="cat-t">💻 Technology</div><a data-nav="moogle_home">Moogle — Search</a><a data-nav="intek">Intek Corporation</a><a data-nav="devtools">devtools.net</a><a data-nav="reviewbomber">reviewbomber.net</a><a data-nav="mytube">mytube.net</a><a data-nav="stub">Tech Support</a><a data-nav="stub">Downloads</a></div>
-  <div class="cat"><div class="cat-t">🗺️ Maps & Directions</div><a data-nav="moogle_maps">Moogle Maps — Hargrove</a><a data-nav="stub">Travel Planner</a><a data-nav="stub">Yellow Pages</a></div>
+  <div class="cat"><div class="cat-t">💼 Business & Finance</div><a data-nav="bizreg">Register a Business</a><a data-nav="bank">First National Bank</a><a data-nav="bank_meridian">Meridian Savings</a><a data-nav="bank_harbor">Harbor Credit Union</a><a data-nav="bank_pacific">Pacific Rim Financial</a><a data-nav="stocks">Stock Market</a><a data-wnet-nav="http://www.realestatenow.net">Real Estate</a></div>
+  <div class="cat"><div class="cat-t">📰 News & Media</div><a data-nav="herald">Daily Herald Online</a><a data-wnet-nav="http://www.corpnews.net">CorpNews Wire</a><a data-wnet-nav="http://www.megamergers.com">MegaMergers</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather</a></div>
+  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-wnet-nav="http://www.amazone.com">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-wnet-nav="http://www.bidbattle.net">BidBattle Auctions</a><a data-wnet-nav="http://www.discountelectronicsdirect.com">Electronics Direct</a></div>
+  <div class="cat"><div class="cat-t">👥 People & Jobs</div><a data-nav="hiring">Job Listings</a><a data-nav="staffing">Staffing Agency</a><a data-nav="yourspace">yourspace.net</a><a data-wnet-nav="http://www.careerlaunchpad.com">CareerLaunchPad</a><a data-wnet-nav="http://www.classmatesfinder.net">ClassmatesFinder</a></div>
+  <div class="cat"><div class="cat-t">⚖️ Government</div><a data-nav="ssa">SSA — ID Services</a><a data-nav="bizreg">Business Registry</a><a data-nav="web_registry">World Wide Web Registry</a><a data-nav="net99669">99669.net — Site Directory</a><a data-nav="fra">Federal Revenue Auth.</a><a data-wnet-nav="http://www.citypermits.gov.net">Permits & Licenses</a></div>
+  <div class="cat"><div class="cat-t">💻 Technology</div><a data-nav="moogle_home">Moogle — Search</a><a data-wnet-nav="http://www.intek-corp.com">Intek Corporation</a><a data-nav="devtools">devtools.net</a><a data-nav="reviewbomber">reviewbomber.net</a><a data-nav="mytube">mytube.net</a><a data-wnet-nav="http://www.driverdump.com">DriverDump</a><a data-wnet-nav="http://www.pixelperfect.net">Web Tutorials</a></div>
+  <div class="cat"><div class="cat-t">🗺️ Maps & Directions</div><a data-nav="moogle_maps">Moogle Maps — Hargrove</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather Forecast</a><a data-nav="net99669">Yellow Pages</a></div>
 </div>
 </div>
 <div style="margin-top:10px;font-size:10px;color:#888;text-align:center;border-top:1px solid #ddd;padding-top:6px;">

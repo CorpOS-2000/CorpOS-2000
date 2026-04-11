@@ -1,0 +1,159 @@
+[
+  {
+    "id": "evt_first_week_expenses_warning",
+    "title": "Operating Expenses Notice",
+    "type": "scheduled",
+    "oneShot": true,
+    "fireOnDay": 7,
+    "fireOnHour": 9,
+    "condition": { "type": "flag_not_set", "flag": "firstWeekWarningSent" },
+    "outcomes": {
+      "default": {
+        "sms": {
+          "from": "FRA",
+          "message": "QUARTERLY NOTICE — Your operator account has been active for 7 days. Mandatory base operating expenses of $480/week are now being applied. Ensure your account maintains sufficient funds. Federal Revenue Authority."
+        },
+        "setFlag": "firstWeekWarningSent"
+      }
+    }
+  },
+  {
+    "id": "evt_compliance_check_day3",
+    "title": "Initial Compliance Scan",
+    "type": "scheduled",
+    "oneShot": true,
+    "fireOnDay": 3,
+    "fireOnHour": 14,
+    "condition": { "type": "flag_not_set", "flag": "initialComplianceSent" },
+    "outcomes": {
+      "default": {
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "Automated compliance scan complete. Your account has been active 3 days. No anomalies detected at this time. Activity logging is continuous per Mandate 2000-CR7."
+        },
+        "setFlag": "initialComplianceSent"
+      }
+    }
+  },
+  {
+    "id": "evt_market_fluctuation",
+    "title": "Market Movement",
+    "type": "interval",
+    "intervalHours": 48,
+    "dc": 12,
+    "modifiers": { "balance": true },
+    "outcomes": {
+      "pass": {
+        "toast": {
+          "title": "Market Update",
+          "message": "Favorable conditions in your sector. Business sentiment is up.",
+          "icon": "📈"
+        }
+      },
+      "fail": {
+        "toast": {
+          "title": "Market Pressure",
+          "message": "Sector headwinds this week. Conditions are tightening.",
+          "icon": "📉"
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_notoriety_spike_warning",
+    "title": "Compliance Alert — Elevated Activity",
+    "type": "triggered",
+    "condition": { "type": "notoriety_above", "value": 50 },
+    "oneShot": true,
+    "dc": 14,
+    "modifiers": { "notoriety": -1 },
+    "outcomes": {
+      "pass": {
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "ALERT: Your operator compliance rating has entered the Non-Compliant tier. Continued irregularities may trigger formal review. Operator: {operatorId}"
+        },
+        "peek": {
+          "sender": "Compliance Monitor",
+          "message": "Compliance rating elevated — review activity",
+          "type": "compliance",
+          "targetId": "COMPLIANCE_MONITOR",
+          "icon": "⚠"
+        }
+      },
+      "fail": {
+        "notorietyDelta": 5,
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "ESCALATION NOTICE: Compliance scan detected continued irregularities. Your file has been flagged for manual review. Operator: {operatorId}"
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_low_funds_warning",
+    "title": "Low Balance Warning",
+    "type": "triggered",
+    "condition": { "type": "bank_balance_below", "value": 1000 },
+    "oneShot": true,
+    "outcomes": {
+      "default": {
+        "sms": {
+          "from": "FRA",
+          "message": "LOW BALANCE NOTICE: Your primary account is below $1,000. Mandatory operating expenses of $68.57/day continue to apply. Insufficient funds will trigger a compliance review."
+        },
+        "peek": {
+          "sender": "FRA",
+          "message": "Account balance critically low",
+          "type": "compliance",
+          "targetId": "FRA",
+          "icon": "⚠"
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_website_first_publish_bonus",
+    "title": "Website Published — Visibility Boost",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "website_published" },
+    "outcomes": {
+      "default": {
+        "toast": {
+          "title": "Website Live",
+          "message": "Your site is indexed and receiving its first visitors.",
+          "icon": "🌐"
+        },
+        "setFlag": "firstWebsitePublished"
+      }
+    }
+  },
+  {
+    "id": "evt_audit_trigger_day14",
+    "title": "Scheduled Compliance Review",
+    "type": "scheduled",
+    "oneShot": true,
+    "fireOnDay": 14,
+    "fireOnHour": 10,
+    "condition": { "type": "notoriety_above", "value": 25 },
+    "dc": 13,
+    "modifiers": { "notoriety": -1 },
+    "outcomes": {
+      "pass": {
+        "sms": {
+          "from": "CORPOS_SYSTEM",
+          "message": "SCHEDULED REVIEW — Day 14 compliance review initiated. Please stand by."
+        },
+        "triggerAudit": 1
+      },
+      "fail": {
+        "sms": {
+          "from": "CORPOS_SYSTEM",
+          "message": "COMPLIANCE NOTICE — Irregularities detected. Enhanced monitoring has been applied to your operator account."
+        },
+        "notorietyDelta": 10
+      }
+    }
+  }
+]

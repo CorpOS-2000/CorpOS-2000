@@ -98,7 +98,10 @@ const state = {
   explorerClipboard: {
     mode: null,
     items: []
-  }
+  },
+  /** Y2K WorldNet sites — guest book entries and registration state (session-only). */
+  y2kGuestbooks: {},
+  y2kRegistrations: {}
 };
 
 function clone(value) {

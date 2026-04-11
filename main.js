@@ -51,7 +51,8 @@ const WATCH_FILES = new Set([
   'generation/taglet_definitions.json',
   'generation/profession_tiers.json',
   'generation/first_names_1940s_female.json',
-  'lenses/lens_definitions.json'
+  'lenses/lens_definitions.json',
+  'events/events.json'
 ]);
 
 let watchTimer = null;
@@ -80,6 +81,7 @@ function broadcastContentChange(filename) {
   else if (base === 'ads.json') category = 'ads';
   else if (base === 'shops.json') category = 'shops';
   else if (normalized.startsWith('actors/') || normalized.startsWith('generation/') || normalized.startsWith('lenses/')) category = 'actors';
+  else if (base === 'events.json' || normalized.startsWith('events/')) category = 'events';
   try {
     wc.send('content-file-changed', { file: normalized, category });
   } catch {
