@@ -2,7 +2,15 @@
  * WebEx-Publisher — drag-and-drop e-commerce website builder.
  * Layout: presets | canvas (mirrors live grid) | modules; dual inventory; publish → 1:1 WorldNet page.
  */
-import { getState, patchState, appendBankingTransaction } from './gameState.js';
+import {
+  getState,
+  patchState,
+  appendBankingTransaction,
+  SIM_HOUR_MS,
+  ensureWebsiteStats,
+  transferSiteToCompany
+} from './gameState.js';
+import { SMS } from './bc-sms.js';
 import { SIM_WEEK_MS, SIM_DAY_MS } from './bank-config.js';
 import { escapeHtml } from './identity.js';
 import { toast, TOAST_KEYS } from './toast.js';
@@ -17,6 +25,14 @@ let _priceOverlay = null;
 let _textOverlay = null;
 /** @type {'editor' | 'properties'} */
 let _mainTab = 'editor';
+
+let _autoSaveTimer = null;
+const AUTO_SAVE_DEBOUNCE_MS = 1500;
+
+const MODULE_CATEGORY_ORDER = ['Content', 'Commerce', 'Engagement', 'Media', 'Security'];
+
+/** @type {Set<string>} */
+const _collapsedCategories = new Set();
 
 const LAYOUT_PRESETS = [
   { id: 'shop_forward', label: 'Shop Forward', icon: '🛒', slots: [
@@ -81,10 +97,24 @@ const LAYOUT_PRESETS = [
   ]},
 ];
 
-const COMMERCE_MODULE_IDS = new Set(['shop', 'product_listing', 'cart_checkout']);
+const COMMERCE_MODULE_IDS = new Set(['shop', 'product_listing', 'cart_checkout', 'checkout_widget']);
 
 /** Slots with a right-click menu (commerce or text box). */
 const COMMERCE_CTX_MODULES = new Set(['shop', 'product_listing']);
+
+function applySecurityModuleStatBonuses(pageEntry, proj) {
+  ensureWebsiteStats(pageEntry);
+  for (const mid of proj.securityModules || []) {
+    const mod = moduleById(mid);
+    if (!mod?.defensiveModule || !mod.statsEffect) continue;
+    const effects = mod.statsEffect;
+    for (const [stat, delta] of Object.entries(effects)) {
+      if (stat in pageEntry.stats) {
+        pageEntry.stats[stat] = Math.min(100, (pageEntry.stats[stat] || 0) + Number(delta) || 0);
+      }
+    }
+  }
+}
 
 /** TLD options: highest price / traffic first → value tier last. Weekly subscription. */
 export const DOMAIN_TLD_OPTIONS = [
@@ -254,6 +284,141 @@ function getProject(id) {
 
 function currentProject() {
   return _currentProjectId ? getProject(_currentProjectId) : null;
+}
+
+function getProjectById(id) {
+  return (getState().player.webExProjects || []).find((p) => p.id === id) || null;
+}
+
+function loadLastProjectId() {
+  const st = getState();
+  const projects = st.player?.webExProjects || [];
+  if (!projects.length) return null;
+  const lastId = st.player?.lastActiveWebExProjectId;
+  if (lastId && projects.some((p) => p.id === lastId)) return lastId;
+  const sorted = [...projects].sort((a, b) => (b.lastAutoSavedAt || 0) - (a.lastAutoSavedAt || 0));
+  return sorted[0]?.id || null;
+}
+
+function flushAutoSaveForProject(projId) {
+  const p = getProjectById(projId);
+  if (!p) return;
+  patchState((st) => {
+    const row = (st.player.webExProjects || []).find((x) => x.id === projId);
+    if (row) row.lastAutoSavedAt = st.sim?.elapsedMs || 0;
+    return st;
+  });
+  if (p.siteName?.trim() && p.publishedPageId) {
+    const fresh = getProjectById(projId);
+    if (fresh) publishProjectSilent(fresh);
+  }
+  try {
+    window.SaveManager?.save?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+function setCurrentProject(projectId) {
+  if (_autoSaveTimer) {
+    clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = null;
+  }
+  const prevId = _currentProjectId;
+  if (prevId && prevId !== projectId) {
+    flushAutoSaveForProject(prevId);
+  }
+  _currentProjectId = projectId;
+  patchState((st) => {
+    st.player = st.player || {};
+    st.player.lastActiveWebExProjectId = projectId;
+    return st;
+  });
+}
+
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    _autoSaveTimer = null;
+    autoSaveAndPublish();
+  }, AUTO_SAVE_DEBOUNCE_MS);
+}
+
+function autoSaveAndPublish() {
+  const proj = currentProject();
+  if (!proj) return;
+  if (!proj.siteName?.trim()) return;
+
+  patchState((st) => {
+    const p = (st.player?.webExProjects || []).find((x) => x.id === proj.id);
+    if (p) p.lastAutoSavedAt = st.sim?.elapsedMs || 0;
+    return st;
+  });
+
+  if (proj.publishedPageId) {
+    const fresh = getProjectById(proj.id);
+    if (fresh) publishProjectSilent(fresh);
+  }
+
+  try {
+    window.SaveManager?.save?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+function publishProjectSilent(proj) {
+  if (!proj?.siteName?.trim() || !proj.publishedPageId) return;
+
+  const fullHost = buildPublicHost(proj);
+  const storeId = proj.publishedStoreId || `player-${proj.id}`;
+  const pageId = proj.publishedPageId;
+  const titleFontStack = getTitleFontStack(proj.titleFontId);
+  const titleSizePx = Math.min(32, Math.max(10, Number(proj.titleSizePx) || 12));
+
+  upsertWebExCommerceStore(storeId, fullHost, proj.siteName.trim(), proj);
+  const { webExLayout, commerce } = buildWebExMirrorLayout(proj, storeId);
+  const placedModuleIds = proj.slots.filter((s) => s.moduleId).map((s) => s.moduleId);
+
+  patchState((s) => {
+    if (!s.contentRegistry) s.contentRegistry = { pages: [], companies: [], npcs: [], government: {} };
+    if (!Array.isArray(s.contentRegistry.pages)) s.contentRegistry.pages = [];
+    const existing = s.contentRegistry.pages.findIndex((pg) => pg.pageId === pageId);
+    const prev = existing >= 0 ? s.contentRegistry.pages[existing] : null;
+    const pageDef = {
+      ...defaultPageDef({
+        category: commerce ? 'shopping' : 'general'
+      }),
+      ...(prev || {}),
+      pageId,
+      url: `http://${fullHost}/`,
+      title: proj.siteName.trim(),
+      siteName: proj.siteName.trim(),
+      hasShop: commerce,
+      shopId: commerce ? storeId : undefined,
+      modules: placedModuleIds,
+      uxScore: computeUxScore(proj),
+      webExProjectId: proj.id,
+      layoutTemplate: 'webex_mirror',
+      webExLayout,
+      webExTitleFontStack: titleFontStack,
+      webExTitleSizePx: titleSizePx,
+      sections: [],
+      navLinks: [],
+      footerText: `© 2000 ${proj.siteName.trim()} · Built with WebEx-Publisher™`,
+      siteTagline: commerce ? 'WorldNet Commerce enabled' : 'WebEx-Publisher site'
+    };
+    if (prev?.stats) {
+      pageDef.stats = { ...prev.stats };
+    }
+    ensureWebsiteStats(pageDef);
+    pageDef.equippedDefenses = [...(proj.securityModules || [])];
+    if (existing >= 0) s.contentRegistry.pages[existing] = pageDef;
+    else s.contentRegistry.pages.push(pageDef);
+    return s;
+  });
+
+  setPipelinePageRoutes(getState().contentRegistry.pages || []);
 }
 
 function moduleById(mid) { return _modules.find(m => m.id === mid) || null; }
@@ -498,6 +663,7 @@ function applyLayoutPresetToProject(presetId) {
     return s;
   });
   setStatus(`Layout: ${preset.label} — site name & domain kept. Modules matched by slot id where possible.`);
+  scheduleAutoSave();
   render();
 }
 
@@ -610,7 +776,8 @@ function upsertWebExCommerceStore(storeId, hostName, siteName, proj) {
  */
 function buildModuleSections(modId, sid, commerce, storeId, proj, slotId) {
   switch (modId) {
-    case 'custom_text_box': {
+    case 'custom_text_box':
+    case 'text_block': {
       const data = proj?.slotModuleData?.[slotId] || {};
       return [
         {
@@ -656,6 +823,7 @@ function buildModuleSections(modId, sid, commerce, storeId, proj, slotId) {
         }
       ];
     case 'cart_checkout':
+    case 'checkout_widget':
       if (commerce && storeId) {
         return [
           {
@@ -930,7 +1098,10 @@ function renderCanvas(proj) {
     const filled = slots.find(s => s.slotId === ps.slotId);
     const mod = filled?.moduleId ? moduleById(filled.moduleId) : null;
     const needsCtx =
-      mod && (COMMERCE_CTX_MODULES.has(filled.moduleId) || filled.moduleId === 'custom_text_box');
+      mod &&
+      (COMMERCE_CTX_MODULES.has(filled.moduleId) ||
+        filled.moduleId === 'custom_text_box' ||
+        filled.moduleId === 'text_block');
     const ctxMenu = needsCtx
       ? ` data-wx-ctx-slot="${ps.slotId}" data-wx-ctx-mod="${filled.moduleId}"`
       : '';
@@ -984,20 +1155,539 @@ function renderCanvas(proj) {
       <div class="wx-grid" style="grid-template-columns:repeat(${gridCols},1fr);grid-template-rows:repeat(${rows},80px);">${gridCells.join('')}</div>
     </div>
     ${renderInventoryPanels(proj)}
-    <div class="wx-canvas-footer">
-      <button class="wx-btn" data-wx-save>Save</button>
-      <button class="wx-btn" data-wx-publish>Publish</button>
-      <button class="wx-btn wx-btn-danger" data-wx-delete>Delete</button>
-    </div>
+    ${renderCanvasFooter(proj)}
   </div>`;
 }
 
+function renderCanvasFooter(proj) {
+  const st = getState();
+  let siteIsDown = false;
+  let pageHealth = 100;
+
+  if (proj?.publishedPageId) {
+    const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === proj.publishedPageId);
+    if (page?.stats) {
+      pageHealth = page.stats.health ?? 0;
+      siteIsDown = pageHealth <= 0;
+    }
+  }
+
+  const repairButton = siteIsDown
+    ? `
+<div class="wx-repair-banner">
+  <div class="wx-repair-icon">☠</div>
+  <div class="wx-repair-info">
+    <div class="wx-repair-title">SITE IS OFFLINE</div>
+    <div class="wx-repair-desc">
+      Your site is unreachable. WorldNet visitors receive a connection error.
+    </div>
+  </div>
+  <button class="wx-btn wx-btn-repair" data-wx-repair>
+    REPAIR SITE<br>
+    <span style="font-size:9px">$5,000 · 4 hrs</span>
+  </button>
+</div>`
+    : pageHealth < 30 && pageHealth > 0
+      ? `
+<div class="wx-health-warning">
+  ⚠ Site health critical: ${Math.round(pageHealth)}% — under attack?
+  Consider equipping Security modules.
+</div>`
+      : '';
+
+  const contract = st.websiteContract;
+  const hasContract = !!(contract?.active);
+  const projIsPublished = !!(proj?.publishedPageId);
+  const handoffEnabled = hasContract && projIsPublished;
+
+  let requirementsMet = true;
+  let requirementsNote = '';
+  if (hasContract && contract.requirements && projIsPublished) {
+    const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === proj.publishedPageId);
+    const uxScore = page?.uxScore ?? computeUxScore(proj);
+
+    if (contract.requirements.minUxScore && uxScore < contract.requirements.minUxScore) {
+      requirementsMet = false;
+      requirementsNote = `UX Score too low (${Math.round(uxScore)}/${contract.requirements.minUxScore} required)`;
+    }
+    if (contract.requirements.requiredModules?.length) {
+      const equippedMods = proj.slots.filter((s) => s.moduleId).map((s) => s.moduleId);
+      const missing = contract.requirements.requiredModules.filter((m) => !equippedMods.includes(m));
+      if (missing.length) {
+        requirementsMet = false;
+        requirementsNote = `Missing required modules: ${missing.join(', ')}`;
+      }
+    }
+  }
+
+  const handoffTitle = !hasContract
+    ? 'No active website contract'
+    : !handoffEnabled
+      ? 'Publish the site before handing off'
+      : requirementsMet
+        ? `Hand off to ${contract.companyName || 'client'} — $${(contract.reward || 0).toLocaleString()} reward`
+        : `Requirements not met: ${requirementsNote}`;
+
+  const handoffButton = hasContract
+    ? `<button
+       type="button"
+       class="wx-btn wx-btn-handoff ${handoffEnabled && requirementsMet ? '' : 'wx-btn-handoff-disabled'}"
+       data-wx-handoff
+       ${handoffEnabled && requirementsMet ? '' : 'disabled'}
+       title="${escapeHtml(handoffTitle)}">
+       🤝 HAND OFF
+       ${
+         contract.companyName
+           ? `<br><span style="font-size:9px">${escapeHtml(contract.companyName)}</span>`
+           : ''
+       }
+     </button>`
+    : `<button type="button" class="wx-btn wx-btn-handoff-hidden" disabled title="No active website contract">
+       🤝 Hand Off
+     </button>`;
+
+  return `
+<div class="wx-canvas-footer">
+  ${repairButton}
+  <div class="wx-canvas-footer-btns">
+    <button type="button" class="wx-btn wx-btn-load" data-wx-load-picker>📂 Load</button>
+    <button type="button" class="wx-btn" data-wx-save>Save</button>
+    <button type="button" class="wx-btn" data-wx-publish>Publish</button>
+    ${handoffButton}
+    <button type="button" class="wx-btn wx-btn-danger" data-wx-delete>Delete</button>
+  </div>
+</div>`;
+}
+
 function renderModulePanel() {
-  return `<div class="wx-section-title">Modules</div>` +
-    _modules.map(m => `<div class="wx-module" draggable="true" data-wx-mod="${m.id}" title="${escapeHtml(m.description)}">
-      <span>${m.icon}</span> ${escapeHtml(m.label)}
-      <span class="wx-mod-stats">+${m.utilityScore}/${-m.clutterScore}</span>
-    </div>`).join('');
+  const byCategory = {};
+  for (const cat of MODULE_CATEGORY_ORDER) byCategory[cat] = [];
+  for (const m of _modules) {
+    const cat = m.category || 'Content';
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(m);
+  }
+
+  return (
+    `<div class="wx-section-title">Modules</div>` +
+    MODULE_CATEGORY_ORDER.map((cat) => {
+      const mods = byCategory[cat] || [];
+      if (!mods.length) return '';
+      const isCollapsed = _collapsedCategories.has(cat);
+      const categoryIcons = {
+        Content: '📝',
+        Commerce: '🛒',
+        Engagement: '💬',
+        Media: '🎵',
+        Security: '🛡'
+      };
+      const icon = categoryIcons[cat] || '◆';
+
+      const modItems = mods
+        .map(
+          (m) => `
+      <div class="wx-module ${m.defensiveModule ? 'wx-module-security' : ''}"
+           draggable="${m.defensiveModule ? 'false' : 'true'}"
+           data-wx-mod="${m.id}"
+           title="${escapeHtml(m.description)}">
+        <span class="wx-mod-icon">${m.icon}</span>
+        <span class="wx-mod-label">${escapeHtml(m.label)}</span>
+        ${
+          m.defensiveModule
+            ? `<button type="button" class="wx-mod-equip-btn" data-wx-equip="${m.id}" title="${escapeHtml(m.defenseDescription || '')}">
+               EQUIP
+             </button>`
+            : `<span class="wx-mod-stats">+${m.utilityScore}/${-m.clutterScore}</span>`
+        }
+      </div>`
+        )
+        .join('');
+
+      return `
+<div class="wx-category">
+  <div class="wx-category-header" data-wx-cat-toggle="${cat}">
+    <span class="wx-cat-icon">${icon}</span>
+    <span class="wx-cat-label">${cat}</span>
+    <span class="wx-cat-count">${mods.length}</span>
+    <span class="wx-cat-chevron">${isCollapsed ? '▶' : '▼'}</span>
+  </div>
+  <div class="wx-category-body ${isCollapsed ? 'wx-cat-collapsed' : ''}">
+    ${modItems}
+  </div>
+</div>`;
+    }).join('')
+  );
+}
+
+function equipSecurityModule(modId) {
+  const proj = currentProject();
+  if (!proj) {
+    setStatus('Open a project first before equipping security modules.');
+    return;
+  }
+
+  const mod = _modules.find((m) => m.id === modId);
+  if (!mod || !mod.defensiveModule) return;
+
+  const equipped = proj.securityModules || [];
+  if (equipped.includes(modId)) {
+    setStatus(`${mod.label} is already equipped on this site.`);
+    return;
+  }
+
+  patchState((st) => {
+    const p = (st.player.webExProjects || []).find((x) => x.id === proj.id);
+    if (p) {
+      p.securityModules = p.securityModules || [];
+      if (!p.securityModules.includes(modId)) {
+        p.securityModules.push(modId);
+      }
+    }
+
+    if (proj.publishedPageId) {
+      const page = (st.contentRegistry?.pages || []).find((pg) => pg.pageId === proj.publishedPageId);
+      if (page) {
+        ensureWebsiteStats(page);
+        const effects = mod.statsEffect || {};
+        for (const [stat, delta] of Object.entries(effects)) {
+          if (stat in page.stats) {
+            page.stats[stat] = Math.min(100, (page.stats[stat] || 0) + (Number(delta) || 0));
+          }
+        }
+        page.equippedDefenses = page.equippedDefenses || [];
+        if (!page.equippedDefenses.includes(modId)) {
+          page.equippedDefenses.push(modId);
+        }
+      }
+    }
+
+    return st;
+  });
+
+  setStatus(`${mod.label} equipped. ${mod.defenseDescription || ''}`);
+
+  toast({
+    key: `equip_sec_${modId}`,
+    title: 'Security Module Equipped',
+    message: `${mod.label} — ${mod.defenseDescription || ''}`,
+    icon: mod.icon
+  });
+
+  scheduleAutoSave();
+  render();
+}
+
+function repairSite() {
+  const proj = currentProject();
+  if (!proj?.publishedPageId) {
+    setStatus('No published site to repair.');
+    return;
+  }
+
+  const REPAIR_COST = 5000;
+  const REPAIR_HOURS = 4;
+
+  const st = getState();
+
+  if (playerSpendableFunds(st) < REPAIR_COST) {
+    setStatus(`Insufficient funds. Site repair costs $${REPAIR_COST.toLocaleString()}.`);
+    toast({
+      key: 'repair_no_funds',
+      title: 'Repair Failed',
+      message: `You need $${REPAIR_COST.toLocaleString()} to repair this site.`,
+      icon: '⚠'
+    });
+    return;
+  }
+
+  const taskId = `repair_${proj.publishedPageId}`;
+  const alreadyRepairing = (st.activeTasks || []).some((t) => t.id === taskId);
+  if (alreadyRepairing) {
+    setStatus('Repair is already in progress.');
+    return;
+  }
+
+  const simMs = st.sim?.elapsedMs || 0;
+  const dueSimMs = simMs + REPAIR_HOURS * SIM_HOUR_MS;
+
+  patchState((s) => {
+    if (!deductWebExHostingFee(s, REPAIR_COST, `Site repair ${proj.siteName || proj.publishedPageId}`)) {
+      return s;
+    }
+    s.activeTasks = s.activeTasks || [];
+    s.activeTasks.push({
+      id: taskId,
+      type: 'site_repair',
+      label: `Repairing: ${proj.siteName || proj.publishedPageId}`,
+      icon: '🔧',
+      pageId: proj.publishedPageId,
+      projectId: proj.id,
+      startSimMs: simMs,
+      dueSimMs,
+      durationMs: REPAIR_HOURS * SIM_HOUR_MS,
+      cost: REPAIR_COST,
+      status: 'in_progress'
+    });
+    return s;
+  });
+
+  setStatus(
+    `Repair initiated. $${REPAIR_COST.toLocaleString()} deducted. ETA: ${REPAIR_HOURS} in-game hours.`
+  );
+
+  toast({
+    key: `repair_start_${proj.publishedPageId}`,
+    title: 'Site Repair Started',
+    message: `${proj.siteName || 'Your site'} will be back online in ${REPAIR_HOURS} in-game hours. Cost: $${REPAIR_COST.toLocaleString()}.`,
+    icon: '🔧'
+  });
+
+  SMS.send({
+    from: 'CORPOS_SYSTEM',
+    message: `MAINTENANCE NOTICE — Site restoration initiated for ${proj.siteName || proj.publishedPageId}. Estimated completion: ${REPAIR_HOURS} in-game hours. Cost: $${REPAIR_COST.toLocaleString()} deducted from primary account. Operator: ${st.player?.operatorId || 'UNKNOWN'}`,
+    gameTime: simMs
+  });
+
+  scheduleAutoSave();
+  render();
+}
+
+function renderLoadPicker() {
+  const st = getState();
+  const projects = st.player?.webExProjects || [];
+
+  if (!projects.length) {
+    setStatus('No saved projects found.');
+    return;
+  }
+
+  document.getElementById('wx-load-picker')?.remove();
+
+  const rows = projects
+    .map((p) => {
+      const publishedPage = p.publishedPageId
+        ? (st.contentRegistry?.pages || []).find((pg) => pg.pageId === p.publishedPageId)
+        : null;
+      const health = publishedPage?.stats?.health ?? null;
+      const isDown = health !== null && health <= 0;
+      const isActive = p.id === _currentProjectId;
+
+      return `
+<div class="wx-load-row ${isActive ? 'wx-load-row-active' : ''}"
+     data-wx-load-id="${escapeHtml(p.id)}">
+  <div class="wx-load-info">
+    <div class="wx-load-name">${escapeHtml(p.siteName || 'Untitled')}</div>
+    <div class="wx-load-meta">
+      ${escapeHtml(buildPublicHost(p))} ·
+      ${escapeHtml(p.layoutPresetId || 'no layout')} ·
+      ${
+        p.publishedPageId
+          ? isDown
+            ? '<span style="color:#cc0000">OFFLINE</span>'
+            : '<span style="color:#00aa00">LIVE</span>'
+          : '<span style="color:#888">Draft</span>'
+      }
+      ${isActive ? ' · <b>Currently open</b>' : ''}
+    </div>
+  </div>
+  <button type="button" class="wx-btn wx-btn-load-select" data-wx-load-id="${escapeHtml(p.id)}">
+    ${isActive ? 'Active' : 'Load'}
+  </button>
+</div>`;
+    })
+    .join('');
+
+  const picker = document.createElement('div');
+  picker.id = 'wx-load-picker';
+  picker.className = 'wx-modal-overlay';
+  picker.innerHTML = `
+<div class="wx-modal-box">
+  <div class="wx-modal-title">
+    📂 Load Website Project
+    <button type="button" class="wx-modal-close" id="wx-load-close">✕</button>
+  </div>
+  <div class="wx-modal-body">
+    <div class="wx-load-list">${rows}</div>
+    <div style="margin-top:12px;text-align:right">
+      <button type="button" class="wx-btn" id="wx-load-new">+ New Website</button>
+      <button type="button" class="wx-btn" id="wx-load-cancel">Cancel</button>
+    </div>
+  </div>
+</div>`;
+
+  _rootEl.appendChild(picker);
+
+  picker.querySelector('#wx-load-close')?.addEventListener('click', () => picker.remove());
+  picker.querySelector('#wx-load-cancel')?.addEventListener('click', () => picker.remove());
+  picker.querySelector('#wx-load-new')?.addEventListener('click', () => {
+    picker.remove();
+    createNewProject('shop_forward');
+  });
+
+  picker.querySelectorAll('[data-wx-load-id]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      const id = e.currentTarget.getAttribute('data-wx-load-id');
+      if (id && id !== _currentProjectId) {
+        setCurrentProject(id);
+        render();
+        setStatus(
+          `Loaded: ${getState().player?.webExProjects?.find((p) => p.id === id)?.siteName || id}`
+        );
+      }
+      picker.remove();
+    });
+  });
+}
+
+function renderHandoffConfirmation() {
+  const proj = currentProject();
+  const st = getState();
+  const contract = st.websiteContract;
+  if (!proj || !contract?.active) return;
+
+  const page = proj.publishedPageId
+    ? (st.contentRegistry?.pages || []).find((p) => p.pageId === proj.publishedPageId)
+    : null;
+  const uxScore = page ? page.uxScore ?? computeUxScore(proj) : computeUxScore(proj);
+
+  document.getElementById('wx-handoff-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'wx-handoff-modal';
+  modal.className = 'wx-modal-overlay';
+  modal.innerHTML = `
+<div class="wx-modal-box wx-modal-handoff">
+  <div class="wx-modal-title">
+    🤝 Confirm Site Handoff
+  </div>
+  <div class="wx-modal-body">
+
+    <table width="100%" style="margin-bottom:12px">
+      <tr style="background:#f0f4ff">
+        <td style="padding:6px;font-weight:bold;font-size:11px;width:140px">Site Name</td>
+        <td style="padding:6px;font-size:11px">${escapeHtml(proj.siteName || 'Untitled')}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px;font-weight:bold;font-size:11px">URL</td>
+        <td style="padding:6px;font-size:11px;font-family:monospace">${escapeHtml(`http://${buildPublicHost(proj)}/`)}</td>
+      </tr>
+      <tr style="background:#f0f4ff">
+        <td style="padding:6px;font-weight:bold;font-size:11px">Client</td>
+        <td style="padding:6px;font-size:11px">${escapeHtml(contract.companyName || 'Unknown')}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px;font-weight:bold;font-size:11px">UX Score</td>
+        <td style="padding:6px;font-size:11px">${Math.round(uxScore)} / 100</td>
+      </tr>
+      <tr style="background:#f0f4ff">
+        <td style="padding:6px;font-weight:bold;font-size:11px">Contract Reward</td>
+        <td style="padding:6px;font-size:13px;font-weight:bold;color:#006600">
+          $${(contract.reward || 0).toLocaleString()}
+        </td>
+      </tr>
+      ${
+        contract.requirements?.minUxScore
+          ? `
+      <tr>
+        <td style="padding:6px;font-weight:bold;font-size:11px">Required UX</td>
+        <td style="padding:6px;font-size:11px">${contract.requirements.minUxScore}</td>
+      </tr>`
+          : ''
+      }
+    </table>
+
+    <div style="padding:8px;background:#fff8e0;border:1px solid #cc8800;font-size:10px;margin-bottom:12px">
+      ⚠ Once confirmed, this site will be transferred to
+      <b>${escapeHtml(contract.companyName || 'the client')}</b>.
+      You will no longer own or pay subscription fees for this domain.
+      The contract will be marked complete and payment will be deposited.
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" class="wx-btn" id="wx-handoff-cancel">Cancel</button>
+      <button type="button" class="wx-btn wx-btn-confirm-handoff" id="wx-handoff-confirm">
+        ✓ Confirm Handoff — $${(contract.reward || 0).toLocaleString()}
+      </button>
+    </div>
+  </div>
+</div>`;
+
+  _rootEl.appendChild(modal);
+
+  modal.querySelector('#wx-handoff-cancel')?.addEventListener('click', () => modal.remove());
+  modal.querySelector('#wx-handoff-confirm')?.addEventListener('click', () => {
+    modal.remove();
+    executeHandoff(proj, contract);
+  });
+}
+
+function executeHandoff(proj, contract) {
+  if (!proj?.publishedPageId || !contract?.active) return;
+
+  const st0 = getState();
+  const simMs = st0.sim?.elapsedMs || 0;
+  const reward = Number(contract.reward) || 0;
+  const pageId = proj.publishedPageId;
+  const companyName = contract.companyName || 'Client';
+  const companyId = contract.companyId;
+
+  transferSiteToCompany(pageId, companyId, companyName);
+
+  patchState((s) => {
+    const primary = (s.accounts || []).find((a) => a.id === 'fncb');
+    if (primary && reward > 0) {
+      primary.balance = Math.round((Number(primary.balance || 0) + reward) * 100) / 100;
+      appendBankingTransaction(s, {
+        bankName: primary.name || 'First National Corp. Bank',
+        accountNumber: primary.accountNumber || '—',
+        type: 'credit',
+        amount: reward,
+        description: `Contract payment — Website delivery to ${companyName}`,
+        complianceFlag: false
+      });
+    }
+    s.activeTasks = (s.activeTasks || []).filter((t) => t.id !== contract.contractId);
+    s.websiteContract = {
+      active: false,
+      contractId: null,
+      companyId: null,
+      companyName: null,
+      requirements: null,
+      reward: 0,
+      breachFee: 0,
+      startSimMs: 0,
+      deadlineSimMs: 0,
+    };
+    s.player.webExProjects = (s.player.webExProjects || []).filter((p) => p.id !== proj.id);
+    s.player.lastActiveWebExProjectId = null;
+    return s;
+  });
+
+  const siteLabel = proj.siteName || pageId;
+  const hostLabel = buildPublicHost(proj);
+
+  toast({
+    key: `handoff_complete_${proj.id}`,
+    title: 'Contract Delivered',
+    message: `${siteLabel} handed off to ${companyName}. $${reward.toLocaleString()} deposited.`,
+    icon: '🤝'
+  });
+
+  SMS.send({
+    from: companyId || 'CORPOS_SYSTEM',
+    message: `Contract complete. We have received your website delivery for ${siteLabel}. Payment of $${reward.toLocaleString()} has been transferred to your account. It has been a pleasure doing business. — ${companyName}`,
+    gameTime: simMs,
+  });
+
+  SMS.send({
+    from: 'CORPOS_SYSTEM',
+    message: `TRANSFER NOTICE — Commercial digital asset transfer recorded. Site: ${siteLabel} (${hostLabel}). Recipient: ${companyName}. Transaction logged per Mandate 2000-CR7.`,
+    gameTime: simMs + 500,
+  });
+
+  setCurrentProject(loadLastProjectId());
+  setStatus('Site delivered. Contract complete.');
+  render();
 }
 
 function closePriceEditor(force) {
@@ -1070,6 +1760,7 @@ function openPriceEditor() {
     _priceOverlay.querySelector('.wx-price-window')?.setAttribute('data-wx-price-dirty', '0');
     setStatus('Prices saved.');
     closePriceEditor(true);
+    scheduleAutoSave();
     render();
   });
   _priceOverlay.querySelector('[data-wx-price-exit]')?.addEventListener('click', () => {
@@ -1089,7 +1780,7 @@ function showSlotContextMenu(clientX, clientY, slotId, modId) {
     items = `<div class="wx-ctx-item" data-wx-ctx="prices">Edit prices</div>
     <div class="wx-ctx-item" data-wx-ctx="inventory">Manage inventory</div>
     <div class="wx-ctx-item" data-wx-ctx="settings">Module settings</div>`;
-  } else if (modId === 'custom_text_box') {
+  } else if (modId === 'custom_text_box' || modId === 'text_block') {
     items = `<div class="wx-ctx-item" data-wx-ctx="edittext">Edit text</div>
     <div class="wx-ctx-item" data-wx-ctx="settings">Module settings</div>`;
   } else {
@@ -1184,6 +1875,7 @@ function openTextBoxEditor(slotId) {
     _textOverlay.querySelector('.wx-price-window')?.setAttribute('data-wx-text-dirty', '0');
     setStatus('Text saved.');
     closeTextEditor(true);
+    scheduleAutoSave();
     render();
   });
   _textOverlay.querySelector('[data-wx-text-exit]')?.addEventListener('click', () => {
@@ -1215,9 +1907,10 @@ function bindEvents() {
     });
   });
 
-  _rootEl.querySelectorAll('[data-wx-load]').forEach(el => {
+  _rootEl.querySelectorAll('[data-wx-load]').forEach((el) => {
     el.addEventListener('click', () => {
-      _currentProjectId = el.getAttribute('data-wx-load');
+      const id = el.getAttribute('data-wx-load');
+      if (id) setCurrentProject(id);
       render();
     });
   });
@@ -1237,6 +1930,7 @@ function bindEvents() {
         return s;
       });
       setStatus(`Renamed to "${nameInput.value.trim().slice(0, 40)}".`);
+      scheduleAutoSave();
       render();
     });
   }
@@ -1252,6 +1946,7 @@ function bindEvents() {
         return s;
       });
       refreshDomainFeeHint();
+      scheduleAutoSave();
     });
   }
 
@@ -1264,6 +1959,7 @@ function bindEvents() {
       if (p) p.titleFontId = v;
       return s;
     });
+    scheduleAutoSave();
     render();
   });
 
@@ -1276,10 +1972,51 @@ function bindEvents() {
       if (p) p.titleSizePx = Number.isNaN(v) ? 12 : v;
       return s;
     });
+    scheduleAutoSave();
     render();
   });
 
   refreshDomainFeeHint();
+
+  if (!_rootEl.dataset.wxDelegatedBound) {
+    _rootEl.dataset.wxDelegatedBound = '1';
+    _rootEl.addEventListener('click', (e) => {
+      const catHeader = e.target.closest('[data-wx-cat-toggle]');
+      if (catHeader) {
+        const cat = catHeader.getAttribute('data-wx-cat-toggle');
+        if (cat) {
+          if (_collapsedCategories.has(cat)) {
+            _collapsedCategories.delete(cat);
+          } else {
+            _collapsedCategories.add(cat);
+          }
+          render();
+        }
+        return;
+      }
+      const equipBtn = e.target.closest('[data-wx-equip]');
+      if (equipBtn) {
+        const modId = equipBtn.getAttribute('data-wx-equip');
+        if (modId) equipSecurityModule(modId);
+        return;
+      }
+      const repairBtn = e.target.closest('[data-wx-repair]');
+      if (repairBtn) {
+        repairSite();
+        return;
+      }
+      const loadPickerBtn = e.target.closest('[data-wx-load-picker]');
+      if (loadPickerBtn) {
+        renderLoadPicker();
+        return;
+      }
+      const handoffBtn = e.target.closest('[data-wx-handoff]');
+      if (handoffBtn && !handoffBtn.disabled) {
+        renderHandoffConfirmation();
+        return;
+      }
+    });
+  }
 
   _rootEl.querySelector('[data-wx-save]')?.addEventListener('click', saveProject);
   _rootEl.querySelector('[data-wx-publish]')?.addEventListener('click', publishProject);
@@ -1292,7 +2029,7 @@ function bindEvents() {
     });
   });
 
-  _rootEl.querySelectorAll('[data-wx-mod]').forEach(el => {
+  _rootEl.querySelectorAll('[data-wx-mod][draggable="true"]').forEach((el) => {
     el.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', el.getAttribute('data-wx-mod'));
       e.dataTransfer.effectAllowed = 'copy';
@@ -1382,9 +2119,11 @@ function showModulePicker(slotId) {
   if (!proj) return;
   const slot = (LAYOUT_PRESETS.find(p => p.id === proj.layoutPresetId)?.slots || []).find(s => s.slotId === slotId);
   if (!slot) return;
-  const compatible = _modules.filter(m => {
+  const compatible = _modules.filter((m) => {
+    if (m.defensiveModule) return false;
+    const sz = m.slotSize || m.slot || 'medium';
     if (slot.accepts === 'small') return true;
-    if (slot.accepts === 'medium') return m.slotSize !== 'large' || slot.accepts === 'large';
+    if (slot.accepts === 'medium') return sz !== 'large' || slot.accepts === 'large';
     return true;
   });
   const menu = document.createElement('div');
@@ -1430,6 +2169,7 @@ function addWebsiteListing(stockItemId) {
     return s;
   });
   setStatus(dup ? 'That item is already listed on the website.' : 'Added to website inventory.');
+  scheduleAutoSave();
   render();
 }
 
@@ -1443,6 +2183,7 @@ function removeWebsiteListing(idx) {
     return s;
   });
   setStatus('Removed from website inventory.');
+  scheduleAutoSave();
   render();
 }
 
@@ -1460,6 +2201,8 @@ function createNewProject(presetId) {
     layoutPresetId: preset.id,
     slots: preset.slots.map(s => ({ slotId: s.slotId, moduleId: null })),
     websiteInventory: [],
+    securityModules: [],
+    lastAutoSavedAt: 0,
     createdSimMs: getState().sim?.elapsedMs || 0,
     publishedPageId: null,
     publishedStoreId: null,
@@ -1470,7 +2213,7 @@ function createNewProject(presetId) {
     s.player.webExProjects.push(proj);
     return s;
   });
-  _currentProjectId = id;
+  setCurrentProject(id);
   setStatus('New project created.');
   render();
 }
@@ -1480,6 +2223,10 @@ function placeModuleInSlot(slotId, moduleId) {
   if (!proj) return;
   const mod = moduleById(moduleId);
   if (!mod) return;
+  if (mod.defensiveModule) {
+    setStatus('Security modules use EQUIP — they are not placed in layout slots.');
+    return;
+  }
   const placed = new Set(proj.slots.filter(s => s.moduleId).map(s => s.moduleId));
   for (const req of (mod.requires || [])) {
     if (!placed.has(req)) {
@@ -1492,7 +2239,7 @@ function placeModuleInSlot(slotId, moduleId) {
     if (!p) return s;
     const slot = p.slots.find(sl => sl.slotId === slotId);
     if (slot) slot.moduleId = moduleId;
-    if (moduleId === 'custom_text_box') {
+    if (moduleId === 'custom_text_box' || moduleId === 'text_block') {
       if (!p.slotModuleData) p.slotModuleData = {};
       if (!p.slotModuleData[slotId]) {
         p.slotModuleData[slotId] = {
@@ -1504,6 +2251,7 @@ function placeModuleInSlot(slotId, moduleId) {
     return s;
   });
   setStatus(`Placed "${mod.label}".`);
+  scheduleAutoSave();
   render();
 }
 
@@ -1515,7 +2263,11 @@ function removeModuleFromSlot(slotId) {
     if (!p) return s;
     const slot = p.slots.find(sl => sl.slotId === slotId);
     if (slot) {
-      if (p.slotModuleData && slot.moduleId === 'custom_text_box' && p.slotModuleData[slotId]) {
+      if (
+        p.slotModuleData &&
+        (slot.moduleId === 'custom_text_box' || slot.moduleId === 'text_block') &&
+        p.slotModuleData[slotId]
+      ) {
         delete p.slotModuleData[slotId];
       }
       slot.moduleId = null;
@@ -1523,10 +2275,24 @@ function removeModuleFromSlot(slotId) {
     return s;
   });
   setStatus('Module removed.');
+  scheduleAutoSave();
   render();
 }
 
 function saveProject() {
+  const proj = currentProject();
+  if (proj) {
+    patchState((st) => {
+      const p = (st.player.webExProjects || []).find((x) => x.id === proj.id);
+      if (p) p.lastAutoSavedAt = st.sim?.elapsedMs || 0;
+      return st;
+    });
+  }
+  try {
+    window.SaveManager?.save?.();
+  } catch {
+    /* ignore */
+  }
   setStatus('Project saved.');
 }
 
@@ -1572,6 +2338,7 @@ function publishProject() {
     if (!s.contentRegistry) s.contentRegistry = { pages: [], companies: [], npcs: [], government: {} };
     if (!Array.isArray(s.contentRegistry.pages)) s.contentRegistry.pages = [];
     const existing = s.contentRegistry.pages.findIndex((pg) => pg.pageId === pageId);
+    const prevPage = existing >= 0 ? s.contentRegistry.pages[existing] : null;
     const pageDef = {
       ...defaultPageDef({
         category: commerce ? 'shopping' : 'general'
@@ -1594,6 +2361,14 @@ function publishProject() {
       footerText: `© 2000 ${siteName} · Built with WebEx-Publisher™`,
       siteTagline: commerce ? 'WorldNet Commerce enabled' : 'WebEx-Publisher site'
     };
+    if (prevPage?.stats) {
+      pageDef.stats = { ...prevPage.stats };
+    }
+    ensureWebsiteStats(pageDef);
+    pageDef.equippedDefenses = [...(proj.securityModules || [])];
+    if (!prevPage?.stats) {
+      applySecurityModuleStatBonuses(pageDef, proj);
+    }
     if (existing >= 0) {
       s.contentRegistry.pages[existing] = pageDef;
     } else {
@@ -1650,6 +2425,11 @@ function publishProject() {
   setStatus(
     `Published "${siteName}" at ${fullHost}${shouldChargeDomain ? ` — charged $${fee.toFixed(2)} for domain week` : ''}.`
   );
+  try {
+    window.SaveManager?.save?.();
+  } catch {
+    /* ignore */
+  }
   render();
 }
 
@@ -1665,7 +2445,7 @@ function deleteProject() {
     }
     return s;
   });
-  _currentProjectId = null;
+  setCurrentProject(loadLastProjectId());
   setStatus('Project deleted.');
   render();
 }
@@ -1678,12 +2458,25 @@ function setStatus(msg) {
 export async function initWebExPublisher(loadJson) {
   try {
     const raw = await loadJson('webex-modules.json');
-    _modules = Array.isArray(raw) ? raw : [];
-  } catch { _modules = []; }
+    _modules = Array.isArray(raw)
+      ? raw.map((m) => ({
+          ...m,
+          slotSize: m.slotSize || m.slot || 'medium'
+        }))
+      : [];
+  } catch {
+    _modules = [];
+  }
 
   _rootEl = document.getElementById('webex-root');
   if (!_rootEl) return;
   ensureWebExStockroom();
+  _currentProjectId = loadLastProjectId();
+  patchState((st) => {
+    st.player = st.player || {};
+    st.player.lastActiveWebExProjectId = _currentProjectId;
+    return st;
+  });
   render();
 }
 

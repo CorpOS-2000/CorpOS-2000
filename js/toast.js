@@ -1,3 +1,6 @@
+import { getState } from './gameState.js';
+import { pushNotification, resolveToastAction, NOTIF_TYPE } from './bc-notifications.js';
+
 export const TOAST_KEYS = Object.freeze({
   SYSTEM_LOAD: 'system_load',
   LOAD_NPCS: 'load_npcs',
@@ -49,7 +52,8 @@ function normalizeToastOptions(options) {
       title: 'CorpOS',
       message: options,
       icon: '◆',
-      autoDismiss: DEFAULT_DISMISS_MS
+      autoDismiss: DEFAULT_DISMISS_MS,
+      notifAction: null,
     };
   }
   const key = String(options?.key || TOAST_KEYS.GENERIC).trim() || TOAST_KEYS.GENERIC;
@@ -58,7 +62,8 @@ function normalizeToastOptions(options) {
     title: String(options?.title || 'CorpOS'),
     message: String(options?.message || ''),
     icon: String(options?.icon || '◆'),
-    autoDismiss: Number(options?.autoDismiss) > 0 ? Number(options.autoDismiss) : DEFAULT_DISMISS_MS
+    autoDismiss: Number(options?.autoDismiss) > 0 ? Number(options.autoDismiss) : DEFAULT_DISMISS_MS,
+    notifAction: options?.notifAction ?? null,
   };
 }
 
@@ -67,6 +72,21 @@ const ToastManager = {
 
   fire(options) {
     const normalized = normalizeToastOptions(options);
+    const simMs = getState()?.sim?.elapsedMs ?? 0;
+    const action =
+      options && typeof options === 'object' && options.notifAction != null
+        ? options.notifAction
+        : resolveToastAction(normalized.key);
+    pushNotification({
+      id: `toast_${normalized.key}_${Date.now()}`,
+      type: NOTIF_TYPE.TOAST,
+      title: normalized.title,
+      body: normalized.message,
+      icon: normalized.icon,
+      simMs,
+      action,
+    });
+
     const container = document.getElementById('toasts');
     if (!container) return;
 

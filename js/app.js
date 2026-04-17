@@ -21,7 +21,8 @@ import {
   patchState,
   resetState,
   migrateStateIfNeeded,
-  processWorldNetDeliveriesIfNeeded
+  processWorldNetDeliveriesIfNeeded,
+  processSiteRepairsIfNeeded
 } from './gameState.js';
 import * as bankUi from './bank-ui.js';
 import {
@@ -70,6 +71,9 @@ import { initFileExplorer } from './file-explorer.js';
 import { initWritepad } from './writepad.js';
 import { initDailyHerald } from './daily-herald.js';
 import { EventSystem } from '../engine/EventSystem.js';
+import { verifyAppIntegrity, seedAllProgramFiles, seedProgramFiles, showAppErrorDialog } from './program-files.js';
+import { initWebExploiter } from './webexploiter.js';
+import { WebExploiter } from '../engine/WebExploiter.js';
 
 let newsItems = [];
 const CONTENT_TOAST_DEBOUNCE_MS = 700;
@@ -188,6 +192,14 @@ async function openW(id) {
       autoDismiss: 5000
     });
     return;
+  }
+  const integrityErr = verifyAppIntegrity(id);
+  if (integrityErr && !integrityErr.warnOnly) {
+    await showAppErrorDialog(integrityErr);
+    return;
+  }
+  if (integrityErr?.warnOnly) {
+    toast({ key: `cfg_warn_${id}`, title: integrityErr.title, message: integrityErr.message, icon: '⚠️', autoDismiss: 5000 });
   }
   openingApps.add(id);
   if (id === 'cherry') {
@@ -391,6 +403,7 @@ async function main() {
       }
       SaveManager.applyPendingDiscoveredActors();
     }
+    seedAllProgramFiles();
     ensureMomExists();
     generatePlayerAndMomAfterEnrollment();
   };
@@ -449,8 +462,11 @@ async function main() {
   window.GameSystems = window.GameSystems || {};
   window.GameSystems.mediaPlayer = MediaPlayer;
   await initFileExplorer(loadJsonFile);
+  seedAllProgramFiles();
   initWritepad();
   initDailyHerald({ mount: document.getElementById('dh-root') });
+  initWebExploiter();
+  window.WebExploiter = WebExploiter;
 
   on('tick', ({ elapsedMs }) => {
     updateClockDisplay();
@@ -469,7 +485,22 @@ async function main() {
     for (const m of processWorldNetDeliveriesIfNeeded()) {
       smsToPlayer(m.text);
     }
+    for (const t of processSiteRepairsIfNeeded()) {
+      toast({
+        key: `repair_done_${t.pageId}`,
+        title: 'Site Back Online',
+        message: `${String(t.label || '').replace(/^Repairing:\s*/i, '') || t.pageId} has been fully restored.`,
+        icon: '✓',
+        autoDismiss: 8000
+      });
+      SMS.send({
+        from: 'CORPOS_SYSTEM',
+        message: `MAINTENANCE COMPLETE — Site restoration for ${t.pageId} is complete. Your site is now online and accessible via WorldNet Explorer.`,
+        gameTime: getState().sim?.elapsedMs || 0
+      });
+    }
     for (const app of processSoftwareInstallsIfNeeded()) {
+      seedProgramFiles(app.id);
       refreshInstallableAppVisibility();
       try {
         window.ActivityLog?.log?.('APP_INSTALL_DONE', `Install complete: ${app.label}`);
@@ -499,6 +530,7 @@ async function main() {
     tickWarehouseDaily();
     tickMarketDaily();
     window.WorldNet?.axis?.processDecay?.();
+    WebExploiter.tickSiteRecovery();
     for (const m of applyDueRegulatoryFinesPatch()) {
       SMS.send({ from: 'COMPLIANCE_MONITOR', message: m, gameTime: getState().sim?.elapsedMs || 0 });
     }

@@ -464,13 +464,469 @@ body {
 
 /* Icon grid home screen */
 .bc-icon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 6px 4px; flex: 1; align-content: start; }
-.bc-grid-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 2px; cursor: pointer; border-radius: 3px; }
+.bc-grid-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 2px;
+  cursor: pointer;
+  border-radius: 3px;
+}
 .bc-grid-cell:hover { background: rgba(255,255,255,0.35); }
 .bc-grid-cell.bc-grid-cell--sel { background: rgba(10,36,106,0.18); outline: 1px dotted #0a246a; }
 .bc-grid-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; }
 .bc-grid-label { font-size: 8px; color: #0d180d; font-weight: bold; text-align: center; line-height: 1.15; }
 .bc-grid-sub { font-size: 7px; color: #2a5a2a; font-family: Consolas, monospace; }
 .bc-unread-badge { position: absolute; top: -4px; right: -6px; background: #cc0000; color: #fff; font-size: 7px; font-weight: bold; min-width: 12px; height: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 0 2px; }
+
+/* Notification bell badge (icon grid) */
+.bc-notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #cc0000;
+  color: #ffffff;
+  font-size: 7px;
+  font-family: 'Share Tech Mono', monospace;
+  font-weight: bold;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+  border: 1px solid #880000;
+}
+
+/* Notifications inbox view */
+.bc-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: #0d1a0d;
+  border-bottom: 1px solid #1a3a1a;
+  font-family: 'Share Tech Mono', monospace;
+  flex-shrink: 0;
+}
+.bc-notif-title {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #88cc88;
+  text-transform: uppercase;
+}
+.bc-notif-clear {
+  font-size: 8px;
+  color: #446644;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 2px 4px;
+}
+.bc-notif-clear:hover { color: #88cc88; }
+
+.bc-notif-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: #060d06;
+}
+
+.bc-notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 10px;
+  gap: 8px;
+}
+.bc-notif-empty-icon { font-size: 24px; opacity: 0.3; }
+.bc-notif-empty-text {
+  font-size: 9px;
+  color: #334433;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+}
+
+.bc-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 7px 6px;
+  border-bottom: 1px solid #0d1a0d;
+  background: #070e07;
+  transition: background 0.15s;
+}
+.bc-notif-item--unread { background: #0a140a; }
+.bc-notif-item--tappable { cursor: pointer; }
+.bc-notif-item--tappable:active { background: #0f1f0f; }
+
+.bc-notif-icon-wrap {
+  position: relative;
+  width: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1px;
+}
+.bc-notif-type-icon { font-size: 13px; line-height: 1; }
+.bc-notif-unread-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00cc44;
+}
+
+.bc-notif-content { flex: 1; min-width: 0; }
+.bc-notif-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.bc-notif-item-title {
+  font-size: 10px;
+  font-weight: bold;
+  color: #a6c4a6;
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.bc-notif-time {
+  font-size: 7px;
+  color: #334433;
+  font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bc-notif-body {
+  font-size: 9px;
+  color: #667866;
+  font-family: 'Share Tech Mono', monospace;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bc-notif-not-linked {
+  font-size: 7px;
+  color: #334433;
+  font-family: 'Share Tech Mono', monospace;
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+  font-style: italic;
+}
+
+.bc-notif-arrow {
+  font-size: 14px;
+  color: #335533;
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 1;
+}
+
+.bc-notif-item--unread .bc-notif-item-title { color: #ccffcc; }
+.bc-notif-item--unread .bc-notif-body { color: #88aa88; }
+
+/* ── Black Cherry Browser ──────────────────────────────────── */
+.bcb-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #0a0e14;
+  overflow: hidden;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+.bcb-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 4px;
+  background: #0d1520;
+  border-bottom: 1px solid #1a2a40;
+  flex-shrink: 0;
+}
+.bcb-nav-btn {
+  background: #0a1a2a;
+  color: #667799;
+  border: 1px solid #1a3a5a;
+  padding: 2px 5px;
+  font-size: 9px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-family: 'Share Tech Mono', monospace;
+  flex-shrink: 0;
+  min-width: 20px;
+  text-align: center;
+}
+.bcb-nav-btn:hover:not(:disabled) { background: #112238; color: #a6b5e7; }
+.bcb-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.bcb-addr-wrap { flex: 1; min-width: 0; }
+.bcb-addr {
+  width: 100%;
+  background: #060d1f;
+  color: #00cc44;
+  border: 1px solid #1a3a5a;
+  padding: 2px 5px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  box-sizing: border-box;
+}
+.bcb-addr:focus { outline: none; border-color: #4466cc; }
+
+.bcb-loading-wrap {
+  flex-shrink: 0;
+  background: #060d1f;
+  border-bottom: 1px solid #1a2a40;
+  padding: 3px 4px;
+}
+.bcb-loading-bar {
+  height: 3px;
+  background: #00cc44;
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 1px;
+}
+.bcb-loading-label {
+  font-size: 8px;
+  color: #334466;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bcb-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #ffffff;
+}
+.bcb-page-wrap { padding: 0; }
+.bcb-page-content {
+  max-width: 100%;
+  overflow-x: hidden;
+  font-size: 10px !important;
+}
+.bcb-page-content table { max-width: 100% !important; }
+.bcb-page-content td,
+.bcb-page-content th { word-break: break-word; }
+.bcb-page-content font[size="5"],
+.bcb-page-content font[size="4"] { font-size: 13px !important; }
+.bcb-page-content font[size="3"] { font-size: 11px !important; }
+.bcb-page-content font[size="2"],
+.bcb-page-content font[size="1"] { font-size: 9px !important; }
+.bcb-page-content [width="468"],
+.bcb-page-content [width="234"] { display: none !important; }
+
+.bcb-gov-readonly .bcb-gov-banner {
+  background: #1a1000;
+  border-bottom: 1px solid #cc8800;
+  color: #cc8800;
+  font-size: 8px;
+  padding: 4px 6px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px;
+}
+.bcb-gov-readonly input[type="submit"],
+.bcb-gov-readonly button[type="submit"] {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.bcb-block-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  background: #0a0e14;
+  min-height: 200px;
+  text-align: center;
+  gap: 8px;
+}
+.bcb-block-icon { font-size: 28px; opacity: 0.7; }
+.bcb-block-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #cc4444;
+  letter-spacing: 1px;
+}
+.bcb-block-body {
+  font-size: 9px;
+  color: #667799;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+.bcb-block-url {
+  font-size: 8px;
+  color: #334455;
+  font-family: 'Share Tech Mono', monospace;
+}
+.bcb-block-home {
+  margin-top: 8px;
+  background: #0a1a2a;
+  color: #a6b5e7;
+  border: 1px solid #1a3a5a;
+  padding: 4px 12px;
+  font-size: 9px;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.bcb-video-strip-notice {
+  background: #0a0e14;
+  color: #445577;
+  font-size: 9px;
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #1a2a40;
+  margin: 4px 0;
+}
+
+.bcb-checkout-note {
+  font-size: 8px;
+  color: #cc8800;
+  font-style: italic;
+  font-family: 'Share Tech Mono', monospace;
+  margin-top: 2px;
+}
+
+.bcb-inline-msg {
+  font-size: 8px;
+  padding: 4px 6px;
+  margin-top: 3px;
+  font-family: 'Share Tech Mono', monospace;
+}
+.bcb-inline-msg--warn {
+  background: #1a1000;
+  color: #cc8800;
+  border-left: 2px solid #cc8800;
+}
+.bcb-inline-msg--block {
+  background: #1a0000;
+  color: #cc4444;
+  border-left: 2px solid #cc0000;
+}
+
+.bcb-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px;
+  background: #0d1520;
+  border-top: 1px solid #1a2a40;
+  flex-shrink: 0;
+}
+#bcb-status-text {
+  font-size: 8px;
+  color: #334466;
+  letter-spacing: 0.3px;
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.bcb-modem-icon { font-size: 10px; opacity: 0.4; }
+
+.bcb-home { background: #ffffff; padding: 0; height: 100%; overflow-y: auto; }
+.bcb-home-inner { padding: 8px; }
+.bcb-home-header {
+  text-align: center;
+  padding: 10px 6px 8px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+.bcb-home-logo { font-size: 24px; margin-bottom: 4px; }
+.bcb-home-tagline { font-size: 12px; font-weight: bold; color: #003399; }
+.bcb-home-sub {
+  font-size: 9px;
+  color: #888888;
+  margin-top: 2px;
+  font-family: Arial, sans-serif;
+}
+.bcb-section-title {
+  font-size: 9px;
+  font-weight: bold;
+  color: #003399;
+  font-family: Arial, sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 8px 0 4px;
+  border-bottom: 1px solid #e0e8f0;
+  padding-bottom: 2px;
+}
+.bcb-quick-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.bcb-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 6px;
+  background: #f0f4ff;
+  border: 1px solid #d0d8e8;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+}
+.bcb-quick-link:active { background: #dde8ff; }
+.bcb-ql-icon { font-size: 13px; flex-shrink: 0; }
+.bcb-ql-label {
+  font-size: 9px;
+  color: #003399;
+  font-weight: bold;
+  line-height: 1.2;
+}
+.bcb-bmark-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px solid #eeeeee;
+  cursor: pointer;
+  background: #ffffff;
+}
+.bcb-bmark-row:active { background: #f0f4ff; }
+.bcb-bmark-title { font-size: 10px; color: #000080; font-family: Arial, sans-serif; }
+.bcb-bmark-rm {
+  background: none;
+  border: none;
+  color: #cc0000;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0 2px;
+}
+.bcb-mobile-notice {
+  margin-top: 10px;
+  padding: 6px 8px;
+  background: #fffef0;
+  border: 1px solid #cc9900;
+  font-size: 8px;
+  color: #887700;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
 
 /* Contacts */
 .bc-contacts { flex: 1; overflow-y: auto; padding: 4px 5px; font-size: 9px; line-height: 1.35; color: #0d180d; }
@@ -2147,6 +2603,89 @@ body {
   font-weight: bold;
 }
 
+/* ── App Integrity Error Dialog (Win2K style) ── */
+.corpos-app-error {
+  position: fixed;
+  inset: 0;
+  z-index: 100130;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.corpos-app-error.is-hidden { display: none; }
+
+.corpos-app-error__panel {
+  width: 100%;
+  max-width: 420px;
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+}
+.corpos-app-error__titlebar {
+  background: linear-gradient(90deg, #0a246a, #3a6ea5);
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.corpos-app-error__body {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  align-items: flex-start;
+}
+.corpos-app-error__icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.corpos-app-error__text {
+  flex: 1;
+  min-width: 0;
+}
+.corpos-app-error__message {
+  font-size: 11px;
+  color: #000;
+  line-height: 1.45;
+  word-wrap: break-word;
+}
+.corpos-app-error__detail {
+  font-size: 11px;
+  color: #444;
+  line-height: 1.4;
+  margin-top: 8px;
+  word-wrap: break-word;
+}
+.corpos-app-error__actions {
+  display: flex;
+  justify-content: center;
+  padding: 4px 16px 14px;
+}
+.corpos-app-error__btn {
+  min-width: 90px;
+  padding: 3px 10px;
+  background: #d4d0c8;
+  color: #111;
+  border: 2px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  font-size: 11px;
+  font-family: 'Tahoma', 'MS Sans Serif', Arial, sans-serif;
+  cursor: pointer;
+  font-weight: bold;
+}
+.corpos-app-error__btn:active {
+  border-color: #404040 #ffffff #ffffff #404040;
+}
+.corpos-app-error__btn:focus {
+  outline: 1px dotted #000;
+  outline-offset: -4px;
+}
+
 .corpos-transfer {
   position: fixed;
   inset: 0;
@@ -2442,7 +2981,7 @@ body.corpos-busy * {
 
 /* ─── WebEx-Publisher ─── */
 #webex-root { font-family: Tahoma, Geneva, sans-serif; font-size: 11px; color: #222; background: #e8e4dc; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.wx-app { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.wx-app { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
 .wx-main-tabs { display: flex; gap: 2px; padding: 4px 6px 0; background: #c0c0c0; border-bottom: 1px solid #808080; flex-shrink: 0; }
 .wx-main-tab { padding: 4px 14px; font-size: 11px; font-family: Tahoma, sans-serif; border: 2px solid; border-color: #fff #404040 #404040 #fff; background: #d4d0c8; cursor: pointer; margin-bottom: -1px; }
 .wx-main-tab--active { background: #e8e4dc; border-bottom-color: #e8e4dc; font-weight: bold; color: #0a246a; }
@@ -2539,7 +3078,7 @@ body.corpos-busy * {
 .wx-slot-icon { font-size: 18px; }
 .wx-slot-label { font-size: 10px; font-weight: bold; }
 .wx-slot-remove { position: absolute; top: 2px; right: 2px; background: none; border: none; color: #a00; cursor: pointer; font-size: 12px; line-height: 1; }
-.wx-canvas-footer { display: flex; gap: 4px; margin-top: 6px; justify-content: flex-end; }
+.wx-canvas-footer { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; align-items: stretch; }
 .wx-picker-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 10; }
 .wx-picker { background: #d4d0c8; border: 2px outset #e0e0e0; padding: 8px; min-width: 200px; max-width: 280px; }
 .wx-picker-title { font-weight: bold; margin-bottom: 6px; font-size: 11px; }
@@ -2674,3 +3213,158 @@ body.corpos-busy * {
 #user-picker-screen .up-reg-purge:active {
   border-color: #404040 #ffffff #ffffff #404040;
 }
+
+/* WebEx Publisher — Module Sidebar Categories */
+.wx-category { margin-bottom: 2px; }
+.wx-category-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; background: #c8c4bc;
+  border: 1px solid; border-color: #ffffff #808080 #808080 #ffffff;
+  cursor: pointer; user-select: none;
+  font-family: Tahoma, Arial, sans-serif; font-size: 11px;
+  font-weight: bold; color: #000080;
+}
+.wx-category-header:hover { background: #d8d4cc; }
+.wx-cat-icon { font-size: 12px; }
+.wx-cat-label { flex: 1; }
+.wx-cat-count {
+  font-size: 9px; color: #666; background: #b0acac;
+  padding: 1px 5px; border-radius: 8px;
+}
+.wx-cat-chevron { font-size: 9px; color: #444; }
+.wx-category-body { overflow: hidden; }
+.wx-cat-collapsed { display: none; }
+
+/* Security module styling in sidebar */
+.wx-module-security {
+  background: #e8f0e8;
+  border-left: 3px solid #006600;
+}
+.wx-module-security:hover { background: #d8ecd8; }
+.wx-mod-equip-btn {
+  font-size: 9px; padding: 2px 6px;
+  background: #004400; color: #88ff88;
+  border: 1px solid #006600; cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px; white-space: nowrap;
+}
+.wx-mod-equip-btn:hover { background: #006600; }
+.wx-mod-icon { font-size: 14px; }
+.wx-mod-label { flex: 1; font-size: 11px; }
+
+/* Repair banner */
+.wx-repair-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 8px;
+  background: #1a0000; border: 2px solid #cc0000;
+}
+.wx-repair-icon { font-size: 24px; }
+.wx-repair-info { flex: 1; }
+.wx-repair-title {
+  font-size: 12px; font-weight: bold; color: #ff4444;
+  font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+}
+.wx-repair-desc {
+  font-size: 10px; color: #884444; margin-top: 3px;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.wx-btn-repair {
+  background: #2a0000; color: #ff4444;
+  border: 2px solid #cc0000;
+  padding: 6px 12px; cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; text-align: center;
+  line-height: 1.4; white-space: nowrap;
+}
+.wx-btn-repair:hover { background: #440000; }
+.wx-health-warning {
+  padding: 6px 10px; margin-bottom: 6px;
+  background: #1a1000; border: 1px solid #cc8800;
+  color: #cc8800; font-size: 10px;
+  font-family: 'Share Tech Mono', monospace;
+}
+.wx-canvas-footer-btns {
+  display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;
+}
+
+/* WebEx — Load picker & Handoff modals */
+.wx-modal-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9000;
+}
+.wx-modal-box {
+  background: #d4d0c8;
+  border: 2px solid; border-color: #ffffff #404040 #404040 #ffffff;
+  min-width: 380px; max-width: 560px; width: 90%;
+  font-family: Tahoma, Arial, sans-serif;
+  box-shadow: 4px 4px 0 #808080;
+}
+.wx-modal-title {
+  background: #0a246a; color: white;
+  padding: 6px 10px; font-size: 12px; font-weight: bold;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.wx-modal-close {
+  background: #d4d0c8; color: #000; border: 1px solid #808080;
+  cursor: pointer; padding: 0 4px; font-size: 11px; line-height: 1.4;
+}
+.wx-modal-body { padding: 12px; }
+.wx-load-list { max-height: 260px; overflow-y: auto; }
+.wx-load-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; margin-bottom: 4px;
+  background: #ffffff; border: 1px solid #cccccc;
+  cursor: pointer;
+}
+.wx-load-row:hover { background: #e8f0ff; }
+.wx-load-row-active { background: #e0e8f0; border-color: #0a246a; }
+.wx-load-info { flex: 1; }
+.wx-load-name { font-size: 12px; font-weight: bold; color: #000080; }
+.wx-load-meta { font-size: 10px; color: #666; margin-top: 2px; font-family: monospace; }
+.wx-btn-load-select {
+  font-size: 10px; padding: 3px 10px;
+  background: #0a246a; color: white;
+  border: 1px solid #000033; cursor: pointer;
+  font-family: Tahoma, sans-serif;
+}
+
+.wx-btn-handoff {
+  background: #003300; color: #88ff88;
+  border: 2px solid #006600; padding: 4px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; cursor: pointer;
+  text-align: center; line-height: 1.4;
+}
+.wx-btn-handoff:hover { background: #005500; }
+.wx-btn-handoff-disabled {
+  background: #1a1a1a; color: #444;
+  border: 2px solid #333; cursor: not-allowed;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; padding: 4px 10px;
+  text-align: center; line-height: 1.4;
+  opacity: 0.5;
+}
+.wx-btn-handoff-hidden {
+  background: #111; color: #333;
+  border: 1px solid #222; cursor: not-allowed;
+  font-size: 10px; padding: 4px 10px;
+  opacity: 0.3;
+}
+.wx-btn-confirm-handoff {
+  background: #003300; color: #88ff88;
+  border: 2px solid #006600; padding: 6px 16px;
+  cursor: pointer; font-size: 11px;
+  font-family: Tahoma, sans-serif; font-weight: bold;
+}
+.wx-btn-confirm-handoff:hover { background: #005500; }
+.wx-modal-handoff { min-width: 440px; }
+
+.wx-btn-load {
+  background: #d4d0c8; color: #000080;
+  border: 2px solid; border-color: #ffffff #404040 #404040 #ffffff;
+  padding: 4px 10px; cursor: pointer;
+  font-family: Tahoma, sans-serif; font-size: 11px;
+}
+.wx-btn-load:hover { background: #c8c4bc; }

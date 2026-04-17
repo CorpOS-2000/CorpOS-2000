@@ -38,5 +38,59 @@
     "loginEnabled": false,
     "loginConfig": {},
     "eventTriggers": []
+  },
+  {
+    "pageId": "test_website_attack",
+    "url": "http://www.testwebsiteattack.com/",
+    "title": "TestWebsiteAttack Corp — B2B Solutions",
+    "category": "business",
+    "theme": "corporate",
+    "primaryColor": "#0a246a",
+    "secondaryColor": "#cc6600",
+    "backgroundColor": "#ffffff",
+    "siteName": "TestWebsiteAttack Corp",
+    "siteTagline": "Leading B2B Solutions for the New Millennium",
+    "sections": [
+      {
+        "type": "hero",
+        "headline": "TestWebsiteAttack Corp",
+        "subheadline": "Leading B2B Solutions for the New Millennium",
+        "sectionId": "hero_main"
+      },
+      {
+        "type": "text",
+        "headline": "About Us",
+        "body": "Welcome to TestWebsiteAttack Corp. We provide enterprise B2B solutions to businesses across Hargrove and the greater California market. Our services include data management, logistics consulting, and digital infrastructure.",
+        "sectionId": "about"
+      },
+      {
+        "type": "form",
+        "headline": "Contact Us",
+        "formId": "contact",
+        "fields": [
+          { "label": "Name", "name": "name", "inputType": "text" },
+          { "label": "Email", "name": "email", "inputType": "text" },
+          { "label": "Message", "name": "message", "inputType": "text" }
+        ],
+        "submitLabel": "Send Message",
+        "sectionId": "contact"
+      },
+      {
+        "type": "live_thread",
+        "headline": "Customer Forum",
+        "commentContext": "business",
+        "sectionId": "forum"
+      }
+    ],
+    "footerText": "© 2000 TestWebsiteAttack Corp. All rights reserved.",
+    "stats": {
+      "health": 100,
+      "traffic": 65,
+      "reputation": 70,
+      "security": 25,
+      "uptime": 100,
+      "lastAttacked": null,
+      "attackLog": []
+    }
   }
 ]

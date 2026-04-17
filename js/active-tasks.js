@@ -1,6 +1,8 @@
 import {
   SIM_HOUR_MS,
   cancelSoftwareInstall,
+  cancelSiteRepairTask,
+  cancelWebsiteContractTask,
   endDeliveryTask,
   getState,
   killDeliveryTask,
@@ -86,6 +88,10 @@ function applyTaskAction(kind, task) {
     res = kind === 'kill' ? killSoftwareInstall(task.targetId) : cancelSoftwareInstall(task.targetId);
   } else if (task.taskType === 'delivery') {
     res = kind === 'kill' ? killDeliveryTask(task.targetId) : endDeliveryTask(task.targetId);
+  } else if (task.taskType === 'site_repair') {
+    res = cancelSiteRepairTask(task.targetId);
+  } else if (task.taskType === 'website_contract') {
+    res = cancelWebsiteContractTask(task.targetId);
   }
   toast(res.message);
   renderActiveTasksPanel();

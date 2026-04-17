@@ -4,10 +4,19 @@
  */
 import { getSessionState, patchSession } from './sessionState.js';
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
+import { on } from './events.js';
 import { toast } from './toast.js';
 import { PeekManager } from './peek-manager.js';
 import { SMS, GOVERNMENT_SENDERS } from './bc-sms.js';
+import {
+  getNotifications,
+  markRead,
+  markAllRead,
+  clearAll,
+  getUnreadCount,
+} from './bc-notifications.js';
 import { startConversation, selectConversationOption, endConversation, getConversationState } from './bc-conversation.js';
+import { initBcBrowser, bcbNavigateTo } from './bc-browser.js';
 
 const PEEK_PX = 56;
 const CORNER_HOTSPOT_W = 220;
@@ -145,9 +154,9 @@ const GRID_ITEMS = [
   { id: 'contacts', label: 'Contacts',    icon: '👤', view: 'contacts' },
   { id: 'cashup',   label: 'CashUp',      icon: '💰', view: 'cashup' },
   { id: 'calllog',  label: 'Call Log',    icon: '📞', view: 'dial' },
-  { id: 'maps',     label: 'Maps',        icon: '🗺', action: 'open-maps' },
+  { id: 'notifications', label: 'Notifications', icon: '🔔', view: 'notifications' },
   { id: 'settings', label: 'Settings',    icon: '⚙',  view: 'settings' },
-  { id: 'browser',  label: 'Browser',     icon: '🌐', action: 'open-browser' },
+  { id: 'browser',  label: 'Browser',     icon: '🌐', view: 'browser' },
   { id: 'calendar', label: 'Calendar',    icon: '📅', view: 'calendar' },
   { id: 'mail',     label: 'Mail',        icon: '📬', action: 'open-mail' },
 ];
@@ -221,6 +230,7 @@ function typingOrBrowserFocus() {
   const tag = a.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
   if (a.isContentEditable) return true;
+  if (a.closest('#bc-view-browser')) return true;
   if (a.closest('#wnet-content')) return true;
   return false;
 }
@@ -246,7 +256,23 @@ function setScreenHeading(text) { const h = $('bc-screen-heading'); if (h) h.tex
 /* ── View navigation ── */
 /** @param {string} view @param {{ preserveDialBuffer?: boolean }} [opts] */
 function showView(view, opts = {}) {
-  const allViews = ['home','messaging','thread','contacts','dialpad','dial','calling','incoming','conversation','transcript','cashup','settings','calendar'];
+  const allViews = [
+    'home',
+    'messaging',
+    'thread',
+    'contacts',
+    'dialpad',
+    'dial',
+    'calling',
+    'incoming',
+    'conversation',
+    'transcript',
+    'cashup',
+    'settings',
+    'notifications',
+    'browser',
+    'calendar',
+  ];
   const activeId = `bc-view-${view}`;
   for (const v of allViews) {
     $(`bc-view-${v}`)?.classList.toggle('bc-view--active', `bc-view-${v}` === activeId);
@@ -267,6 +293,20 @@ function showView(view, opts = {}) {
   else if (view === 'transcript') { setScreenHeading(''); }
   else if (view === 'cashup') { setScreenHeading('CashUp'); renderCashUp(); }
   else if (view === 'settings') { setScreenHeading('Settings'); }
+  else if (view === 'notifications') {
+    setScreenHeading('Notifications');
+    markAllRead();
+    renderNotificationList();
+    updateBellBadge();
+  }
+  else if (view === 'browser') {
+    setScreenHeading('Browser');
+    const bcbRoot = $('bc-view-browser');
+    if (bcbRoot && !bcbRoot.dataset.init) {
+      bcbRoot.dataset.init = '1';
+      initBcBrowser(bcbRoot);
+    }
+  }
   else if (view === 'calendar') { setScreenHeading('Calendar'); }
   syncBcKeyboardDialpadMode();
   updateDialHud();
@@ -308,6 +348,7 @@ function renderIconGrid() {
   const grid = $('bc-icon-grid');
   if (!grid) return;
   const unread = SMS.getUnreadCount();
+  const notifUnread = getUnreadCount();
   const cash = getState().player?.hardCash || 0;
   grid.innerHTML = GRID_ITEMS.map((item, i) => {
     const r = Math.floor(i / GRID_COLS);
@@ -315,6 +356,9 @@ function renderIconGrid() {
     const sel = (r === gridRow && c === gridCol) ? ' bc-grid-cell--sel' : '';
     let badge = '';
     if (item.id === 'sms' && unread > 0) badge = `<span class="bc-unread-badge">${unread}</span>`;
+    if (item.id === 'notifications' && notifUnread > 0) {
+      badge = `<span class="bc-notif-badge">${notifUnread > 99 ? '99+' : notifUnread}</span>`;
+    }
     let sub = '';
     if (item.id === 'cashup' && cash > 0) sub = `<span class="bc-grid-sub">$${cash.toLocaleString()}</span>`;
     return `<div class="bc-grid-cell${sel}" data-grid-r="${r}" data-grid-c="${c}" data-grid-idx="${i}">
@@ -328,16 +372,6 @@ function activateGridItem() {
   const idx = gridRow * GRID_COLS + gridCol;
   const item = GRID_ITEMS[idx];
   if (!item) return;
-  if (item.action === 'open-maps') {
-    closeBlackCherryDock();
-    window.WorldNet?.navigateTo?.('moogle_maps');
-    return;
-  }
-  if (item.action === 'open-browser') {
-    closeBlackCherryDock();
-    window.WorldNet?.navigateTo?.('wahoo');
-    return;
-  }
   if (item.action === 'open-mail') {
     closeBlackCherryDock();
     window.WorldNet?.navigateTo?.('jeemail');
@@ -388,6 +422,66 @@ function formatSimTime(simMs) {
     const ampm = h < 12 ? 'AM' : 'PM';
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
   } catch { return ''; }
+}
+
+function updateBellBadge() {
+  const unread = getUnreadCount();
+  const badge = document.querySelector('.bc-notif-badge');
+  if (badge) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.style.display = unread > 0 ? '' : 'none';
+  }
+  if (currentView !== 'notifications') {
+    renderIconGrid();
+  }
+}
+
+function renderNotificationList() {
+  const list = document.getElementById('bc-notif-list');
+  if (!list) return;
+
+  const items = getNotifications();
+
+  if (!items.length) {
+    list.innerHTML = `
+<div class="bc-notif-empty">
+  <div class="bc-notif-empty-icon">🔔</div>
+  <div class="bc-notif-empty-text">No notifications</div>
+</div>`;
+    return;
+  }
+
+  list.innerHTML = items
+    .map((n) => {
+      const timeLabel = formatSimTime(n.simMs);
+      const unreadDot = !n.read ? '<span class="bc-notif-unread-dot"></span>' : '';
+      const notLinkedNote = !n.linked
+        ? '<div class="bc-notif-not-linked">not linked to any action</div>'
+        : '';
+      const tappable = n.action ? 'bc-notif-item--tappable' : '';
+      const at = esc(n.action?.type || '');
+      const ap = esc(n.action?.payload ?? '');
+      return `
+<div class="bc-notif-item ${!n.read ? 'bc-notif-item--unread' : ''} ${tappable}"
+     data-notif-id="${esc(n.id)}"
+     data-action-type="${at}"
+     data-action-payload="${ap}">
+  <div class="bc-notif-icon-wrap">
+    <span class="bc-notif-type-icon">${n.icon}</span>
+    ${unreadDot}
+  </div>
+  <div class="bc-notif-content">
+    <div class="bc-notif-row-top">
+      <span class="bc-notif-item-title">${esc(n.title)}</span>
+      <span class="bc-notif-time">${esc(timeLabel)}</span>
+    </div>
+    <div class="bc-notif-body">${esc(n.body)}</div>
+    ${notLinkedNote}
+  </div>
+  ${n.action ? '<div class="bc-notif-arrow">›</div>' : ''}
+</div>`;
+    })
+    .join('');
 }
 
 /* ── SMS thread detail ── */
@@ -1573,6 +1667,83 @@ export function initBlackCherry() {
   window.addEventListener('resize', scheduleDockAlign);
   scheduleDockAlign();
   requestAnimationFrame(scheduleDockAlign);
+
+  on('bc:notification_pushed', () => {
+    updateBellBadge();
+    if (currentView === 'notifications') {
+      renderNotificationList();
+    }
+  });
+
+  document.getElementById('bc-notif-list')?.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-notif-id]');
+    if (!row) return;
+
+    const id = row.getAttribute('data-notif-id');
+    const actionType = row.getAttribute('data-action-type') || '';
+    const actionPayload = row.getAttribute('data-action-payload') || '';
+
+    if (id) markRead(id);
+    renderNotificationList();
+    updateBellBadge();
+
+    if (!actionType) return;
+
+    switch (actionType) {
+      case 'open_sms_thread':
+        pushView('messaging');
+        if (actionPayload) {
+          setTimeout(() => openThread(actionPayload), 80);
+        }
+        break;
+      case 'open_view':
+        if (actionPayload) pushView(actionPayload);
+        break;
+      case 'open_window':
+        if (actionPayload) {
+          closeBlackCherryDock();
+          window.openW?.(actionPayload);
+        }
+        break;
+      case 'open_worldnet':
+        closeBlackCherryDock();
+        window.openW?.('worldnet');
+        if (actionPayload) {
+          setTimeout(() => window.wnetGo?.(actionPayload), 120);
+        }
+        break;
+      case 'open_jeemail':
+        closeBlackCherryDock();
+        window.openW?.('worldnet');
+        setTimeout(() => window.wnetGo?.('jeemail'), 120);
+        break;
+      case 'open_jeemail_message':
+        closeBlackCherryDock();
+        window.openW?.('worldnet');
+        setTimeout(() => {
+          window.wnetGo?.('jeemail');
+          setTimeout(() => {
+            window.dispatchEvent(
+              new CustomEvent('jeemail:open-message', { detail: { messageId: actionPayload } })
+            );
+          }, 300);
+        }, 120);
+        break;
+      case 'open_bc_dial':
+        pushView('dial');
+        break;
+      default:
+        break;
+    }
+  });
+
+  document.getElementById('bc-notif-clear-btn')?.addEventListener('click', () => {
+    clearAll();
+    renderNotificationList();
+    updateBellBadge();
+  });
+
+  window.bcbNavigateTo = bcbNavigateTo;
 
   window.BlackCherry = {
     openToThread(senderId) {

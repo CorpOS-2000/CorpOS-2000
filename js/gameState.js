@@ -10,6 +10,130 @@ import { getInstallableApp, getSoftwarePurchasePriceUsd, isInstallableApp } from
 
 const GAME_EPOCH_UTC_MS = Date.UTC(2000, 0, 1, 6, 0, 0, 0);
 
+export function ensureWebsiteStats(pageEntry) {
+  if (!pageEntry.stats) {
+    pageEntry.stats = {
+      health:       100,
+      traffic:      Math.floor(20 + Math.random() * 80),
+      reputation:   Math.floor(30 + Math.random() * 70),
+      security:     Math.floor(10 + Math.random() * 60),
+      uptime:       100,
+      lastAttacked: null,
+      attackLog:    [],
+    };
+  }
+  return pageEntry;
+}
+
+export function migrateWebsiteStats(st) {
+  if (!st.contentRegistry?.pages) return st;
+  for (const p of st.contentRegistry.pages) {
+    ensureWebsiteStats(p);
+  }
+  return st;
+}
+
+export function getWebsiteContract(st) {
+  return st?.websiteContract || null;
+}
+
+export function hasActiveWebsiteContract(st) {
+  return !!(st?.websiteContract?.active);
+}
+
+export function setWebsiteContract(contractData) {
+  patchState((st) => {
+    st.websiteContract = {
+      active: true,
+      contractId: contractData.contractId ?? null,
+      companyId: contractData.companyId ?? null,
+      companyName: contractData.companyName ?? 'Unknown Client',
+      requirements: contractData.requirements ?? null,
+      reward: Number(contractData.reward) || 0,
+      breachFee: Number(contractData.breachFee) || 0,
+      startSimMs: contractData.startSimMs ?? 0,
+      deadlineSimMs: contractData.deadlineSimMs ?? 0,
+    };
+    return st;
+  });
+}
+
+export function clearWebsiteContract() {
+  patchState((st) => {
+    st.websiteContract = {
+      active: false,
+      contractId: null,
+      companyId: null,
+      companyName: null,
+      requirements: null,
+      reward: 0,
+      breachFee: 0,
+      startSimMs: 0,
+      deadlineSimMs: 0,
+    };
+    return st;
+  });
+}
+
+export function transferSiteToCompany(pageId, companyId, companyName) {
+  patchState((st) => {
+    const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === pageId);
+    if (!page) return st;
+
+    page.ownedByCompany = companyId;
+    page.ownedByName = companyName;
+    page.transferredAt = st.sim?.elapsedMs || 0;
+    page.playerOwned = false;
+
+    const owningProj = (st.player?.webExProjects || []).find((p) => p.publishedPageId === pageId);
+    if (owningProj && Array.isArray(st.player.webExDomainSubscriptions)) {
+      st.player.webExDomainSubscriptions = st.player.webExDomainSubscriptions.filter(
+        (sub) => sub.projectId !== owningProj.id
+      );
+    }
+
+    const company = (st.companies || []).find((c) => c.id === companyId || c.actor_id === companyId);
+    if (company) {
+      company.assets = company.assets || [];
+      company.assets.push({
+        type: 'website',
+        pageId,
+        url: page.url,
+        title: page.title,
+        acquiredAt: st.sim?.elapsedMs || 0,
+        source: 'contract_delivery',
+      });
+    }
+
+    return st;
+  });
+}
+
+export function cancelWebsiteContractTask(taskId) {
+  let cleared = false;
+  patchState((st) => {
+    if (!Array.isArray(st.activeTasks)) st.activeTasks = [];
+    st.activeTasks = st.activeTasks.filter((t) => t.id !== taskId);
+    const wc = st.websiteContract;
+    if (wc?.active && wc.contractId === taskId) {
+      cleared = true;
+      st.websiteContract = {
+        active: false,
+        contractId: null,
+        companyId: null,
+        companyName: null,
+        requirements: null,
+        reward: 0,
+        breachFee: 0,
+        startSimMs: 0,
+        deadlineSimMs: 0,
+      };
+    }
+    return st;
+  });
+  return { ok: true, message: cleared ? 'Website contract cancelled.' : 'Task removed.' };
+}
+
 const DEFAULT_REGISTRY = {
   citizens: [
     {
@@ -179,6 +303,18 @@ function createInitialStateInternal() {
       webExStockroom: [],
       webExDomainSubscriptions: [],
       pendingSmsEvents: [],
+      lastActiveWebExProjectId: null,
+    },
+    websiteContract: {
+      active: false,
+      contractId: null,
+      companyId: null,
+      companyName: null,
+      requirements: null,
+      reward: 0,
+      breachFee: 0,
+      startSimMs: 0,
+      deadlineSimMs: 0,
     },
     registry: JSON.parse(JSON.stringify(DEFAULT_REGISTRY)),
     regulatory: {
@@ -311,7 +447,9 @@ function createInitialStateInternal() {
     /** Product hashtag tracking: tag -> { mentions, likes, dislikes, purchaseCountWindow, lastPurchaseSimMs, shortage? } */
     marketBuzz: {},
     /** CCR — Contacts, Contracts & Relations. */
-    ccr: { contracts: [], newsFeed: [], nextSeq: 1 }
+    ccr: { contracts: [], newsFeed: [], nextSeq: 1 },
+    /** Background jobs (site repair, etc.) — processed on tick. */
+    activeTasks: []
   };
 }
 
@@ -675,6 +813,47 @@ export function migrateStateIfNeeded(st) {
       st.eventSystem = { intervalLastFired: {} };
     }
     if (!st.eventSystem.intervalLastFired) st.eventSystem.intervalLastFired = {};
+  }
+  if ((st.meta.version || 0) < 19) {
+    st.meta.version = 19;
+    if (!st.virtualFs || typeof st.virtualFs !== 'object') {
+      st.virtualFs = { entries: [], nextSeq: 1 };
+    }
+    st.virtualFs.entries = Array.isArray(st.virtualFs.entries) ? st.virtualFs.entries : [];
+    if (st.virtualFs.nextSeq == null) st.virtualFs.nextSeq = 1;
+  }
+  if ((st.meta.version || 0) < 20) {
+    st.meta.version = 20;
+    migrateWebsiteStats(st);
+  }
+  if ((st.meta.version || 0) < 21) {
+    st.meta.version = 21;
+    if (!Array.isArray(st.activeTasks)) st.activeTasks = [];
+    for (const p of st.player?.webExProjects || []) {
+      if (!Array.isArray(p.securityModules)) p.securityModules = [];
+    }
+  }
+  if ((st.meta.version || 0) < 22) {
+    st.meta.version = 22;
+    if (st.player && st.player.lastActiveWebExProjectId == null) {
+      st.player.lastActiveWebExProjectId = null;
+    }
+    if (!st.websiteContract || typeof st.websiteContract !== 'object') {
+      st.websiteContract = {
+        active: false,
+        contractId: null,
+        companyId: null,
+        companyName: null,
+        requirements: null,
+        reward: 0,
+        breachFee: 0,
+        startSimMs: 0,
+        deadlineSimMs: 0,
+      };
+    }
+    for (const p of st.player?.webExProjects || []) {
+      if (p.lastAutoSavedAt == null) p.lastAutoSavedAt = 0;
+    }
   }
   if (!st.ccr || typeof st.ccr !== 'object') {
     st.ccr = { contracts: [], newsFeed: [], nextSeq: 1 };
@@ -1141,7 +1320,94 @@ export function listBackgroundTasks(stateObj = state) {
       canKill: true
     };
   });
-  return [...installs, ...deliveries];
+  const repairs = (stateObj.activeTasks || [])
+    .filter((t) => t.type === 'site_repair' && t.status === 'in_progress')
+    .map((t) => {
+      const denom = Math.max(1, (t.dueSimMs || 0) - (t.startSimMs || 0));
+      const elapsed = now - (t.startSimMs || 0);
+      const progress = Math.min(100, Math.max(0, Math.round((elapsed / denom) * 100)));
+      return {
+        id: `repair:${t.id}`,
+        taskId: `repair:${t.id}`,
+        taskType: 'site_repair',
+        targetId: t.id,
+        icon: t.icon || '🔧',
+        label: t.label || 'Site repair',
+        category: 'Site Maintenance',
+        status: 'Repairing',
+        progress,
+        detail: t.pageId || '',
+        canEnd: true,
+        canKill: true
+      };
+    });
+  const websiteContracts = (stateObj.activeTasks || [])
+    .filter((t) => t.type === 'website_contract' && t.status === 'in_progress')
+    .map((t) => {
+      const denom = Math.max(1, (t.dueSimMs || 0) - (t.startSimMs || 0));
+      const elapsed = now - (t.startSimMs || 0);
+      const progress = Math.min(100, Math.max(0, Math.round((elapsed / denom) * 100)));
+      return {
+        id: `contract:${t.id}`,
+        taskId: `contract:${t.id}`,
+        taskType: 'website_contract',
+        targetId: t.id,
+        icon: t.icon || '🌐',
+        label: t.label || 'Website contract',
+        category: 'Contracts',
+        status: 'In progress',
+        progress,
+        detail: t.companyName || '',
+        canEnd: false,
+        canKill: true
+      };
+    });
+  return [...installs, ...deliveries, ...repairs, ...websiteContracts];
+}
+
+/**
+ * Completes due site_repair tasks. Returns completed task objects for toast/SMS in caller.
+ * @returns {object[]}
+ */
+export function processSiteRepairsIfNeeded() {
+  const now = state.sim?.elapsedMs ?? 0;
+  /** @type {object[]} */
+  const completed = [];
+  patchState((st) => {
+    if (!Array.isArray(st.activeTasks)) st.activeTasks = [];
+    const keep = [];
+    for (const t of st.activeTasks) {
+      if (t.type !== 'site_repair' || t.status !== 'in_progress') {
+        keep.push(t);
+        continue;
+      }
+      if ((t.dueSimMs || 0) > now) {
+        keep.push(t);
+        continue;
+      }
+      const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === t.pageId);
+      if (page?.stats) {
+        page.stats.health = 100;
+        page.stats.uptime = 100;
+        page.stats.lastAttacked = null;
+        page.stats.traffic = Math.min(100, (page.stats.traffic || 0) + 20);
+        page.stats.security = Math.min(100, (page.stats.security || 0) + 10);
+      }
+      completed.push(t);
+    }
+    st.activeTasks = keep;
+    return st;
+  });
+  return completed;
+}
+
+export function cancelSiteRepairTask(taskId) {
+  patchState((st) => {
+    if (!Array.isArray(st.activeTasks)) st.activeTasks = [];
+    st.activeTasks = st.activeTasks.filter((t) => t.id !== taskId);
+    return st;
+  });
+  return { ok: true, message: 'Repair task cancelled.' };
 }
 
 export function processSoftwareInstallsIfNeeded() {

@@ -31,6 +31,7 @@ const NODES = {
   'folder-downloads': { label: 'My Downloads', parent: 'disk-c' },
   'folder-videos': { label: 'My Videos', parent: 'disk-c' },
   'folder-pictures': { label: 'My Pictures', parent: 'disk-c' },
+  'folder-progfiles': { label: 'Program Files', parent: 'disk-c' },
   'folder-corpos': { label: 'CORPOS', parent: 'disk-c' },
   'folder-system': { label: 'SYSTEM', parent: 'folder-corpos' }
 };
@@ -43,6 +44,7 @@ const CHILDREN = {
     'folder-downloads',
     'folder-videos',
     'folder-pictures',
+    'folder-progfiles',
     'folder-corpos'
   ],
   'folder-documents': ['folder-doc-music'],
@@ -268,6 +270,11 @@ function vfsFileLooksLikeAudio(item) {
   return /\.(mp3|wav|ogg|m4a|flac)$/i.test(n);
 }
 
+function vfsFileLooksBinary(item) {
+  const n = (item.name || '').toLowerCase();
+  return /\.(exe|dll|dat|sys|com|bin|ocx|drv)$/i.test(n);
+}
+
 function openRow(item) {
   if (item.kind === 'folder') {
     currentNodeId = item.id;
@@ -289,6 +296,17 @@ function openRow(item) {
       }
       return;
     }
+    if (vfsFileLooksBinary(item)) {
+      try {
+        window.toast?.({
+          title: 'My Computer',
+          message: `'${item.name}' is not a recognized file type or the program needed to open it is not available.`,
+          icon: '⚠',
+          autoDismiss: 5000
+        });
+      } catch { /* ignore */ }
+      return;
+    }
     openExplorerFileInWritepad(item, addressPathForNode(currentNodeId));
     return;
   }
@@ -303,8 +321,16 @@ function openRow(item) {
   }
 }
 
+function isSystemEntry(entry) {
+  return !!(entry?.system || entry?.readonly);
+}
+
 function deleteVfsEntry(item) {
   if (!item?.vfs || !item.entry) return;
+  if (isSystemEntry(item.entry)) {
+    try { window.toast?.({ title: 'Access Denied', message: 'This is a protected system file and cannot be deleted.', icon: '🛑', autoDismiss: 5000 }); } catch { /* ignore */ }
+    return;
+  }
   const eid = item.entry.id;
   const name = item.entry.name || item.name;
   if (eid === LOG_PATH_NODE_ID) {
@@ -316,7 +342,20 @@ function deleteVfsEntry(item) {
   }
   patchState((st) => {
     if (!st.virtualFs?.entries) return st;
-    st.virtualFs.entries = st.virtualFs.entries.filter((x) => x.id !== eid);
+    const remove = new Set([eid]);
+    if (item.kind === 'folder') {
+      let added = true;
+      while (added) {
+        added = false;
+        for (const e of st.virtualFs.entries) {
+          if (!remove.has(e.id) && remove.has(e.parentId)) {
+            remove.add(e.id);
+            added = true;
+          }
+        }
+      }
+    }
+    st.virtualFs.entries = st.virtualFs.entries.filter((x) => !remove.has(x.id));
     return st;
   });
   renderAll();
@@ -503,14 +542,15 @@ function showRowContext(e, item) {
   const menu = document.createElement('div');
   menu.className = 'fx-ctx';
   const isVfs = !!item.vfs;
-  const showRename = isVfs && vfsEntryRenamable(item.entry);
+  const isSys = isVfs && isSystemEntry(item.entry);
+  const showRename = isVfs && !isSys && vfsEntryRenamable(item.entry);
   menu.innerHTML = `
     <button type="button" data-a="open">${item.kind === 'folder' ? 'Open' : 'Open'}</button>
     <button type="button" data-a="rename" ${!showRename ? 'disabled' : ''}>Rename</button>
     <hr />
-    <button type="button" data-a="cut" ${!isVfs ? 'disabled' : ''}>Cut</button>
+    <button type="button" data-a="cut" ${!isVfs || isSys ? 'disabled' : ''}>Cut</button>
     <button type="button" data-a="copy" ${!isVfs ? 'disabled' : ''}>Copy</button>
-    <button type="button" data-a="delete" ${!isVfs ? 'disabled' : ''}>Delete</button>
+    <button type="button" data-a="delete" ${!isVfs || isSys ? 'disabled' : ''}>Delete</button>
     <button type="button" data-a="paste" ${!canPasteInto(currentNodeId) ? 'disabled' : ''}>Paste</button>
     <hr />
     <button type="button" data-a="prop">Properties</button>

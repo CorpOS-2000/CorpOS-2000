@@ -144,6 +144,39 @@ function defaultNotFoundHtml() {
 </div>`;
 }
 
+function renderDeadSiteHtml(pageEntry) {
+  const url = escapeHtml(pageEntry.url || 'this address');
+  return `<div class="iebody" style="display:flex;align-items:center;justify-content:center;min-height:400px;background:#ffffff;">
+<table width="480" bgcolor="#fffef0" border="1" bordercolor="#cc0000" cellpadding="20">
+  <tr bgcolor="#cc0000"><td align="center">
+    <font face="Arial" size="4" color="white"><b>⚠ Cannot Display Webpage</b></font>
+  </td></tr>
+  <tr><td>
+    <font face="Arial" size="2"><b>WorldNet Explorer cannot display this page.</b></font>
+    <br><br>
+    <font face="Arial" size="2" color="#666666">The website at <b>${url}</b> is not responding.</font>
+    <br><br>
+    <table width="100%" bgcolor="#f8f8f8" border="1" bordercolor="#dddddd" cellpadding="6">
+      <tr><td><font face="Arial" size="2">
+        • The website may be temporarily offline.<br>
+        • The server may be experiencing technical difficulties.<br>
+        • The domain may no longer be active.<br>
+        • Network connectivity issues may be affecting this address.
+      </font></td></tr>
+    </table>
+    <br>
+    <font face="Arial" size="1" color="#999999">
+      Error Code: HTTP 503 — Service Unavailable<br>
+      Attempted: ${url}<br>
+      WorldNet Explorer 5.0 · Mandate 2000-CR7 Compliant
+    </font>
+    <br><br>
+    <a href="#" data-nav="home" style="font-size:11px;margin-right:12px;">Go to Wahoo!</a>
+  </td></tr>
+</table>
+</div>`;
+}
+
 function renderWahooHome() {
   const s = getSessionState();
   const user = s.wahoo.currentUser;
@@ -221,6 +254,62 @@ function renderDevtoolsPage() {
   );
 }
 
+function renderBackroomsPage() {
+  const base = pages.backrooms || worldnetPages.backrooms || defaultNotFoundHtml();
+  return base.replace(
+    /<div data-backrooms-app="([^"]+)"><\/div>/g,
+    (_match, appId) => renderBackroomsAppCard(appId)
+  );
+}
+
+function renderBackroomsAppCard(appId) {
+  const app = getInstallableApp(appId);
+  if (!app) return '';
+  const status = getInstallStatus(appId);
+  let buttonLabel = '[ DOWNLOAD ]';
+  let disabled = '';
+  let btnBg = '#1a0000';
+  let btnBorder = '#ff0000';
+  if (status.state === 'downloading') {
+    buttonLabel = '[ DOWNLOADING... ]';
+    disabled = 'disabled';
+    btnBg = '#0a0a0a';
+    btnBorder = '#333';
+  } else if (status.state === 'installing') {
+    buttonLabel = '[ INSTALLING... ]';
+    disabled = 'disabled';
+    btnBg = '#0a0a0a';
+    btnBorder = '#333';
+  } else if (status.state === 'installed') {
+    buttonLabel = '[ INSTALLED ]';
+    disabled = 'disabled';
+    btnBg = '#001a00';
+    btnBorder = '#004400';
+  }
+  const activeTransfer = status.state === 'downloading' || status.state === 'installing' || status.state === 'aborting';
+  return `<div style="border:1px solid #003300;background:#0a0a0a;padding:10px;">
+<div style="display:flex;align-items:flex-start;gap:10px;">
+  <div style="font-size:28px;line-height:1;filter:hue-rotate(90deg);">${app.icon}</div>
+  <div style="flex:1;">
+    <div style="font-weight:bold;color:#00ff41;font-size:13px;letter-spacing:1px;">${escapeHtml(app.label)}</div>
+    <div style="font-size:10px;color:#006600;line-height:1.4;margin-top:3px;">${escapeHtml(app.description)}</div>
+    <div style="font-size:9px;color:#004400;margin-top:5px;">
+      Source: <span style="color:#ff0000;">${escapeHtml(app.sourceHost)}</span> &nbsp;|&nbsp;
+      Trust: <span style="color:#ff0000;">UNVERIFIED — USE AT OWN RISK</span> &nbsp;|&nbsp;
+      Delivery: encrypted tunnel
+    </div>
+    <div style="margin-top:5px;font-size:12px;font-weight:bold;color:#ff0000;">${escapeHtml(formatSoftwarePurchasePrice(app))}</div>
+    <div style="margin-top:4px;display:inline-block;padding:2px 6px;border:1px solid #660000;background:#1a0000;color:#ff4444;font-size:9px;font-weight:bold;letter-spacing:1px;">⚠ NOT CORPOS CERTIFIED — FLAGGED AS HOSTILE SOFTWARE</div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+      <button type="button" data-action="install-app" data-install-app-id="${escapeHtml(app.id)}"
+        style="height:26px;padding:0 16px;background:${btnBg};color:#ff0000;border:1px solid ${btnBorder};cursor:pointer;font-family:'Courier New',monospace;font-size:11px;font-weight:bold;letter-spacing:2px;" ${disabled}>${escapeHtml(buttonLabel)}</button>
+      ${activeTransfer ? `<button type="button" data-action="open-install-window" data-install-app-id="${escapeHtml(app.id)}" style="height:26px;padding:0 10px;background:#0a0a0a;color:#006600;border:1px solid #003300;cursor:pointer;font-family:'Courier New',monospace;font-size:10px;">STATUS</button>` : ''}
+    </div>
+  </div>
+</div>
+</div>`;
+}
+
 function ensureCorpOsConfirmDialog() {
   let overlay = document.getElementById('corpos-confirm-dialog');
   if (overlay) return overlay;
@@ -285,9 +374,10 @@ function showCorpOsConfirm({ message, detail, confirmLabel, onConfirm }) {
 
 function installTrustMeta(app) {
   return {
-    verified: { text: 'CorpOS verified', color: '#006600', bg: '#e8ffe8', border: '#3a8f3a' },
-    unknown: { text: 'Unknown to CorpOS', color: '#8a6d00', bg: '#fff8d8', border: '#c9a227' },
-    untrusted: { text: 'CorpOS does not trust this file', color: '#8b0000', bg: '#ffe9e9', border: '#cc6666' }
+    verified:   { text: 'CorpOS verified',                  color: '#006600', bg: '#e8ffe8', border: '#3a8f3a' },
+    unknown:    { text: 'Unknown to CorpOS',                color: '#8a6d00', bg: '#fff8d8', border: '#c9a227' },
+    unverified: { text: 'Unverified — not CorpOS certified', color: '#8b0000', bg: '#fff0f0', border: '#cc6666' },
+    untrusted:  { text: 'CorpOS does not trust this file',  color: '#8b0000', bg: '#ffe9e9', border: '#cc6666' }
   }[app?.trustLevel || 'unknown'];
 }
 
@@ -347,7 +437,7 @@ function ensureCorpOsTransferDialog() {
           const res = cancelSoftwareInstall(appId);
           toast(res.message);
           refreshTransferDialog();
-          if (currentPageKey === 'devtools') navigate('devtools', '', { pushHistory: false });
+          if (currentPageKey === 'devtools' || currentPageKey === 'backrooms') navigate(currentPageKey, '', { pushHistory: false });
         }
       },
       false
@@ -947,6 +1037,7 @@ function renderPage(key, sub = '') {
   if (key === 'market_pulse') return pages.market_pulse || defaultNotFoundHtml();
   if (key === 'herald') return '<div id="dh-wnet-root" style="min-height:100%;"></div>';
   if (key === 'devtools') return renderDevtoolsPage();
+  if (key === 'backrooms') return renderBackroomsPage();
   if (key === 'wn_shop') return renderShopHtml(sub || '');
   if (key === 'not_found') return defaultNotFoundHtml();
   if (key === 'web_registry') return renderWorldWideWebRegistryHtml();
@@ -954,6 +1045,9 @@ function renderPage(key, sub = '') {
     const st = getState();
     const pageDef = st.contentRegistry?.pages?.find((p) => p.pageId === sub);
     if (pageDef) {
+      if (pageDef.stats && pageDef.stats.health <= 0) {
+        return renderDeadSiteHtml(pageDef);
+      }
       const headlines =
         (typeof window !== 'undefined' && window.__wnetNewsHeadlines) || [];
       return renderPageDefinitionHtml(pageDef, {
@@ -1331,12 +1425,14 @@ function dispatchAction(action, rootEl, sourceEl = null) {
               year: 'numeric'
             });
             const priceStr = formatSoftwarePurchasePrice(purchased);
-            let msg = `${bankName}: ${dateStr}. Purchase ${priceStr} at devtools.net — ${purchased?.label || appId}. ${acctTail}. If you did not authorize, call 1-800-555-CORP.`;
+            const host = purchased?.sourceHost || 'devtools.net';
+            let msg = `${bankName}: ${dateStr}. Purchase ${priceStr} at ${host} — ${purchased?.label || appId}. ${acctTail}. If you did not authorize, call 1-800-555-CORP.`;
             if (msg.length > 160) msg = `${msg.slice(0, 157)}...`;
             smsToPlayer(msg);
           }
         }
-        navigate('devtools', '', { pushHistory: false });
+        const srcPage = app?.sourceHost === 'backrooms.hck' ? 'backrooms' : 'devtools';
+        navigate(srcPage, '', { pushHistory: false });
       }
     });
     return true;
@@ -1925,4 +2021,6 @@ export function exposeGlobals() {
   window.wnetForward = wnetForward;
   window.wnetReload = wnetReload;
   window.wahooSearch = () => wahooSearch(document);
+  /** Used by Black Cherry mobile browser (`bc-browser.js`) — avoids circular imports. */
+  window.renderWorldNetPage = (key, sub) => renderPage(key, sub ?? '');
 }

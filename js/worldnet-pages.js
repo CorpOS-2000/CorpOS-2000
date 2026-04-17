@@ -249,6 +249,12 @@ export const worldnetPages = {
   <div data-devtools-app="admin-gov"></div>
   <div data-devtools-app="admin-axis"></div>
 </div>
+<div style="margin-top:14px;padding-top:6px;border-top:1px solid #ddd;font-size:9px;color:#ccc;">
+  <span style="color:#bbb;">devtools.net &copy; 2000 — </span>
+  <a data-nav="home" style="color:#aaa;">Home</a> &nbsp;|&nbsp;
+  <a data-nav="web_registry" style="color:#aaa;">Registry</a> &nbsp;|&nbsp;
+  <a href="#" data-nav="backrooms" style="color:#bbb;text-decoration:none;" title="...">other channels</a>
+</div>
 </div>
 <aside style="width:120px;flex-shrink:0;">
 <div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div>
@@ -352,6 +358,55 @@ export const worldnetPages = {
 <aside style="width:120px;flex-shrink:0;">
 <div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div>
 </aside>
+</div>
+</div>`,
+
+  backrooms: `<div class="iebody" style="background:#080808;color:#00ff41;font-family:'Courier New',monospace;font-size:11px;padding:0;min-height:100%;">
+<div style="background:#000;border-bottom:1px solid #003300;padding:4px 10px;">
+  <span style="color:#003300;font-size:9px;letter-spacing:3px;">/// ENCRYPTED CHANNEL — TRACE ROUTE MASKED — NODE 7F.A2.0C ///</span>
+</div>
+<div style="padding:12px 16px;">
+<pre style="color:#00ff41;font-size:18px;font-weight:bold;line-height:1.1;margin:0 0 4px;">
+ ____             _                                    _     _    
+| __ )  __ _  ___| | ___ __ ___   ___  _ __ ___  ___  | |__ | | __
+|  _ \\ / _\` |/ __| |/ / '__/ _ \\ / _ \\| '_ \` _ \\/ __| | '_ \\| |/ /
+| |_) | (_| | (__|   &lt;| | | (_) | (_) | | | | | \\__ \\_| | | |   &lt; 
+|____/ \\__,_|\\___|_|\\_\\_|  \\___/ \\___/|_| |_| |_|___(_)_| |_|_|\\_\\
+</pre>
+<div style="color:#006600;font-size:9px;margin-bottom:12px;letter-spacing:2px;">UNDERGROUND SOFTWARE COLLECTIVE — EST. 1997 — .hck DOMAIN</div>
+<div style="border:1px solid #003300;background:#0a0a0a;padding:8px;margin-bottom:10px;">
+  <span style="color:#ff0000;font-size:10px;font-weight:bold;">⚠ NOTICE:</span>
+  <span style="color:#888;font-size:10px;"> This site operates outside CorpOS jurisdiction. Software distributed here is NOT verified by any corporate authority. All downloads are final. All transactions are untraceable. By proceeding you accept full liability.</span>
+</div>
+<div style="color:#006600;font-size:9px;border-bottom:1px solid #001a00;padding-bottom:4px;margin-bottom:8px;letter-spacing:2px;">▓▓ AVAILABLE TOOLS ▓▓</div>
+<div style="display:grid;grid-template-columns:1fr;gap:8px;max-width:640px;">
+  <div data-backrooms-app="webexploiter"></div>
+</div>
+<div style="margin-top:16px;border-top:1px solid #001a00;padding-top:8px;">
+  <div style="color:#003300;font-size:9px;letter-spacing:1px;margin-bottom:6px;">▓▓ COMMUNITY BOARD ▓▓</div>
+  <div style="background:#0a0a0a;border:1px solid #002200;padding:6px;font-size:10px;">
+    <div style="color:#005500;margin-bottom:4px;">[xXd4rkm4tterXx] anyone tested the new exploiter on gov sites? asking for a friend</div>
+    <div style="color:#004400;margin-bottom:4px;">[zeroc00l_99] works clean. took down a corp site in 4 hits. security was trash</div>
+    <div style="color:#005500;margin-bottom:4px;">[gh0stpr0t0c0l] careful with notoriety. the feds are watching everything post-mandate</div>
+    <div style="color:#004400;margin-bottom:4px;">[n3tph4nt0m] new version drops next month. full stealth mode. $0 notoriety.</div>
+    <div style="color:#003300;margin-bottom:4px;">[sys_null] ^^^ scam. nobody has stealth working yet. stick to v1.0</div>
+    <div style="color:#005500;margin-bottom:4px;">[packet_witch] just use it smart. hit traffic first, drain security, then takedown. ez.</div>
+    <div style="color:#004400;">[cr4sh_0v3rrid3] feds got no jurisdiction on .hck domains. we're ghosts out here</div>
+  </div>
+</div>
+<div style="margin-top:16px;border-top:1px solid #001a00;padding-top:8px;">
+  <div style="color:#003300;font-size:9px;letter-spacing:1px;margin-bottom:6px;">▓▓ SITE STATS ▓▓</div>
+  <div style="font-size:9px;color:#004400;">
+    Active nodes: 1,247 &nbsp;|&nbsp; Tools distributed: 8,914 &nbsp;|&nbsp; Uptime: 99.7% &nbsp;|&nbsp; Last raid survived: Dec 12 1999<br>
+    Mirror: backrooms2.hck (offline) &nbsp;|&nbsp; IRC: #backrooms @ irc.undernet.hck<br>
+    PGP key: 0xDEAD BEEF 1337 C0DE
+  </div>
+</div>
+<div style="margin-top:12px;font-size:9px;color:#002200;letter-spacing:1px;">
+  <a data-nav="home" style="color:#006600;">[ EXIT TO CLEARNET ]</a> &nbsp;
+  <span style="color:#001a00;">|</span> &nbsp;
+  <span style="color:#003300;">backrooms.hck — we were never here</span>
+</div>
 </div>
 </div>`
 };

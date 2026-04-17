@@ -75,6 +75,17 @@ export const INSTALLABLE_APPS = Object.freeze({
     trustLevel: 'verified',
     description: 'Build and publish e-commerce websites with drag-and-drop modules.',
     priceUsd: 199.99
+  },
+  'webexploiter': {
+    id: 'webexploiter',
+    label: 'WebExploiter v1.0',
+    icon: '⚡',
+    sourceHost: 'backrooms.hck',
+    downloadDurationMs: 2 * 3600000,
+    installDurationMs: 1 * 3600000,
+    trustLevel: 'unverified',
+    description: 'Cyber operations console. Target and degrade rival website statistics.',
+    priceUsd: 899.99
   }
 });
 

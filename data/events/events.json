@@ -155,5 +155,53 @@
         "notorietyDelta": 10
       }
     }
+  },
+  {
+    "id": "evt_website_contract_offer_day5",
+    "title": "Website Development Contract",
+    "type": "scheduled",
+    "oneShot": true,
+    "fireOnDay": 5,
+    "fireOnHour": 10,
+    "condition": { "type": "flag_not_set", "flag": "firstWebsiteContractOffered" },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "sms": {
+          "from": "ACT-KYLE-HARGROVE",
+          "message": "Hey — one of our partner companies is looking for someone to build their WorldNet presence. Pays $4,500 on delivery. They need a published site with at least a Hero Banner and a Contact Form. Interested? Log into CorpOS and accept the contract from your Active Tasks."
+        },
+        "setFlag": "firstWebsiteContractOffered",
+        "scheduleFollowUp": {
+          "eventId": "evt_website_contract_create",
+          "delayHours": 0.1
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_website_contract_create",
+    "title": "Create Website Contract Task",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "flag_set", "flag": "firstWebsiteContractOffered" },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "createWebsiteContract": {
+          "contractId": "contract_website_001",
+          "companyName": "Meridian Professional Services",
+          "companyId": "company_meridian_services",
+          "reward": 4500,
+          "breachFee": 500,
+          "requirements": {
+            "minUxScore": 20,
+            "requiredModules": ["hero_banner", "contact_form"]
+          },
+          "deadlineHours": 168
+        },
+        "setFlag": "firstWebsiteContractActive"
+      }
+    }
   }
 ]

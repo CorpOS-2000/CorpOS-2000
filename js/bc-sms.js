@@ -3,6 +3,7 @@
  * Manages threads keyed by senderId, government sender registry, and unread counts.
  */
 import { getState, patchState, formatMoney } from './gameState.js';
+import { pushNotification, NOTIF_TYPE } from './bc-notifications.js';
 
 export const GOVERNMENT_SENDERS = {
   CORPOS_SYSTEM: { name: 'CORPOS SYSTEM', avatarColor: '#0a246a', avatarLabel: 'COS', number: 'CORPOS-2000', official: true },
@@ -128,6 +129,20 @@ export const SMS = {
       thread.unreadCount = (thread.unreadCount || 0) + 1;
       return s;
     });
+
+    pushNotification({
+      id: `sms_${senderId}_${gameTime || 0}_${uid()}`,
+      type: NOTIF_TYPE.SMS,
+      title: SMS.getDisplayName(senderId) || senderName || senderId,
+      body: String(message || '').slice(0, 80),
+      icon: '✉',
+      simMs: gameTime || 0,
+      action: {
+        type: 'open_sms_thread',
+        payload: senderId,
+      },
+    });
+
     try {
       window.ActivityLog?.log?.('SMS_RECEIVE', `SMS received from ${senderName}`);
     } catch {

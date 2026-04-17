@@ -7,7 +7,7 @@
 
 import { on } from '../js/events.js';
 import { resolveAgainstDC } from '../js/d20.js';
-import { getState, patchState } from '../js/gameState.js';
+import { getState, patchState, setWebsiteContract } from '../js/gameState.js';
 import { getSessionState } from '../js/sessionState.js';
 import { ActorDB } from './ActorDB.js';
 import { SMS } from '../js/bc-sms.js';
@@ -243,6 +243,53 @@ export const EventSystem = {
         this._queue.push({ firesAtSimMs: fireAt, eventDef: followDef, contextData: {} });
         this._queue.sort((a, b) => a.firesAtSimMs - b.firesAtSimMs);
       }
+    }
+
+    if (outcome.createWebsiteContract) {
+      const c = outcome.createWebsiteContract;
+      const st0 = getState();
+      if (st0.websiteContract?.active || st0.activeTasks?.some((t) => t.id === c.contractId)) {
+        return;
+      }
+      const simMsNow = st0.sim?.elapsedMs || 0;
+      const deadlineSimMs = simMsNow + (c.deadlineHours || 168) * SIM_HOUR_MS;
+
+      setWebsiteContract({
+        contractId: c.contractId,
+        companyId: c.companyId,
+        companyName: c.companyName,
+        requirements: c.requirements,
+        reward: c.reward,
+        breachFee: c.breachFee || 0,
+        startSimMs: simMsNow,
+        deadlineSimMs,
+      });
+
+      patchState((st) => {
+        st.activeTasks = st.activeTasks || [];
+        st.activeTasks.push({
+          id: c.contractId,
+          type: 'website_contract',
+          label: `Build website — ${c.companyName}`,
+          icon: '🌐',
+          companyName: c.companyName,
+          reward: c.reward,
+          breachFee: c.breachFee || 0,
+          startSimMs: simMsNow,
+          dueSimMs: deadlineSimMs,
+          durationMs: (c.deadlineHours || 168) * SIM_HOUR_MS,
+          status: 'in_progress',
+          requirements: c.requirements,
+        });
+        return st;
+      });
+
+      ToastManager.fire({
+        key: c.contractId,
+        title: 'Website Contract',
+        message: `New contract from ${c.companyName}. Build and deliver a website. Reward: $${Number(c.reward || 0).toLocaleString()}. Open WebEx Publisher to start.`,
+        icon: '🌐',
+      });
     }
   },
 

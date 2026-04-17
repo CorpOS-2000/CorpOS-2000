@@ -4,6 +4,12 @@
  */
 import { NotificationSound } from './notification-sound.js';
 import { getSessionState, patchSession } from './sessionState.js';
+import { getState } from './gameState.js';
+import {
+  pushNotification,
+  resolvePeekAction,
+  mapPeekTypeToNotifCategory,
+} from './bc-notifications.js';
 
 const MAX_SIMULTANEOUS = 3;
 const AUTO_DISMISS_MS = 5000;
@@ -128,6 +134,17 @@ function deepLink(type, targetId) {
  * notification is queued and will appear when a slot frees.
  */
 export function peekShow({ sender, preview, type, targetId = null, icon = '💬' }) {
+  const simMs = getState()?.sim?.elapsedMs ?? 0;
+  pushNotification({
+    id: `peek_${type}_${targetId || ''}_${Date.now()}`,
+    type: mapPeekTypeToNotifCategory(type),
+    title: sender || 'Notification',
+    body: String(preview || '').slice(0, 200),
+    icon: icon || '💬',
+    simMs,
+    action: resolvePeekAction(type, targetId),
+  });
+
   const opts = { sender, preview, type, targetId, icon };
   if (active.length >= MAX_SIMULTANEOUS) {
     queue.push(opts);

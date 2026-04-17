@@ -1,4 +1,4 @@
-import { getState, patchState, migrateStateIfNeeded } from './gameState.js';
+import { getState, patchState, migrateStateIfNeeded, ensureWebsiteStats } from './gameState.js';
 import { ensureContentRegistry, PIPELINE_PAGES_FILE } from './content-registry-defaults.js';
 import { createNpcCreatorApi } from './pipeline/npc-creator.js';
 import { createCompanyCreatorApi } from './pipeline/company-creator.js';
@@ -89,6 +89,7 @@ export async function initContentPipeline(loadJsonFile) {
       if (Array.isArray(disk.pages)) st.contentRegistry.pages = disk.pages;
     }
     ensureContentRegistry(st);
+    for (const p of st.contentRegistry.pages) ensureWebsiteStats(p);
     return st;
   });
 
@@ -193,6 +194,7 @@ export async function reloadContentCategoryFromDisk(category, loadJsonFile) {
       patchState((st) => {
         ensureContentRegistry(st);
         st.contentRegistry.pages = Array.isArray(j) ? j : [];
+        for (const p of st.contentRegistry.pages) ensureWebsiteStats(p);
         return st;
       });
       refreshPipelineRoutes();

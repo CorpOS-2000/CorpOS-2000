@@ -38,6 +38,10 @@ const state = {
     recentCalls: [],
     pendingRudenessEvents: [],
   },
+  bcNotifications: {
+    items: [],
+    unreadCount: 0,
+  },
   /** Review Bomber — votes and live comments (session-only; not in save games). */
   reviewBomber: {
     /** postId -> { up, down } display counts (initialized from post stats, then mutated) */

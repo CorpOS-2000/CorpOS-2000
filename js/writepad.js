@@ -1,7 +1,7 @@
 /**
  * Writepad — CorpOS notepad for opening virtual text files from Explorer.
  */
-import { patchState } from './gameState.js';
+import { getState, patchState } from './gameState.js';
 import { ActivityLog, LOG_PATH_NODE_ID } from '../engine/ActivityLog.js';
 let inited = false;
 
@@ -60,6 +60,11 @@ function saveWritepad() {
   if (id === LOG_PATH_NODE_ID) {
     ActivityLog.applyUserSavedAuditContent(text);
   } else {
+    const existing = getState().virtualFs?.entries?.find((x) => x.id === id);
+    if (existing?.readonly) {
+      try { window.toast?.({ title: 'Writepad', message: `Cannot save — '${existing.name}' is read-only.`, icon: '🔒', autoDismiss: 4000 }); } catch { /* ignore */ }
+      return;
+    }
     patchState((st) => {
       const row = st.virtualFs?.entries?.find((x) => x.id === id);
       if (row) {

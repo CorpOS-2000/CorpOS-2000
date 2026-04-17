@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/worldnet-ads.css">
   <link rel="stylesheet" href="css/worldnet-shop.css">
   <link rel="stylesheet" href="css/worldnet-y2k.css">
+  <link rel="stylesheet" href="css/webexploiter.css">
   <link rel="stylesheet" href="css/corpos-admin.css">
   <link rel="stylesheet" href="css/axis.css">
   <link rel="stylesheet" href="css/review-bomber.css">
@@ -138,6 +139,7 @@
   <div class="di" data-app-id="admin-web" data-open="admin-web" style="top:508px;left:110px"><div class="ico">📝</div><div class="lbl">Web Editor</div></div>
   <div class="di" data-app-id="admin-axis" data-open="admin-axis" style="top:588px;left:20px"><div class="ico">📇</div><div class="lbl">Contacts &amp; Relations</div></div>
   <div class="di" data-app-id="webex-publisher" data-open="webex-publisher" style="top:588px;left:110px"><div class="ico">🌐</div><div class="lbl">WebEx-Publisher</div></div>
+  <div class="di" data-app-id="webexploiter" data-open="webexploiter" style="top:668px;left:20px"><div class="ico">⚡</div><div class="lbl">WebExploiter</div></div>
 
   <div class="ww inactive" id="win-personal" style="width:430px;height:500px;top:60px;left:200px;display:none;">
     <div class="wtb" onmousedown="drag(event,'win-personal')">
@@ -487,6 +489,32 @@
     <div class="wrz" onmousedown="resz(event,'win-webex-publisher')">◢</div>
   </div>
 
+  <!-- WebExploiter v1.0 -->
+  <div class="ww inactive" id="win-webexploiter" style="width:780px;height:560px;top:80px;left:180px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-webexploiter')">
+      <span class="wti">⚡</span>
+      <span class="wtt">WebExploiter™ v1.0 — Cyber Operations Console</span>
+      <button type="button" class="wcb" onclick="minW('webexploiter')">_</button>
+      <button type="button" class="wcb" onclick="maxW('webexploiter')">□</button>
+      <button type="button" class="wcb" onclick="closeW('webexploiter')">✕</button>
+    </div>
+    <div class="wmb">
+      <span class="wmi">Operations</span>
+      <span class="wmi">Targets</span>
+      <span class="wmi">Settings</span>
+      <span class="wmi">Help</span>
+    </div>
+    <div class="wc" style="padding:0;overflow:hidden;">
+      <div id="webexploiter-root" style="height:100%;"></div>
+    </div>
+    <div class="wsb">
+      <div class="sp">WebExploiter v1.0</div>
+      <div class="sp">All operations logged</div>
+      <div class="sp" id="we-sb-target">No target</div>
+    </div>
+    <div class="wrz" onmousedown="resz(event,'win-webexploiter')">◢</div>
+  </div>
+
   <div id="taskbar">
     <button type="button" id="start-btn" onclick="toggleStart()">
       <svg class="scos" viewBox="0 0 140 140" aria-hidden="true"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="2"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="104" y="55" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><text x="104" y="93" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text></svg>
@@ -525,6 +553,7 @@
         <div class="smitem" data-app-id="admin-web" onclick="openW('admin-web');toggleStart()">📝 Website Editor</div>
         <div class="smitem" data-app-id="admin-axis" onclick="openW('admin-axis');toggleStart()">📇 Contacts &amp; Relations</div>
         <div class="smitem" data-app-id="webex-publisher" onclick="openW('webex-publisher');toggleStart()">🌐 WebEx-Publisher</div>
+        <div class="smitem" data-app-id="webexploiter" onclick="openW('webexploiter');toggleStart()">⚡ WebExploiter</div>
         <div class="smsep"></div>
         <div class="smitem" onclick="fireNews();toggleStart()">⚡ Fire News Ticker</div>
         <div class="smsep"></div>
@@ -639,6 +668,16 @@
               <div id="bc-transcript-body"></div>
               <div id="bc-transcript-options" class="bc-transcript-options"></div>
             </div>
+            <!-- Notifications inbox -->
+            <div id="bc-view-notifications" class="bc-view">
+              <div class="bc-notif-header">
+                <span class="bc-notif-title">Notifications</span>
+                <button type="button" class="bc-notif-clear" id="bc-notif-clear-btn">Clear all</button>
+              </div>
+              <div class="bc-notif-list" id="bc-notif-list"></div>
+            </div>
+            <!-- Black Cherry — in-handset WorldNet browser -->
+            <div id="bc-view-browser" class="bc-view" style="height:100%;display:flex;flex-direction:column;overflow:hidden;"></div>
             <!-- Calendar stub -->
             <div id="bc-view-calendar" class="bc-view">
               <div class="bc-settings-body"><p style="margin:0;color:#888;">Calendar — Coming Soon</p></div>
