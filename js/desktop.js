@@ -48,9 +48,37 @@ let pressed = null;
 /** Last successful single-click: used to detect the second click for double-click. */
 let lastClick = { icon: null, time: 0 };
 let pendingCustomIconRender = false;
+/** Last vfs snapshot used to skip `stateChanged` work on every sim clock tick (~60/s). */
+let __desktopVfsRenderSig = '';
+/** rAF chain waiting for #desktop.show + non-zero layout (avoid grid math while display:none). */
+let __desktopLayoutWaitRaf = null;
 
 function desktopEl() {
   return document.getElementById('desktop');
+}
+
+/** True once the desktop surface is visible and measured — grid layout is meaningless before this. */
+function isDesktopLaidOut() {
+  const d = desktopEl();
+  if (!d || !d.classList.contains('show')) return false;
+  const r = d.getBoundingClientRect();
+  return r.width > 120 && r.height > 120;
+}
+
+function queueRefreshDesktopWhenVisible() {
+  if (__desktopLayoutWaitRaf != null) return;
+  let attempts = 0;
+  const step = () => {
+    __desktopLayoutWaitRaf = null;
+    if (isDesktopLaidOut()) {
+      refreshDesktopLayoutFromSession();
+      return;
+    }
+    attempts++;
+    if (attempts > 720) return;
+    __desktopLayoutWaitRaf = requestAnimationFrame(step);
+  };
+  __desktopLayoutWaitRaf = requestAnimationFrame(step);
 }
 
 function clampToDesktop(x, y, icon) {
@@ -76,6 +104,16 @@ function iconIdFor(el, idx) {
     el.dataset.iconId = `app-${appId}`;
     return el.dataset.iconId;
   }
+  const open = el.getAttribute('data-open');
+  if (open) {
+    el.dataset.iconId = `open-${open}`;
+    return el.dataset.iconId;
+  }
+  const slot = el.getAttribute('data-icon-slot');
+  if (slot) {
+    el.dataset.iconId = `slot-${slot}`;
+    return el.dataset.iconId;
+  }
   if (!el.dataset.iconId) {
     el.dataset.iconId = `desktop-${idx + 1}`;
   }
@@ -98,6 +136,13 @@ function iconEligible(el) {
   return true;
 }
 
+/** Same ordering as save sync — must exclude `display:none` icons or indices drift vs stored keys. */
+function eligibleDesktopIcons() {
+  const d = desktopEl();
+  if (!d) return [];
+  return [...d.querySelectorAll('#desktop .di')].filter(iconEligible);
+}
+
 function iconBox(el) {
   const left = parseInt(el.style.left, 10) || 8;
   const top = parseInt(el.style.top, 10) || 8;
@@ -113,10 +158,57 @@ function boxesOverlap(a, b, pad = 4) {
   );
 }
 
+/**
+ * Push icons apart until no pair overlaps (grid-based nudge).
+ * @param {{ persist?: boolean }} [opts] persist=false only adjusts DOM (e.g. before save sync).
+ */
+export function resolveAllDesktopOverlaps(opts = {}) {
+  const persist = opts.persist !== false;
+  if (!isDesktopLaidOut()) return;
+  const icons = eligibleDesktopIcons();
+  let anyOverlap = false;
+  for (let i = 0; i < icons.length; i++) {
+    const bi = iconBox(icons[i]);
+    for (let j = i + 1; j < icons.length; j++) {
+      if (boxesOverlap(bi, iconBox(icons[j]))) {
+        anyOverlap = true;
+        break;
+      }
+    }
+    if (anyOverlap) break;
+  }
+  if (anyOverlap) {
+    const maxPasses = Math.max(24, icons.length * 6);
+    for (let pass = 0; pass < maxPasses; pass++) {
+      let movedAny = false;
+      for (const icon of icons) {
+        const self = iconBox(icon);
+        if (!icons.some((o) => o !== icon && boxesOverlap(self, iconBox(o)))) continue;
+        resolveDraggedIconOverlap(icon);
+        movedAny = true;
+      }
+      if (!movedAny) break;
+    }
+  }
+  if (persist) {
+    patchSession((s) => {
+      s.desktop = s.desktop || { wallpaper: '#008080', customIcons: [], positions: {} };
+      if (!s.desktop.positions || typeof s.desktop.positions !== 'object') s.desktop.positions = {};
+      for (let i = 0; i < icons.length; i++) {
+        const el = icons[i];
+        const id = iconIdFor(el, i);
+        const x = parseInt(el.style.left, 10) || 8;
+        const y = parseInt(el.style.top, 10) || 8;
+        s.desktop.positions[id] = { x, y };
+      }
+    });
+  }
+}
+
 function resolveDraggedIconOverlap(moved) {
   const d = desktopEl();
   if (!d || !moved) return;
-  const all = [...d.querySelectorAll('#desktop .di')].filter(iconEligible);
+  const all = eligibleDesktopIcons();
   const others = all.filter((o) => o !== moved);
   let self = iconBox(moved);
   if (!others.some((o) => boxesOverlap(self, iconBox(o)))) return;
@@ -157,8 +249,8 @@ function resolveDraggedIconOverlap(moved) {
 
 export function organizeDesktopIcons() {
   const d = desktopEl();
-  if (!d) return;
-  const icons = [...d.querySelectorAll('#desktop .di')].filter(iconEligible);
+  if (!d || !isDesktopLaidOut()) return;
+  const icons = eligibleDesktopIcons();
   if (!icons.length) return;
   const rect = d.getBoundingClientRect();
   const startX = 16;
@@ -187,7 +279,7 @@ export function organizeDesktopIcons() {
  */
 function placeNewInstallableIconsAtFirstGap(newIcons) {
   const d = desktopEl();
-  if (!d || !newIcons.length) return;
+  if (!d || !newIcons.length || !isDesktopLaidOut()) return;
   const rect = d.getBoundingClientRect();
   const startX = 16;
   const startY = 16;
@@ -195,7 +287,7 @@ function placeNewInstallableIconsAtFirstGap(newIcons) {
   const rows = Math.max(1, Math.floor((rect.height - startY - 40) / ICON_SLOT_H));
   const newSet = new Set(newIcons);
   const occupied = new Set();
-  const all = [...d.querySelectorAll('#desktop .di')].filter(iconEligible);
+  const all = eligibleDesktopIcons();
   for (const el of all) {
     if (newSet.has(el)) continue;
     const b = iconBox(el);
@@ -233,16 +325,133 @@ function placeNewInstallableIconsAtFirstGap(newIcons) {
       }
     }
   });
+  resolveAllDesktopOverlaps({ persist: true });
+}
+
+/** Copy `desktop-{n}` entries to stable ids (`open-*`, `slot-*`, `app-*`) after ID scheme change. */
+function migrateLegacyDesktopPositionKeys() {
+  const icons = eligibleDesktopIcons();
+  if (!icons.length) return;
+  patchSession((s) => {
+    s.desktop = s.desktop || { wallpaper: '#008080', customIcons: [], positions: {} };
+    const pos = s.desktop.positions;
+    if (!pos || typeof pos !== 'object') return;
+    icons.forEach((el, i) => {
+      const newId = iconIdFor(el, i);
+      const legacy = `desktop-${i + 1}`;
+      if (pos[newId] == null && pos[legacy] != null) {
+        const t = pos[legacy];
+        if (Number.isFinite(t.x) && Number.isFinite(t.y)) pos[newId] = { x: t.x, y: t.y };
+      }
+      const openId = el.getAttribute('data-open');
+      if (openId && newId && !String(newId).startsWith('open-')) {
+        const openKey = `open-${openId}`;
+        if (pos[newId] == null && pos[openKey] != null) {
+          const t = pos[openKey];
+          if (Number.isFinite(t.x) && Number.isFinite(t.y)) pos[newId] = { x: t.x, y: t.y };
+        }
+      }
+    });
+  });
+}
+
+/**
+ * Resolve a saved {x,y} for a desktop icon. Supports legacy `desktop-{n}` and older saves
+ * that keyed installable apps as `open-*` while the DOM now prefers `app-*` when both
+ * `data-app-id` and `data-open` are present.
+ */
+function lookupSavedIconPosition(pos, el, primaryId, domIndex) {
+  if (!pos || typeof pos !== 'object') return null;
+  const pick = (key) => {
+    if (!key) return null;
+    const s = pos[key];
+    return s && Number.isFinite(s.x) && Number.isFinite(s.y) ? s : null;
+  };
+
+  let saved = pick(primaryId);
+  if (saved) return saved;
+
+  if (!String(primaryId).startsWith('desktop-')) {
+    saved = pick(`desktop-${domIndex + 1}`);
+    if (saved) return saved;
+  }
+
+  const openId = el.getAttribute('data-open');
+  if (openId) {
+    saved = pick(`open-${openId}`);
+    if (saved) return saved;
+  }
+  const appId = el.getAttribute('data-app-id');
+  if (appId) {
+    saved = pick(`app-${appId}`);
+    if (saved) return saved;
+  }
+  return null;
 }
 
 function hydrateExistingIcons() {
-  const icons = [...document.querySelectorAll('#desktop .di')];
+  const icons = eligibleDesktopIcons();
   const st = getSessionState();
+  const pos = st.desktop?.positions;
   icons.forEach((el, i) => {
     const id = iconIdFor(el, i);
-    const saved = st.desktop.positions[id];
-    if (saved) applyIconPosition(el, saved.x, saved.y);
+    const saved = lookupSavedIconPosition(pos, el, id, i);
+    if (saved) {
+      const p = clampToDesktop(saved.x, saved.y, el);
+      applyIconPosition(el, p.x, p.y);
+    }
   });
+}
+
+function hasMeaningfulSavedDesktopLayout() {
+  const st = getSessionState();
+  const pos = st.desktop?.positions;
+  if (!pos || typeof pos !== 'object' || !Object.keys(pos).length) return false;
+  const icons = eligibleDesktopIcons();
+  for (let i = 0; i < icons.length; i++) {
+    const el = icons[i];
+    const id = iconIdFor(el, i);
+    const saved = lookupSavedIconPosition(pos, el, id, i);
+    if (saved) return true;
+  }
+  return false;
+}
+
+/** Writes every visible desktop .di position into session (call before save). */
+export function syncDesktopIconPositionsToSession() {
+  const d = desktopEl();
+  if (!d) return;
+  resolveAllDesktopOverlaps({ persist: false });
+  const icons = eligibleDesktopIcons();
+  patchSession((s) => {
+    s.desktop = s.desktop || { wallpaper: '#008080', customIcons: [], positions: {} };
+    if (!s.desktop.positions || typeof s.desktop.positions !== 'object') s.desktop.positions = {};
+    for (let i = 0; i < icons.length; i++) {
+      const el = icons[i];
+      const id = iconIdFor(el, i);
+      const x = parseInt(el.style.left, 10) || 8;
+      const y = parseInt(el.style.top, 10) || 8;
+      s.desktop.positions[id] = { x, y };
+    }
+  });
+}
+
+/** Re-apply session desktop layout to the DOM (after SaveManager.hydrate / login). */
+export function refreshDesktopLayoutFromSession() {
+  migrateLegacyDesktopPositionKeys();
+  hydrateExistingIcons();
+  if (!isDesktopLaidOut()) {
+    queueRefreshDesktopWhenVisible();
+    return;
+  }
+  if (!hasMeaningfulSavedDesktopLayout()) {
+    organizeDesktopIcons();
+  }
+  migrateLegacyCustomIcons();
+  renderCustomIcons();
+  applyWallpaper();
+  refreshInstallableAppVisibility();
+  resolveAllDesktopOverlaps({ persist: true });
 }
 
 export function refreshInstallableAppVisibility() {
@@ -295,6 +504,7 @@ function flushDeferredCustomIconRender() {
   if (drag || pressed) return;
   pendingCustomIconRender = false;
   renderCustomIcons();
+  resolveAllDesktopOverlaps({ persist: true });
 }
 
 /* ── Interaction: state machine handlers ────────────────────────────── */
@@ -363,6 +573,7 @@ function onDocMouseUp(e) {
     drag.icon.classList.remove('di-dragging');
     resolveDraggedIconOverlap(drag.icon);
     persistPosition(drag.icon);
+    resolveAllDesktopOverlaps({ persist: true });
     drag = null;
     flushDeferredCustomIconRender();
     return;
@@ -399,10 +610,20 @@ function vfsDesktopEntries() {
   return (getState().virtualFs?.entries || []).filter((e) => e.parentId === DESKTOP_PARENT_ID);
 }
 
+/** Identity + label of desktop vfs rows — changes only when shortcuts are added/removed/renamed. */
+function vfsDesktopSignature() {
+  const parts = vfsDesktopEntries().map((e) => `${e.id}\x1f${String(e.name || '')}`);
+  parts.sort();
+  return parts.join('\n');
+}
+
 function renderCustomIcons() {
   document.querySelectorAll('#desktop .di.custom-di').forEach((el) => el.remove());
   const d = desktopEl();
-  if (!d) return;
+  if (!d) {
+    __desktopVfsRenderSig = vfsDesktopSignature();
+    return;
+  }
   const st = getSessionState();
   for (const ent of vfsDesktopEntries()) {
     const el = document.createElement('div');
@@ -418,6 +639,7 @@ function renderCustomIcons() {
     el.innerHTML = `<div class="ico">${icon}</div><div class="lbl">${escapeHtml(ent.name)}</div>`;
     d.appendChild(el);
   }
+  __desktopVfsRenderSig = vfsDesktopSignature();
 }
 
 function migrateLegacyCustomIcons() {
@@ -588,18 +810,18 @@ export function desktopContextActions(x, y) {
 export function initDesktopSystem() {
   const d = desktopEl();
   if (!d) return;
-  hydrateExistingIcons();
-  migrateLegacyCustomIcons();
-  renderCustomIcons();
-  applyWallpaper();
-  refreshInstallableAppVisibility();
+  refreshDesktopLayoutFromSession();
 
   on('stateChanged', () => {
     if (drag || pressed) {
       pendingCustomIconRender = true;
       return;
     }
+    if (!isDesktopLaidOut()) return;
+    const sig = vfsDesktopSignature();
+    if (sig === __desktopVfsRenderSig) return;
     renderCustomIcons();
+    resolveAllDesktopOverlaps({ persist: true });
   });
 
   d.addEventListener('mousedown', onIconMouseDown);

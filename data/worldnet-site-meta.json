@@ -1,0 +1,86 @@
+{
+  "sites": [
+    { "pageKey": "home",          "host": "www.wahoo.net",                  "outcome": "legit",       "category": "portal",      "trustSignals": ["ssl","established"] },
+    { "pageKey": "moogle_home",   "host": "www.moogle.com",                 "outcome": "legit",       "category": "portal",      "trustSignals": ["ssl","established"] },
+    { "pageKey": "jeemail_login", "host": "mail.jeemail.net",               "outcome": "legit",       "category": "service",     "trustSignals": ["ssl"] },
+    { "pageKey": "bank",          "host": "www.firstnationalcorp.com",      "outcome": "legit",       "category": "banking",     "trustSignals": ["ssl","fdic","established"] },
+    { "pageKey": "bank_meridian", "host": "www.meridiansavings.com",        "outcome": "legit",       "category": "banking",     "trustSignals": ["ssl","fdic"] },
+    { "pageKey": "bank_harbor",   "host": "www.harborcu.org",               "outcome": "legit",       "category": "banking",     "trustSignals": ["ssl","ncua"] },
+    { "pageKey": "bank_pacific",  "host": "www.pacificrimfinancial.com",    "outcome": "legit",       "category": "banking",     "trustSignals": ["ssl","fdic"] },
+    { "pageKey": "bank_darkweb",  "host": "firsttrust.onion.net",           "outcome": "scam",        "category": "banking",     "scam": { "copyTypoLevel": 2, "sslMismatch": true, "whoisFake": true, "chargeMultiplier": 1.0, "deliveryTable": [{ "p": 0.1, "outcome": "jackpot" }, { "p": 0.3, "outcome": "fake" }, { "p": 0.6, "outcome": "nothing" }] } },
+    { "pageKey": "dmb",           "host": "www.davidmitchellbanking.com",   "outcome": "legit",       "category": "banking",     "trustSignals": ["ssl"] },
+    { "pageKey": "web_registry",  "host": "www.worldwidewebregistry.net",   "outcome": "legit",       "category": "service",     "trustSignals": ["established"] },
+    { "pageKey": "bizreg",        "host": "www.fedbizreg.gov",              "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
+    { "pageKey": "stocks",        "host": "market.worldnet.com",            "outcome": "legit",       "category": "finance",     "trustSignals": ["ssl","established"] },
+    { "pageKey": "hiring",        "host": "www.staffingplus.net",           "outcome": "legit",       "category": "service",     "trustSignals": ["established"] },
+    { "pageKey": "ssa",           "host": "www.ssa.gov.net",                "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
+    { "pageKey": "fra",           "host": "www.fra.gov.net",                "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
+    { "pageKey": "devtools",      "host": "www.devtools.net",               "outcome": "legit",       "category": "service",     "trustSignals": [] },
+    { "pageKey": "backrooms",     "host": "www.backrooms.hck",              "outcome": "scam",        "category": "service",     "scam": { "copyTypoLevel": 1, "sslMismatch": true, "whoisFake": true, "chargeMultiplier": 1.5, "deliveryTable": [{ "p": 0.15, "outcome": "jackpot" }, { "p": 0.45, "outcome": "fake" }, { "p": 0.4, "outcome": "nothing" }] } },
+    { "pageKey": "net99669",      "host": "www.99669.net",                  "outcome": "legit",       "category": "directory",   "trustSignals": ["established"] },
+    { "pageKey": "reviewbomber",  "host": "www.reviewbomber.net",           "outcome": "legit",       "category": "community",   "trustSignals": [] },
+    { "pageKey": "yourspace",     "host": "www.yourspace.net",              "outcome": "legit",       "category": "community",   "trustSignals": ["established"] },
+    { "pageKey": "mytube",        "host": "www.mytube.net",                 "outcome": "legit",       "category": "media",       "trustSignals": ["established"] },
+    { "pageKey": "herald",        "host": "www.dailyherald.net",            "outcome": "legit",       "category": "news",        "trustSignals": ["established"] },
+    { "pageKey": "warehouse",     "host": "www.whereallthingsgo.net",       "outcome": "legit",       "category": "property",    "trustSignals": ["ssl","established"] },
+    { "pageKey": "market_pulse",  "host": "www.marketpulse.net",            "outcome": "legit",       "category": "finance",     "trustSignals": [] },
+    { "pageKey": "focs_mandate",  "host": "www.focs.gov.net",               "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
+    { "pageKey": "corpos_portal", "host": "www.corpos.gov.net",             "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
+    { "pageKey": "wn_shop",       "host": "www.rapidmart1999.net",          "outcome": "marketplace", "category": "ecommerce",   "trustSignals": ["ssl"] },
+    { "pageKey": "moogle_maps",   "host": "maps.moogle.com",                "outcome": "legit",       "category": "service",     "trustSignals": ["ssl","established"] },
+    {
+      "pageKey": "__scam__",
+      "host": "www.1st-natl-coorp.com",
+      "outcome": "scam",
+      "category": "banking",
+      "displayTitle": "1st National Co-orp",
+      "scam": {
+        "copyTypoLevel": 3,
+        "sslMismatch": true,
+        "whoisFake": true,
+        "chargeMultiplier": 1.0,
+        "deliveryTable": [
+          { "p": 0.05, "outcome": "jackpot" },
+          { "p": 0.25, "outcome": "fake" },
+          { "p": 0.70, "outcome": "nothing" }
+        ]
+      }
+    },
+    {
+      "pageKey": "__scam__",
+      "host": "www.rapidmart-deals.net",
+      "outcome": "scam",
+      "category": "ecommerce",
+      "displayTitle": "RapidMart DEALS!! (Unofficial)",
+      "scam": {
+        "copyTypoLevel": 2,
+        "sslMismatch": false,
+        "whoisFake": true,
+        "chargeMultiplier": 0.7,
+        "deliveryTable": [
+          { "p": 0.2,  "outcome": "jackpot" },
+          { "p": 0.5,  "outcome": "fake" },
+          { "p": 0.3,  "outcome": "nothing" }
+        ]
+      }
+    },
+    {
+      "pageKey": "__scam__",
+      "host": "www.wahoo-prizes.net",
+      "outcome": "scam",
+      "category": "service",
+      "displayTitle": "Wahoo! Prize Center",
+      "scam": {
+        "copyTypoLevel": 2,
+        "sslMismatch": true,
+        "whoisFake": true,
+        "chargeMultiplier": 1.2,
+        "deliveryTable": [
+          { "p": 0.1,  "outcome": "jackpot" },
+          { "p": 0.2,  "outcome": "fake" },
+          { "p": 0.7,  "outcome": "nothing" }
+        ]
+      }
+    }
+  ]
+}

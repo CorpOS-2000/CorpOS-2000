@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>CorpOS 2000</title>
+  <link rel="preload" href="assets/cursors/corpos-arrow.png" as="image">
+  <link rel="preload" href="assets/cursors/corpos-arrow-pressed.png" as="image">
+  <link rel="preload" href="assets/cursors/corpos-ibeam.png" as="image">
+  <link rel="preload" href="assets/cursors/corpos-wait.png" as="image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -31,6 +35,8 @@
   <link rel="stylesheet" href="css/media-player.css">
   <link rel="stylesheet" href="css/explorer.css">
   <link rel="stylesheet" href="css/daily-herald.css">
+  <link rel="stylesheet" href="css/cursors.css">
+  <link rel="stylesheet" href="css/cursor-follower.css">
   <script>
     (function () {
       function show(title, detail) {
@@ -126,12 +132,12 @@
 
   <div class="di" data-open="herald" style="top:28px;left:20px"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
   <div class="di" data-open="worldnet" style="top:108px;left:20px"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
-  <div class="di" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
+  <div class="di" data-icon-slot="properties" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
   <div class="di" data-open="explorer" style="top:348px;left:20px"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
   <div class="di" data-open="tasks" style="top:428px;left:20px"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
   <div class="di" data-open="personal" style="top:28px;left:110px"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
   <div class="di" data-open="corporate" style="top:108px;left:110px"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
-  <div class="di" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
+  <div class="di" data-icon-slot="ledger" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
   <div class="di" data-app-id="media-player" data-open="media-player" style="top:268px;left:110px"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
   <div class="di" data-app-id="admin-npc" data-open="admin-npc" style="top:348px;left:110px"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
   <div class="di" data-app-id="admin-company" data-open="admin-company" style="top:428px;left:110px"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
@@ -677,7 +683,7 @@
               <div class="bc-notif-list" id="bc-notif-list"></div>
             </div>
             <!-- Black Cherry — in-handset WorldNet browser -->
-            <div id="bc-view-browser" class="bc-view" style="height:100%;display:flex;flex-direction:column;overflow:hidden;"></div>
+            <div id="bc-view-browser" class="bc-view" style="height:100%;min-height:0;flex-direction:column;overflow:hidden;"></div>
             <!-- Calendar stub -->
             <div id="bc-view-calendar" class="bc-view">
               <div class="bc-settings-body"><p style="margin:0;color:#888;">Calendar — Coming Soon</p></div>
@@ -728,6 +734,16 @@
   <div id="peek-stack"></div>
   <div id="toasts"></div>
   <button type="button" id="demo-btn" onclick="fireNews()">⚡ Fire News Ticker Demo</button>
+</div>
+
+<!-- CRT/VHS monitor simulation — body-level so it covers login, desktop, logoff, shutdown -->
+<div id="crt-overlay" class="crt-overlay" aria-hidden="true">
+  <div class="crt-overlay__curvature"></div>
+  <div class="crt-overlay__scanlines"></div>
+  <div class="crt-overlay__aberration"></div>
+  <div class="crt-overlay__flicker"></div>
+  <div class="crt-overlay__vhs-band"></div>
+  <div class="crt-overlay__glow"></div>
 </div>
 
 <script type="module" src="js/app.js"></script>

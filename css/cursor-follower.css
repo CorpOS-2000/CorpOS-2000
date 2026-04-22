@@ -1,0 +1,86 @@
+/* ── CorpOS software cursor (Electron / Windows often ignores cursor:url) ──
+ * When html.corpos-soft-cursor is set, the OS pointer is hidden and a fixed
+ * stack follows the pointer (see js/cursor-follower.js).
+ * Exceptions restore native cursors where gameplay expects them.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+html.corpos-soft-cursor,
+html.corpos-soft-cursor * {
+  cursor: none !important;
+}
+
+html.corpos-soft-cursor .wrz,
+html.corpos-soft-cursor .wrz * {
+  cursor: se-resize !important;
+}
+
+html.corpos-soft-cursor .wx-inv-item,
+html.corpos-soft-cursor .wx-inv-item * {
+  cursor: grab !important;
+}
+
+html.corpos-soft-cursor .wx-inv-item:active,
+html.corpos-soft-cursor .wx-inv-item:active * {
+  cursor: grabbing !important;
+}
+
+html.corpos-soft-cursor .wx-module,
+html.corpos-soft-cursor .wx-module * {
+  cursor: grab !important;
+}
+
+html.corpos-soft-cursor .mm-picker-canvas {
+  cursor: grab !important;
+}
+
+/* Title bar + all descendants (icon, text); only .wtb matched before — children
+ * still had cursor:none from html.corpos-soft-cursor * and hid the pointer. */
+html.corpos-soft-cursor .wtb,
+html.corpos-soft-cursor .wtb * {
+  cursor: move !important;
+}
+
+html.corpos-soft-cursor .wtb .wcb {
+  cursor: none !important;
+}
+
+#corpos-cursor-root {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 100090;
+}
+
+/* Slightly larger than source art (32px) — hotspots scaled in JS */
+#corpos-cursor-stack {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  contain: layout style;
+}
+
+#corpos-cursor-stack .corpos-cursor-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 85ms cubic-bezier(0.22, 0.82, 0.38, 1);
+}
+
+#corpos-cursor-stack .corpos-cursor-layer.is-visible {
+  opacity: 1;
+}

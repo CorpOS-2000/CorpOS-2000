@@ -516,6 +516,7 @@ async function waitForSaveReady() {
  * After logoff / purge, login or other chrome can otherwise stay in the stacking order and steal hits.
  */
 function prepareChromeForEnrollment() {
+  document.body.classList.remove('corpos-crt');
   document.getElementById('smenu')?.classList.remove('open');
   document.getElementById('start-btn')?.classList.remove('active');
   const logoff = document.getElementById('logoff-screen');
@@ -775,6 +776,7 @@ function showUserPicker(accounts) {
   screen.classList.add('show');
   screen.style.display = 'flex';
   screen.style.pointerEvents = 'auto';
+  document.body.classList.add('corpos-crt');
 }
 
 function hideUserPicker() {
@@ -819,6 +821,7 @@ function ensureDevLoginShortcut() {
 }
 
 export function showLogin() {
+  document.body.classList.add('corpos-crt');
   const p = getState().player;
   const unameEl = document.getElementById('uname');
   if (unameEl && p.username && !unameEl.value) unameEl.value = p.username;

@@ -5,6 +5,7 @@
 
 import { BANK_META } from './bank-pages.js';
 import { getState } from './gameState.js';
+import { escapeHtml } from './identity.js';
 
 /** Root URLs keyed by worldnet page id (shown on Wahoo / typed in address bar). */
 export const ROOT_URL_BY_PAGE = {
@@ -416,7 +417,7 @@ export const WAHOO_LISTED_PAGE_KEYS = new Set([
 
 /**
  * Rows for the World Wide Web Registry page.
- * @returns {{ title: string, url: string, onWahoo: string, note: string }[]}
+ * @returns {{ pageKey: string, subPath: string, title: string, url: string, onWahoo: string, note: string }[]}
  */
 export function getWorldWideWebRegistryRows() {
   const rows = [];
@@ -430,6 +431,8 @@ export function getWorldWideWebRegistryRows() {
     }
     if (!title) title = key;
     rows.push({
+      pageKey: key,
+      subPath: '',
       title,
       url,
       onWahoo: onY,
@@ -439,12 +442,16 @@ export function getWorldWideWebRegistryRows() {
     if (BANK_META[key]) {
       const b = BANK_META[key];
       rows.push({
+        pageKey: key,
+        subPath: 'register',
         title: `${b.title} — online enrollment`,
         url: urlForPage(key, 'register'),
         onWahoo: 'No',
         note: 'Hidden path — not linked on Wahoo'
       });
       rows.push({
+        pageKey: key,
+        subPath: 'about',
         title: `${b.title} — about us`,
         url: urlForPage(key, 'about'),
         onWahoo: 'No',
@@ -456,12 +463,16 @@ export function getWorldWideWebRegistryRows() {
   const dmbRoot = ROOT_URL_BY_PAGE.dmb;
   if (dmbRoot) {
     rows.push({
+      pageKey: 'dmb',
+      subPath: 'register',
       title: 'David & Mitchell Banking — online enrollment',
       url: urlForPage('dmb', 'register'),
       onWahoo: 'No',
       note: 'Hidden path — not linked on Wahoo directory'
     });
     rows.push({
+      pageKey: 'dmb',
+      subPath: 'about',
       title: 'David & Mitchell Banking — about (disclosures)',
       url: urlForPage('dmb', 'about'),
       onWahoo: 'No',
@@ -481,6 +492,8 @@ export function getWorldWideWebRegistryRows() {
       /* keep */
     }
     rows.push({
+      pageKey: 'pipeline_page',
+      subPath: String(p.pageId),
       title: String(p.title || p.siteName || 'Content pipeline site'),
       url,
       onWahoo: 'No',
@@ -491,18 +504,29 @@ export function getWorldWideWebRegistryRows() {
   return rows.sort((a, b) => a.title.localeCompare(b.title));
 }
 
+/** `href` + `data-nav` (+ optional `data-wnet-subpath`) for WorldNet in-page navigation (shared hosts need keys, not raw URLs). */
+export function worldNetRegistryNavAttrs(pageKey, subPath = '') {
+  const sub = String(subPath || '').trim();
+  const subAttr = sub ? ` data-wnet-subpath="${escapeHtml(sub)}"` : '';
+  return `href="#" data-nav="${escapeHtml(pageKey)}"${subAttr}`;
+}
+
 export function renderWorldWideWebRegistryHtml() {
   const rows = getWorldWideWebRegistryRows();
+  const linkStyle =
+    'color:#000080;text-decoration:underline;cursor:pointer;word-break:break-all;';
+  const urlStyle =
+    'font-size:10px;font-family:Consolas,monospace;color:#006600;text-decoration:underline;cursor:pointer;word-break:break-all;';
   const body = rows
-    .map(
-      (r) =>
-        `<tr>
-<td style="padding:5px 8px;border:1px solid #ccc;font-size:11px;vertical-align:top;">${r.title}</td>
-<td style="padding:5px 8px;border:1px solid #ccc;font-size:10px;font-family:Consolas,monospace;word-break:break-all;color:#006600;">${r.url}</td>
-<td style="padding:5px 8px;border:1px solid #ccc;font-size:11px;text-align:center;">${r.onWahoo}</td>
-<td style="padding:5px 8px;border:1px solid #ccc;font-size:10px;color:#555;">${r.note}</td>
-</tr>`
-    )
+    .map((r) => {
+      const nav = worldNetRegistryNavAttrs(r.pageKey, r.subPath);
+      return `<tr>
+<td style="padding:5px 8px;border:1px solid #ccc;font-size:11px;vertical-align:top;"><a ${nav} style="${linkStyle}font-weight:bold;">${escapeHtml(r.title)}</a></td>
+<td style="padding:5px 8px;border:1px solid #ccc;font-size:10px;font-family:Consolas,monospace;word-break:break-all;"><a ${nav} style="${urlStyle}">${escapeHtml(r.url)}</a></td>
+<td style="padding:5px 8px;border:1px solid #ccc;font-size:11px;text-align:center;">${escapeHtml(r.onWahoo)}</td>
+<td style="padding:5px 8px;border:1px solid #ccc;font-size:10px;color:#555;">${escapeHtml(r.note)}</td>
+</tr>`;
+    })
     .join('');
 
   return `<div class="iebody">

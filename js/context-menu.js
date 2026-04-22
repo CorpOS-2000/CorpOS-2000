@@ -125,28 +125,44 @@ function buildBrowserMenu() {
 
 export function initContextMenus() {
   document.addEventListener('contextmenu', (e) => {
-    const onDesktop = !!e.target.closest('#desktop');
     const onBrowser = !!e.target.closest('#win-worldnet');
+    const onDesktop = !!e.target.closest('#desktop');
     if (!onDesktop && !onBrowser) return;
+
+    if (onBrowser) {
+      e.preventDefault();
+      lastTarget = e.target;
+      let items = buildBrowserMenu();
+      const selectedText = getSelectedText();
+      if (selectedText) {
+        items.push({ type: 'sep' });
+        items.push({ label: 'Copy', onClick: copySelectedText });
+      }
+      if (e.target.matches('input,textarea')) {
+        items.push({ label: 'Paste', onClick: pasteToTarget });
+      }
+      drawMenu(items, e.clientX, e.clientY);
+      return;
+    }
+
+    // #desktop contains every CorpOS window (.ww). Only the bare desktop / icons use this menu.
+    if (e.target.closest('.ww')) return;
+
     e.preventDefault();
     lastTarget = e.target;
 
     let items;
-    if (onBrowser) {
-      items = buildBrowserMenu();
+    const vfsIcon = e.target.closest('#desktop .di.custom-di');
+    const vfsId = vfsIcon?.dataset?.vfsId;
+    if (vfsId) {
+      items = [
+        { label: 'Open', onClick: () => openDesktopVfsItem(vfsId) },
+        { label: 'Rename', onClick: () => void renameDesktopVfsPrompt(vfsId) },
+        { type: 'sep' },
+        ...buildDesktopMenu(e)
+      ];
     } else {
-      const vfsIcon = e.target.closest('#desktop .di.custom-di');
-      const vfsId = vfsIcon?.dataset?.vfsId;
-      if (vfsId) {
-        items = [
-          { label: 'Open', onClick: () => openDesktopVfsItem(vfsId) },
-          { label: 'Rename', onClick: () => void renameDesktopVfsPrompt(vfsId) },
-          { type: 'sep' },
-          ...buildDesktopMenu(e)
-        ];
-      } else {
-        items = buildDesktopMenu(e);
-      }
+      items = buildDesktopMenu(e);
     }
     const selectedText = getSelectedText();
     if (selectedText) {

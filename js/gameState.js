@@ -449,7 +449,9 @@ function createInitialStateInternal() {
     /** CCR — Contacts, Contracts & Relations. */
     ccr: { contracts: [], newsFeed: [], nextSeq: 1 },
     /** Background jobs (site repair, etc.) — processed on tick. */
-    activeTasks: []
+    activeTasks: [],
+    /** Global ad performance analytics: impressions, clicks, conversions, irritation per ad. */
+    adAnalytics: { byAdId: {} }
   };
 }
 
@@ -870,6 +872,19 @@ export function migrateStateIfNeeded(st) {
     : [];
   if (st.businessRegistry.lastFilingDayIndex == null) st.businessRegistry.lastFilingDayIndex = -1;
   if (st.businessRegistry.filingsCountOnThatDay == null) st.businessRegistry.filingsCountOnThatDay = 0;
+  if ((st.meta.version || 0) < 23) {
+    st.meta.version = 23;
+    if (!Array.isArray(st.player.assets)) st.player.assets = [];
+    if (!Array.isArray(st.player.scamHistory)) st.player.scamHistory = [];
+    if (!st.adAnalytics || typeof st.adAnalytics !== 'object') {
+      st.adAnalytics = { byAdId: {} };
+    }
+    if (!st.adAnalytics.byAdId || typeof st.adAnalytics.byAdId !== 'object') {
+      st.adAnalytics.byAdId = {};
+    }
+    if (!st.warehouse) st.warehouse = { units: [], liquidation: [], properties: [] };
+    if (!Array.isArray(st.warehouse.properties)) st.warehouse.properties = [];
+  }
   return st;
 }
 

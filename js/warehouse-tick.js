@@ -5,6 +5,7 @@
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
 import { rollD4 } from './d20.js';
 import { escapeHtml } from './identity.js';
+import { getPageAdOutcomeWeights, getAllAdAnalytics } from './ad-analytics.js';
 
 const SIM_DAY_MS = SIM_HOUR_MS * 24;
 
@@ -17,10 +18,85 @@ const UNIT_TIERS = [
 
 export { UNIT_TIERS };
 
+/** Purchasable property tiers (no recurring cost after purchase; increase net worth). */
+export const PROPERTY_TIERS = [
+  { id: 'storage_unit', label: 'Storage Unit (5×10)',  purchasePrice: 4500,  maxItems: 20,  maintenancePerDay: 2,  kind: 'storage_unit' },
+  { id: 'warehouse',    label: 'Small Warehouse',       purchasePrice: 22000, maxItems: 150, maintenancePerDay: 10, kind: 'warehouse' },
+  { id: 'commercial',   label: 'Commercial Building',   purchasePrice: 95000, maxItems: 500, maintenancePerDay: 40, kind: 'commercial' }
+];
+
 function ensureWarehouse(st) {
   if (!st.warehouse) st.warehouse = { units: [], liquidation: [] };
   if (!Array.isArray(st.warehouse.units)) st.warehouse.units = [];
   if (!Array.isArray(st.warehouse.liquidation)) st.warehouse.liquidation = [];
+  if (!Array.isArray(st.warehouse.properties)) st.warehouse.properties = [];
+}
+
+/**
+ * Purchase a property outright. Debits cash, creates asset in player.assets and
+ * a permanent property record in warehouse.properties.
+ * @param {string} tierId
+ * @returns {{ ok: boolean, error?: string, propertyId?: string }}
+ */
+export function purchaseProperty(tierId) {
+  const tier = PROPERTY_TIERS.find((t) => t.id === tierId);
+  if (!tier) return { ok: false, error: 'Unknown property type.' };
+  const st = getState();
+  const cash = (st.player?.hardCash || 0) + (st.accounts?.reduce((s, a) => s + (a.balance || 0), 0) || 0);
+  if ((st.player?.hardCash || 0) < tier.purchasePrice) {
+    return { ok: false, error: `Insufficient cash. Need $${tier.purchasePrice.toLocaleString()} on hand.` };
+  }
+  const propertyId = `prop-${Date.now().toString(36)}`;
+  patchState((s) => {
+    ensureWarehouse(s);
+    s.player.hardCash = (s.player.hardCash || 0) - tier.purchasePrice;
+    const property = {
+      id: propertyId,
+      tierId: tier.id,
+      label: tier.label,
+      purchasePrice: tier.purchasePrice,
+      maintenancePerDay: tier.maintenancePerDay,
+      maxItems: tier.maxItems,
+      items: [],
+      acquiredSimMs: s.sim?.elapsedMs ?? 0,
+      kind: tier.kind
+    };
+    s.warehouse.properties.push(property);
+    if (!Array.isArray(s.player.assets)) s.player.assets = [];
+    s.player.assets.push({
+      id: `asset-prop-${propertyId}`,
+      name: tier.label,
+      sourceSiteId: 'warehouse',
+      kind: 'physical',
+      valueUsd: tier.purchasePrice,
+      quality: 100,
+      flags: { property: true, propertyId },
+      acquiredSimMs: s.sim?.elapsedMs ?? 0,
+      stored: false,
+      listed: false
+    });
+    return s;
+  });
+  return { ok: true, propertyId };
+}
+
+/**
+ * Store item into an owned property. Falls back to warehouse units if none provided.
+ * @param {string} propertyId
+ * @param {object} item
+ */
+export function storeItemInProperty(propertyId, item) {
+  const st = getState();
+  const prop = (st.warehouse?.properties || []).find((p) => p.id === propertyId);
+  if (!prop) return { ok: false, error: 'Property not found.' };
+  if ((prop.items?.length || 0) >= prop.maxItems) return { ok: false, error: 'Property storage is full.' };
+  patchState((s) => {
+    ensureWarehouse(s);
+    const p = s.warehouse.properties.find((x) => x.id === propertyId);
+    if (p) p.items.push({ ...item, storedSimMs: s.sim?.elapsedMs ?? 0 });
+    return s;
+  });
+  return { ok: true };
 }
 
 /**
@@ -104,12 +180,24 @@ export function retrieveItem(unitId, itemIndex) {
 }
 
 /**
- * Daily tick: repossess overdue units and simulate NPC liquidation buyers.
+ * Daily tick: repossess overdue units, collect property maintenance, and simulate NPC liquidation buyers.
  */
 export function tickWarehouseDaily() {
   const st = getState();
   ensureWarehouse(st);
   const simMs = st.sim?.elapsedMs || 0;
+
+  // Collect property maintenance costs
+  patchState(s => {
+    ensureWarehouse(s);
+    for (const prop of s.warehouse.properties || []) {
+      const cost = Number(prop.maintenancePerDay) || 0;
+      if (cost > 0) {
+        s.player.hardCash = Math.max(0, (s.player.hardCash || 0) - cost);
+      }
+    }
+    return s;
+  });
 
   // Repossess overdue units
   patchState(s => {
@@ -135,14 +223,33 @@ export function tickWarehouseDaily() {
   const liq = getState().warehouse?.liquidation || [];
   if (!liq.length) return;
 
-  const buyerCount = rollD4();
+  // Derive ad tone weights from warehouse page ads
+  const allAnalytics = getAllAdAnalytics();
+  const warehouseAdIds = Object.keys(allAnalytics).filter((id) =>
+    id.toLowerCase().includes('warehouse') || id.toLowerCase().includes('storage')
+  );
+  const adWeights = getPageAdOutcomeWeights(warehouseAdIds);
+
+  // Base buyer count modified by ad engagement (more engaging ads attract more visitors)
+  const baseBuyerCount = rollD4();
+  const engagedBuyerBoost = adWeights.engagement > 1.1 ? 1 : 0;
+  const buyerCount = baseBuyerCount + engagedBuyerBoost;
+
+  // Bounce modifier: highly irritating ads mean some buyers leave without purchasing
+  const bounceProb = Math.min(0.6, (adWeights.bounce - 1) * 0.4);
+
   let totalSold = 0;
   let totalRevenue = 0;
 
   patchState(s => {
     ensureWarehouse(s);
     for (let b = 0; b < buyerCount && s.warehouse.liquidation.length > 0; b++) {
-      const itemsToBuy = 1 + (Math.random() < 0.5 ? 1 : 0); // 1-2 items
+      // Simulate NPC "bounce" driven by ad irritation
+      if (Math.random() < bounceProb) continue;
+
+      // Conversion boost: good ads push NPC to buy more items
+      const convBoost = adWeights.conversion > 1.05 ? 1 : 0;
+      const itemsToBuy = 1 + convBoost + (Math.random() < 0.5 ? 1 : 0); // 1–3 items
       for (let i = 0; i < itemsToBuy && s.warehouse.liquidation.length > 0; i++) {
         const idx = Math.floor(Math.random() * s.warehouse.liquidation.length);
         const item = s.warehouse.liquidation[idx];
@@ -170,14 +277,32 @@ export function mountWarehousePage(root) {
     const st = getState();
     ensureWarehouse(st);
     const units = st.warehouse.units || [];
+    const properties = st.warehouse.properties || [];
     const liq = st.warehouse.liquidation || [];
     const simMs = st.sim?.elapsedMs || 0;
+    const cash = st.player?.hardCash || 0;
 
-    let html = `<div style="margin:8px 0;">
-      <b style="color:#663300;">Your Storage Units</b>
-      ${units.length === 0 ? '<p style="color:#666;font-size:11px;">You have no rented units. Choose a size below to get started.</p>' : ''}
+    let html = '';
+
+    // ── Owned Properties ──────────────────────────────────────────────────────
+    if (properties.length > 0) {
+      html += `<div style="margin:8px 0 4px;"><b style="color:#003366;">Your Owned Properties</b></div>`;
+      for (const prop of properties) {
+        html += `<div style="border:2px solid #6699cc;padding:6px;margin-bottom:6px;background:#edf4fb;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <b>${escapeHtml(prop.label)}</b>
+            <span style="font-size:10px;color:#336699;">Owned &bull; $${(prop.maintenancePerDay || 0)}/day maintenance</span>
+          </div>
+          <div style="font-size:10px;color:#555;margin-top:2px;">${(prop.items || []).length}/${prop.maxItems} items stored &bull; Purchase value: $${(prop.purchasePrice || 0).toLocaleString()}</div>
+        </div>`;
+      }
+    }
+
+    // ── Rented Units ──────────────────────────────────────────────────────────
+    html += `<div style="margin:8px 0 4px;">
+      <b style="color:#663300;">Rented Storage Units</b>
+      ${units.length === 0 ? '<span style="color:#666;font-size:11px;margin-left:6px;">None active.</span>' : ''}
     </div>`;
-
     for (const u of units) {
       const daysLeft = Math.max(0, Math.ceil((u.paidThroughSimMs - simMs) / SIM_DAY_MS));
       const overdue = simMs > u.paidThroughSimMs;
@@ -186,21 +311,36 @@ export function mountWarehousePage(root) {
           <b>${escapeHtml(u.label)}</b>
           <span style="font-size:10px;color:${overdue ? '#c00' : '#666'};">${overdue ? 'OVERDUE — repossession pending' : `${daysLeft} days remaining`}</span>
         </div>
-        <div style="font-size:10px;color:#666;margin-top:2px;">$${u.rentPerDay}/day &bull; ${u.items.length}/${u.maxItems} items</div>
+        <div style="font-size:10px;color:#666;margin-top:2px;">$${u.rentPerDay}/day &bull; ${(u.items || []).length}/${u.maxItems} items</div>
         <div style="margin-top:4px;">
-          <button class="wx-btn" data-wh-pay="${u.id}">Pay 7 Days ($${u.rentPerDay * 7})</button>
+          <button class="wx-btn" data-wh-pay="${escapeHtml(u.id)}">Pay 7 Days ($${u.rentPerDay * 7})</button>
         </div>
       </div>`;
     }
 
+    // ── Rent a Unit ───────────────────────────────────────────────────────────
     html += `<div style="margin:12px 0 6px;"><b style="color:#663300;">Rent a Unit</b></div>`;
     for (const tier of UNIT_TIERS) {
-      html += `<div style="display:inline-block;border:2px outset #d0d0d0;padding:4px 8px;margin:2px;background:#e8e4dc;cursor:pointer;font-size:11px;" data-wh-rent="${tier.id}">
+      html += `<div style="display:inline-block;border:2px outset #d0d0d0;padding:4px 8px;margin:2px;background:#e8e4dc;cursor:pointer;font-size:11px;" data-wh-rent="${escapeHtml(tier.id)}">
         ${escapeHtml(tier.label)} — $${tier.rentPerDay}/day<br>
         <span style="font-size:9px;color:#666;">Max ${tier.maxItems} items &bull; $${tier.rentPerDay * 7} deposit</span>
       </div>`;
     }
 
+    // ── Purchase Property ─────────────────────────────────────────────────────
+    html += `<div style="margin:14px 0 6px;"><b style="color:#003366;">Purchase Property</b>
+      <span style="font-size:10px;color:#666;margin-left:6px;">One-time cost — no lease, no repossession</span></div>`;
+    for (const tier of PROPERTY_TIERS) {
+      const canAfford = cash >= tier.purchasePrice;
+      html += `<div style="display:inline-block;border:2px outset #aabbd0;padding:5px 10px;margin:3px;background:${canAfford ? '#ddeeff' : '#e8e8e8'};cursor:${canAfford ? 'pointer' : 'default'};font-size:11px;${canAfford ? '' : 'opacity:0.6;'}" ${canAfford ? `data-wh-buy="${escapeHtml(tier.id)}"` : ''}>
+        <b>${escapeHtml(tier.label)}</b><br>
+        $${tier.purchasePrice.toLocaleString()} purchase &bull; $${tier.maintenancePerDay}/day maintenance<br>
+        <span style="font-size:9px;color:#666;">Max ${tier.maxItems} items &bull; Contributes to net worth</span>
+        ${canAfford ? '' : `<br><span style="font-size:9px;color:#cc6600;">Insufficient cash (have $${cash.toFixed(2)})</span>`}
+      </div>`;
+    }
+
+    // ── Liquidation Outlet ────────────────────────────────────────────────────
     if (liq.length) {
       html += `<div style="margin:14px 0 6px;"><b style="color:#993300;">Liquidation Outlet</b>
         <span style="font-size:10px;color:#666;margin-left:6px;">${liq.length} items at clearance prices</span></div>`;
@@ -218,8 +358,8 @@ export function mountWarehousePage(root) {
     }
 
     html += `<div style="margin-top:14px;background:#f0e8d8;border:1px solid #c0a880;padding:6px;font-size:10px;color:#555;">
-      <b>Policy Notice:</b> Units not paid within their term will be repossessed. Contents are transferred to the Liquidation Outlet and sold at markdown prices.
-      NPC buyers visit daily. Proceeds from liquidation sales are deposited to your CashUp balance.
+      <b>Policy Notice:</b> Rented units not paid within their term will be repossessed. Purchased properties are yours permanently but require daily maintenance deducted from cash.
+      NPC buyers visit the Liquidation Outlet daily — proceeds go directly to your cash balance.
     </div>`;
 
     container.innerHTML = html;
@@ -231,18 +371,21 @@ export function mountWarehousePage(root) {
     const rentBtn = e.target.closest('[data-wh-rent]');
     if (rentBtn) {
       const result = rentUnit(rentBtn.getAttribute('data-wh-rent'));
-      if (!result.ok) {
-        alert(result.error);
-      }
+      if (!result.ok) alert(result.error);
       renderWarehouseUI();
       return;
     }
     const payBtn = e.target.closest('[data-wh-pay]');
     if (payBtn) {
       const result = payRent(payBtn.getAttribute('data-wh-pay'), 7);
-      if (!result.ok) {
-        alert(result.error);
-      }
+      if (!result.ok) alert(result.error);
+      renderWarehouseUI();
+      return;
+    }
+    const buyBtn = e.target.closest('[data-wh-buy]');
+    if (buyBtn) {
+      const result = purchaseProperty(buyBtn.getAttribute('data-wh-buy'));
+      if (!result.ok) alert(result.error);
       renderWarehouseUI();
       return;
     }

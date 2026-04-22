@@ -1,3 +1,4 @@
+import { initCorpOsCursorFollower } from './cursor-follower.js';
 import { loadBiosLines, startBootFlow, exposeGlobals as exposeBoot } from './boot.js';
 import { startClock, pause, unpause, setSpeed } from './clock.js';
 import {
@@ -42,7 +43,11 @@ import { SMS } from './bc-sms.js';
 import { initTaskHandlerPanel, renderActiveTasksPanel } from './active-tasks.js';
 import { on } from './events.js';
 import { TOAST_KEYS, toast } from './toast.js';
-import { initDesktopSystem, refreshInstallableAppVisibility } from './desktop.js';
+import {
+  initDesktopSystem,
+  refreshDesktopLayoutFromSession,
+  refreshInstallableAppVisibility
+} from './desktop.js';
 import { initContextMenus } from './context-menu.js';
 import {
   renderProfilesFromState,
@@ -64,6 +69,7 @@ import { initMoogleMaps } from './moogle-maps.js';
 import { initWebExPublisher, tickWebExDomainBilling } from './webex-publisher.js';
 import { tickWarehouseDaily } from './warehouse-tick.js';
 import { initMarketDynamics, tickMarketDaily } from './market-dynamics.js';
+import { tickPlayerStore } from './player-store.js';
 import { initPlayerReplies, tickPlayerReplies, wireReplyDeps } from './player-interaction-replies.js';
 import { MediaPlayer } from '../engine/MediaPlayer.js';
 import { initMediaPlayer } from './media-player.js';
@@ -294,6 +300,7 @@ function flushContentSummaries() {
 }
 
 async function main() {
+  initCorpOsCursorFollower();
   pause('boot');
   bankUi.installBankWindowGlobals();
   exposeWin();
@@ -403,6 +410,8 @@ async function main() {
       }
       SaveManager.applyPendingDiscoveredActors();
     }
+    // First-time operators have no save blob yet; still lay out the desktop once #desktop is shown.
+    refreshDesktopLayoutFromSession();
     seedAllProgramFiles();
     ensureMomExists();
     generatePlayerAndMomAfterEnrollment();
@@ -529,6 +538,7 @@ async function main() {
     processBusinessRegistryApprovals();
     tickWarehouseDaily();
     tickMarketDaily();
+    tickPlayerStore();
     window.WorldNet?.axis?.processDecay?.();
     WebExploiter.tickSiteRecovery();
     for (const m of applyDueRegulatoryFinesPatch()) {

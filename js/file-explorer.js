@@ -834,13 +834,13 @@ function renderList() {
     if (item.gray) row.style.color = '#888';
     row.dataset.fxItemIndex = String(i);
     row.innerHTML = `<span>${escapeHtml(item.name)}</span><span>${escapeHtml(item.typeLabel)}</span><span>${escapeHtml(formatSize(item.size))}</span>`;
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (ev) => {
       host.querySelectorAll('.fx-row.is-sel').forEach((r) => r.classList.remove('is-sel'));
       row.classList.add('is-sel');
-    });
-    row.addEventListener('dblclick', (ev) => {
-      ev.preventDefault();
-      openRow(item);
+      if (ev.detail === 2) {
+        ev.preventDefault();
+        openRow(item);
+      }
     });
     const canDragVfs = item.vfs && item.entry && !item.entry.system;
     if (canDragVfs) {
@@ -848,6 +848,7 @@ function renderList() {
     }
     row.addEventListener('contextmenu', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       showRowContext(e, item);
     });
     host.appendChild(row);
@@ -877,6 +878,7 @@ export async function initFileExplorer(loadJsonFile) {
   document.getElementById('fx-list')?.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.fx-row')) return;
     e.preventDefault();
+    e.stopPropagation();
     showBlankContext(e);
   });
 

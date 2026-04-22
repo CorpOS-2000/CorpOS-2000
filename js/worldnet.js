@@ -17,7 +17,8 @@ import {
   renderWorldWideWebRegistryHtml,
   getWorldNetSiteDirectoryLinks,
   getRegisteredShopHosts,
-  titleForWorldNetPage
+  titleForWorldNetPage,
+  worldNetRegistryNavAttrs
 } from './worldnet-routes.js';
 import { renderPageDefinitionHtml } from './worldnet-page-renderer.js';
 import { getStoreById } from './worldnet-shop.js';
@@ -62,6 +63,7 @@ import { CORPOS_GATED_PAGE_KEYS, renderGateInterstitial } from './corpos-enrollm
 import { simpleHash, deliverCorpOSWelcomePacket } from './jeemail-corpos.js';
 import { SMS } from './bc-sms.js';
 import { renderFocsMandateHtml, renderCorposPortalHtml } from './worldnet-gov-pages.js';
+import { initSiteRegistry, getSiteByPageKey, trustBadgeHtml, scamClassModifiers } from './worldnet-site-registry.js';
 
 let pages = { ...worldnetPages };
 let historyEntries = [];
@@ -130,12 +132,18 @@ function isKnownAddress(raw) {
 
 function defaultNotFoundHtml() {
   const shown = notFoundAddress || 'Unknown address';
+  const shownEsc = escapeHtml(shown);
+  const looksNavigable =
+    /^https?:\/\//i.test(shown) || /[a-z0-9_-]+\.[a-z]{2,}/i.test(shown);
+  const addrInner = looksNavigable
+    ? `<a href="#" data-wnet-nav="${shownEsc}" style="color:#006600;text-decoration:underline;">${shownEsc}</a>`
+    : shownEsc;
   return `<div class="iebody">
 <h1 style="font-size:18px;color:#0a246a;font-family:Arial,sans-serif;">Page Not Found</h1>
 <div style="font-size:10px;color:#666;margin-bottom:8px;">WorldNet Explorer 5.0 — CorpOS 2000</div>
 <p style="font-size:11px;margin-bottom:10px;">The page or address you requested could not be located.</p>
 <div style="border:1px solid #cc9900;background:#fff8f0;padding:8px;font-size:11px;margin-bottom:10px;">
-  <b>Address:</b> ${shown}
+  <b>Address:</b> ${addrInner}
 </div>
 <div style="display:flex;gap:8px;align-items:center;">
   <a data-nav="home">Return to Wahoo Home</a>
@@ -860,7 +868,7 @@ function renderWahooSearchResults(query) {
   const results = resultDefs
     .map(
       (r) =>
-        `<div style="margin-bottom:10px;"><a data-nav="${r.nav}" style="font-size:14px;cursor:pointer;">${r.label}</a><br><span style="color:#006600;font-size:10px;">http://${r.url}/</span><br><span style="font-size:11px;">Find information about ${r.label.toLowerCase()} on WorldNet.</span></div>`
+        `<div style="margin-bottom:10px;"><a href="#" data-nav="${escapeHtml(r.nav)}" style="font-size:14px;cursor:pointer;text-decoration:underline;">${escapeHtml(r.label)}</a><br><a href="#" data-nav="${escapeHtml(r.nav)}" style="color:#006600;font-size:10px;text-decoration:underline;">http://${escapeHtml(r.url)}/</a><br><span style="font-size:11px;">Find information about ${escapeHtml(r.label.toLowerCase())} on WorldNet.</span></div>`
     )
     .join('');
   return `<div class="iebody"><h2>Wahoo! Search: "${q}"</h2><p style="color:#666;font-size:11px;margin-bottom:8px;">About 4,820,000 results (0.31 seconds)</p>${results}</div>`;
@@ -953,15 +961,15 @@ ${pager}
 function renderPortal99669() {
   const rows = getWorldNetSiteDirectoryLinks();
   const siteRows = rows
-    .map(
-      (r, i) =>
-        `<tr style="background:${i % 2 ? '#eef6ff' : '#fff'};">
+    .map((r, i) => {
+      const nav = worldNetRegistryNavAttrs(r.pageKey, r.subPath || '');
+      return `<tr style="background:${i % 2 ? '#eef6ff' : '#fff'};">
 <td style="padding:7px 10px;border-bottom:1px solid #ccc;vertical-align:top;">
-<a data-nav="${escapeHtml(r.pageKey)}"${r.subPath ? ` data-wnet-subpath="${escapeHtml(r.subPath)}"` : ''} href="#" style="font-size:13px;font-weight:bold;color:#000080;cursor:pointer;text-decoration:underline;">${escapeHtml(r.title)}</a>
+<a ${nav} style="font-size:13px;font-weight:bold;color:#000080;cursor:pointer;text-decoration:underline;">${escapeHtml(r.title)}</a>
 </td>
-<td style="padding:7px 10px;border-bottom:1px solid #ccc;font-size:10px;font-family:Consolas,monospace;color:#006600;word-break:break-all;">${escapeHtml(r.url)}</td>
-</tr>`
-    )
+<td style="padding:7px 10px;border-bottom:1px solid #ccc;font-size:10px;font-family:Consolas,monospace;word-break:break-all;"><a ${nav} style="color:#006600;text-decoration:underline;cursor:pointer;word-break:break-all;">${escapeHtml(r.url)}</a></td>
+</tr>`;
+    })
     .join('');
 
   return `<div class="iebody" data-wn-ad-page="net99669">
@@ -1218,6 +1226,11 @@ function navigate(key, sub = '', opts = {}) {
   }
   const html = renderPage(currentPageKey, currentSubPath);
   content.innerHTML = html;
+  // Apply scam visual modifier class to content wrapper
+  content.classList.remove('wn-scam-light', 'wn-scam-medium', 'wn-scam-heavy');
+  const _scamEntry = getSiteByPageKey(currentPageKey);
+  const _scamCls = _scamEntry ? scamClassModifiers(_scamEntry) : '';
+  if (_scamCls) content.classList.add(_scamCls);
   bindWorldNetContent(content);
   bindShopRoot(content, navigate);
   mountPage(content, currentPageKey);
@@ -1909,6 +1922,12 @@ export async function initWorldNet(loadJsonText) {
   } catch {
     adsJson = null;
   }
+  let siteMetaJson = null;
+  try {
+    if (loadJsonText) siteMetaJson = JSON.parse(await loadJsonText('worldnet-site-meta.json'));
+  } catch { /* optional file */ }
+  initSiteRegistry(siteMetaJson);
+
   initWorldNetAds(adsJson, { navigate });
   await initWorldNetShop(loadJsonText, navigate);
   if (typeof window !== 'undefined') {

@@ -4,15 +4,16 @@
  */
 import { getState, patchState, getGameEpochMs } from '../js/gameState.js';
 import { getSessionState, patchSession } from '../js/sessionState.js';
+import { syncDesktopIconPositionsToSession } from '../js/desktop.js';
 import { ActorDB } from './ActorDB.js';
 import { ActivityLog } from './ActivityLog.js';
 
 const LEGACY_SAVE_KEY = 'corpos2000_player_save';
 const ACCOUNT_INDEX_KEY = 'corpos2000_account_index';
 const SAVE_KEY_PREFIX = 'corpos2000_save__';
-const CURRENT_VERSION = '2.1.0';
+const CURRENT_VERSION = '2.2.0';
 
-const MIGRATION_ORDER = ['2.0.0', '2.1.0'];
+const MIGRATION_ORDER = ['2.0.0', '2.1.0', '2.2.0'];
 
 let _activeUsername = null;
 
@@ -69,6 +70,13 @@ const migrations = {
     if (!save.axisRelationships) save.axisRelationships = [];
     if (!save.completedEvents) save.completedEvents = [];
     if (!save.discoveredActors) save.discoveredActors = {};
+    return save;
+  },
+  '2.2.0': (save) => {
+    if (!save.desktop || typeof save.desktop !== 'object') {
+      save.desktop = { wallpaper: '#008080', positions: {} };
+    }
+    if (!save.desktop.positions || typeof save.desktop.positions !== 'object') save.desktop.positions = {};
     return save;
   }
 };
@@ -192,6 +200,11 @@ export const SaveManager = {
   },
 
   save() {
+    try {
+      syncDesktopIconPositionsToSession();
+    } catch (e) {
+      console.warn('[SaveManager] Desktop icon sync:', e);
+    }
     const payload = this.buildPlayerSlice();
     payload.version = CURRENT_VERSION;
     payload.savedAt = new Date().toISOString();
@@ -375,6 +388,12 @@ export const SaveManager = {
         accounts: sess.wahoo?.accounts || {},
         active: sess.wahoo?.currentUser ?? null
       },
+      desktop: {
+        wallpaper: sess.desktop?.wallpaper || '#008080',
+        positions: sess.desktop?.positions && typeof sess.desktop.positions === 'object'
+          ? { ...sess.desktop.positions }
+          : {}
+      },
       companies: st.companies || [],
       corporateProfile: st.corporateProfile || {},
       inventory: st.worldNetShopping?.inventory || [],
@@ -539,6 +558,18 @@ export const SaveManager = {
       s.wahoo.currentUser = d.wahoo?.active ?? null;
       s.blackCherry = s.blackCherry || { inbox: [], recentCalls: [], pendingRudenessEvents: [] };
       s.blackCherry.recentCalls = Array.isArray(d.callLog) ? d.callLog : s.blackCherry.recentCalls || [];
+      s.desktop = s.desktop || { wallpaper: '#008080', customIcons: [], positions: {} };
+      const desk = d.desktop;
+      if (desk && typeof desk === 'object') {
+        if (typeof desk.wallpaper === 'string' && desk.wallpaper) s.desktop.wallpaper = desk.wallpaper;
+        if (desk.positions && typeof desk.positions === 'object') {
+          s.desktop.positions = { ...desk.positions };
+        } else {
+          s.desktop.positions = {};
+        }
+      } else {
+        s.desktop.positions = {};
+      }
       return s;
     });
 

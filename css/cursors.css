@@ -1,0 +1,122 @@
+/* ── CorpOS 2000 — Y2K cursor theme ──────────────────────────────────
+ * Pure CSS custom cursors — no JS follower.
+ * Loaded after styles.css to override scattered cursor: rules.
+ * Preload links in index.html warm PNGs before first paint.
+ * ──────────────────────────────────────────────────────────────────── */
+
+/* Default cursor everywhere */
+html, body {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, default;
+}
+
+/* UEFI / BIOS / logo — styles.css uses .bds-item { cursor: default }; beat it with ID scope */
+#boot-drive-screen,
+#boot-drive-screen *,
+#bios,
+#bios *,
+#logo-screen,
+#logo-screen * {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, default;
+}
+
+#boot-drive-screen .bds-item:active {
+  cursor: url('../assets/cursors/corpos-arrow-pressed.png') 1 1, default;
+}
+
+/* Interactive elements — same arrow (keeps the retro feel; Win98 used arrow for buttons) */
+a, button, [role="button"],
+summary, label[for],
+.di, .smitem, .wcb, .lbtn,
+.start-btn, #start-btn,
+.icon-grid-item, .win-head,
+[onclick], [data-action],
+.bc-dock, .bc-grid-item,
+.bc-nav-back, .bc-sms-send,
+.bcb-nav-btn, .bcb-quick-link, .bcb-bmark-rm, .bcb-home,
+.peek-card,
+.toast,
+select {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, pointer;
+}
+
+/* :active pressed state */
+a:active, button:active,
+[role="button"]:active,
+.lbtn:active, .smitem:active,
+.di:active, .wcb:active,
+#start-btn:active,
+select:active {
+  cursor: url('../assets/cursors/corpos-arrow-pressed.png') 1 1, pointer;
+}
+
+/* Text input I-beam — hotspot at center of serif */
+input[type="text"],
+input[type="password"],
+input[type="search"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="tel"],
+input:not([type]),
+textarea,
+[contenteditable="true"],
+.wn-addr,
+.bcb-addr {
+  cursor: url('../assets/cursors/corpos-ibeam.png') 15 15, text;
+}
+
+/* ── Busy (hourglass) — inherits from existing corpos-busy toggle ── */
+body.corpos-busy,
+body.corpos-busy * {
+  cursor: url('../assets/cursors/corpos-wait.png') 8 8, wait !important;
+}
+
+/* ── Inline styles (WorldNet, banks, enrollment, etc.) use cursor:pointer.
+ * Specificity (1,0,0,0) beats our element/class rules — without this,
+ * the OS pointer shows instead of the CorpOS PNG.                    */
+[style*='cursor:pointer'],
+[style*='cursor: pointer'] {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, pointer !important;
+}
+
+[style*='cursor:pointer']:active,
+[style*='cursor: pointer']:active {
+  cursor: url('../assets/cursors/corpos-arrow-pressed.png') 1 1, pointer !important;
+}
+
+[style*='cursor:default'],
+[style*='cursor: default'] {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, default !important;
+}
+
+[style*='cursor:not-allowed'],
+[style*='cursor: not-allowed'] {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, not-allowed !important;
+}
+
+[style*='cursor:text'],
+[style*='cursor: text'] {
+  cursor: url('../assets/cursors/corpos-ibeam.png') 15 15, text !important;
+}
+
+[style*='cursor:grab'],
+[style*='cursor: grab'] {
+  cursor: grab !important;
+}
+
+/* ── Preserve gameplay-specific cursors ──
+ * These selectors are more specific than the generic rules above,
+ * so native resize / grab / not-allowed cursors keep working.         */
+
+.wrz                            { cursor: se-resize !important; }
+.wth[style*="cursor: move"]     { cursor: move      !important; }
+
+.wx-inv-item                    { cursor: grab       !important; }
+.wx-inv-item:active             { cursor: grabbing   !important; }
+.wx-module                      { cursor: grab       !important; }
+
+[disabled],
+button:disabled,
+.disabled-overlay {
+  cursor: url('../assets/cursors/corpos-arrow.png') 0 0, not-allowed;
+}

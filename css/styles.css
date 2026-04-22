@@ -391,6 +391,194 @@ body {
   display: block;
 }
 
+/* ── CRT / VHS monitor filter (body-level, covers login + desktop + logoff) ── */
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100050;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+}
+
+body.corpos-crt .crt-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Slight tube curvature + edge shading (no lens warp — keeps text sharp) */
+.crt-overlay__curvature {
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.45rem;
+  box-shadow:
+    inset 0 0 120px rgba(0, 0, 0, 0.28),
+    inset 0 0 40px rgba(0, 15, 30, 0.22),
+    inset 0 4px 24px rgba(255, 255, 255, 0.04);
+  animation: crt-curve-breathe 14s ease-in-out infinite;
+}
+
+@keyframes crt-curve-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 120px rgba(0, 0, 0, 0.26),
+      inset 0 0 40px rgba(0, 15, 30, 0.2),
+      inset 0 4px 24px rgba(255, 255, 255, 0.035);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 130px rgba(0, 0, 0, 0.32),
+      inset 0 0 48px rgba(0, 10, 25, 0.26),
+      inset 0 4px 20px rgba(200, 220, 255, 0.045);
+  }
+}
+
+/* Horizontal scanlines (~low-res CRT) */
+.crt-overlay__scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.11) 2px,
+    rgba(0, 0, 0, 0.11) 3px
+  );
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+
+/* Subtle chromatic aberration (RGB split at edges of “glass”) */
+.crt-overlay__aberration {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.35rem;
+  box-shadow:
+    inset 1.5px 0 0 rgba(255, 55, 55, 0.1),
+    inset -1.5px 0 0 rgba(55, 180, 255, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  mix-blend-mode: soft-light;
+  opacity: 0.85;
+}
+
+/* Power / phosphor flicker */
+.crt-overlay__flicker {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  animation: crt-flicker 4.2s steps(24, end) infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes crt-flicker {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  1% {
+    opacity: 0.04;
+  }
+  2% {
+    opacity: 0.01;
+  }
+  3% {
+    opacity: 0.06;
+  }
+  45% {
+    opacity: 0.015;
+  }
+  46% {
+    opacity: 0.05;
+  }
+  72% {
+    opacity: 0.02;
+  }
+  73% {
+    opacity: 0.07;
+  }
+}
+
+/* Occasional VHS-style horizontal band (tracking shimmer) */
+.crt-overlay__vhs-band {
+  position: absolute;
+  left: -5%;
+  width: 110%;
+  height: 14%;
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 42%,
+    rgba(0, 0, 0, 0.07) 50%,
+    rgba(255, 255, 255, 0.02) 58%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateY(-30%);
+  animation: crt-vhs-roll 32s ease-in-out infinite;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+@keyframes crt-vhs-roll {
+  0%,
+  46% {
+    transform: translateY(-35%);
+    opacity: 0;
+  }
+  48% {
+    opacity: 0.28;
+  }
+  52% {
+    transform: translateY(calc(100vh + 20%));
+    opacity: 0.08;
+  }
+  54%,
+  100% {
+    transform: translateY(calc(100vh + 20%));
+    opacity: 0;
+  }
+}
+
+/* Soft phosphor bloom toward bezel */
+.crt-overlay__glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 45%,
+    rgba(120, 160, 255, 0.06) 0%,
+    transparent 55%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.crt-overlay *,
+.crt-overlay {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay__curvature {
+    animation: none;
+  }
+  .crt-overlay__flicker,
+  .crt-overlay__vhs-band {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .crt-overlay__scanlines {
+    opacity: 0.35;
+  }
+}
+
 /* ── BLACK CHERRY™ handset (bottom-right dock) ── */
 .bc-dock {
   position: fixed;
@@ -2878,10 +3066,7 @@ body {
   color: #6b0000;
 }
 
-body.corpos-busy,
-body.corpos-busy * {
-  cursor: wait !important;
-}
+/* corpos-busy cursor override moved to css/cursors.css */
 
 .corpos-opening {
   position: fixed;
@@ -3368,3 +3553,34 @@ body.corpos-busy * {
   font-family: Tahoma, sans-serif; font-size: 11px;
 }
 .wx-btn-load:hover { background: #c8c4bc; }
+
+/* ─── Scam site visual modifiers ───────────────────────────────────────── */
+/* Applied to WorldNet page wrappers for scam-classified sites.
+   Levels 1–3 introduce increasingly noticeable layout "wrongness"
+   without labelling anything explicitly as a scam. */
+
+.wn-scam-light {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: -0.2px;
+}
+.wn-scam-light a { color: #000099 !important; }
+
+.wn-scam-medium {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: -0.3px;
+  filter: hue-rotate(3deg);
+}
+.wn-scam-medium a { color: #0000aa !important; text-decoration: underline wavy #cc0000; }
+.wn-scam-medium .wn-shop-header,
+.wn-scam-medium .y2k-header { border-color: #9999aa !important; }
+
+.wn-scam-heavy {
+  font-family: 'Courier New', Courier, monospace !important;
+  letter-spacing: 0.2px;
+  filter: hue-rotate(6deg) contrast(0.97);
+}
+.wn-scam-heavy a { color: #0000cc !important; text-decoration: underline wavy #ff0000; }
+.wn-scam-heavy .wn-shop-header,
+.wn-scam-heavy .y2k-header { background: #0a1688 !important; }
+.wn-scam-heavy input,
+.wn-scam-heavy select { border: 1px dashed #cc9900 !important; }

@@ -13,6 +13,10 @@ import {
 } from './gameState.js';
 import { registerWorldNetShopHost } from './worldnet-routes.js';
 import { smsToPlayer } from './black-cherry.js';
+import { getSiteByPageKey } from './worldnet-site-registry.js';
+import { deliverAsset, getCarryHeadroom, CARRY_CAP } from './player-assets.js';
+import { resolveScamPurchase } from './scam-purchases.js';
+import { recordConversion } from './ad-analytics.js';
 
 /** @type {Map<string, object>} */
 const _stores = new Map();
@@ -749,7 +753,43 @@ function completeCheckout(storeId, { shipTier, payRaw, shipName, shipAddr }) {
   const ord = st1.worldNetShopping.orders.find((o) => o.orderId === orderId);
   const etaH =
     ord != null ? Math.ceil((ord.deliverBySimMs - (st1.sim?.elapsedMs ?? 0)) / SIM_HOUR_MS) : 0;
-  smsToPlayer(`Order ${orderId} confirmed. ETA ~${etaH} sim hours. ${store.name} thanks you.`);
+
+  // Determine site classification — scam sites skip normal delivery and roll their table
+  const siteMeta = getSiteByPageKey(storeId) || getSiteByPageKey('wn_shop');
+  const isScam = siteMeta?.outcome === 'scam';
+
+  if (isScam && siteMeta?.scam) {
+    const cartSummary = {
+      storeId,
+      orderId,
+      total,
+      lines: resolved.map(({ p, qty, unit }) => ({ title: p.title, qty, unitPrice: unit }))
+    };
+    resolveScamPurchase(siteMeta, cartSummary);
+    // Scam sites do not send a legit confirmation SMS — they send a vague one
+    smsToPlayer(`Order ${orderId} placed. Delivery details will be communicated separately.`);
+  } else {
+    // Legitimate delivery: create player asset for each line (delivered on arrival)
+    for (const { p, qty } of resolved) {
+      for (let i = 0; i < qty; i++) {
+        deliverAsset({
+          name: p.title,
+          sourceSiteId: storeId,
+          kind: 'physical',
+          valueUsd: Number(p.basePrice || p.price || 0),
+          quality: 100,
+          flags: {},
+          orderId
+        });
+      }
+    }
+
+    // Record ad conversion if one was recently clicked
+    const lastAdId = st1.worldNetShopping?._lastClickedAdId;
+    if (lastAdId) recordConversion(lastAdId);
+
+    smsToPlayer(`Order ${orderId} confirmed. ETA ~${etaH} sim hours. ${store.name} thanks you.`);
+  }
 
   return { ok: true, orderId };
 }

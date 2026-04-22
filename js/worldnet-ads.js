@@ -15,7 +15,8 @@
  */
 
 import { escapeHtml } from './identity.js';
-import { getState } from './gameState.js';
+import { getState, patchState } from './gameState.js';
+import { recordImpression, recordClick } from './ad-analytics.js';
 import {
   AD_RENDER_RULES,
   listAdPlacements,
@@ -228,6 +229,17 @@ function buildAdElements(ad, placementRegion = '') {
     creative.href = '#';
     creative.addEventListener('click', (e) => {
       e.preventDefault();
+      if (ad.id) {
+        recordClick(ad.id);
+        // Track last-clicked ad id on shopping state for conversion attribution
+        try {
+          patchState((s) => {
+            if (!s.worldNetShopping) s.worldNetShopping = {};
+            s.worldNetShopping._lastClickedAdId = String(ad.id);
+            return s;
+          });
+        } catch { /* ignore */ }
+      }
       _navigate(ad.link, ad.linkSubpath != null ? String(ad.linkSubpath) : '', {
         pushHistory: true
       });
@@ -319,6 +331,7 @@ function mountInto(hostEl, pageKey, slotId, storeId) {
     hostEl.appendChild(inner);
     inner.classList.add('is-fading');
     requestAnimationFrame(() => inner.classList.remove('is-fading'));
+    if (ad.id) recordImpression(ad.id);
   };
 
   paint();

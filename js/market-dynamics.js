@@ -4,6 +4,7 @@
  */
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
 import { rollD4 } from './d20.js';
+import { getPageAdOutcomeWeights, getAllAdAnalytics } from './ad-analytics.js';
 
 const SIM_DAY_MS = SIM_HOUR_MS * 24;
 
@@ -153,14 +154,38 @@ export function tickMarketDaily() {
 }
 
 /**
- * Compute NPC add-to-cart probability modifier based on a site's uxScore.
- * Range: 0.3 (terrible site) to 1.5 (great site). Default 1.0 for uxScore ~30.
+ * Compute NPC add-to-cart probability modifier based on a site's uxScore,
+ * further adjusted by the page's ad tone (conversion boost from good ad CTR,
+ * dampening from high irritation/bounce).
+ * Range: 0.1 (terrible site + irritating ads) to 2.0 (great site + effective ads).
+ * @param {number} uxScore
+ * @param {string[]} [pageAdIds] optional ad IDs for the page to factor in ad tone
  */
-export function npcConversionModifier(uxScore) {
+export function npcConversionModifier(uxScore, pageAdIds = []) {
   const score = Number(uxScore) || 0;
-  if (score <= 0) return 0.3;
-  if (score >= 60) return 1.5;
-  return 0.3 + (score / 60) * 1.2;
+  let base;
+  if (score <= 0) base = 0.3;
+  else if (score >= 60) base = 1.5;
+  else base = 0.3 + (score / 60) * 1.2;
+
+  if (!pageAdIds.length) return base;
+  const adW = getPageAdOutcomeWeights(pageAdIds);
+  // Conversion boost amplified, bounce dampens
+  const adModifier = adW.conversion * (1 / adW.bounce);
+  return Math.max(0.1, Math.min(2.0, base * adModifier));
+}
+
+/**
+ * Get ad IDs registered for a given page key from analytics store.
+ * Used by ticks to pass relevant ad IDs to npcConversionModifier.
+ * @param {string} _pageKey
+ * @returns {string[]}
+ */
+export function getAdsForPage(_pageKey) {
+  const all = getAllAdAnalytics();
+  // Simple heuristic: return all ad IDs that have any impressions
+  // (a more precise approach would require page-keyed ad storage)
+  return Object.keys(all).filter((id) => (all[id]?.impressions ?? 0) > 0);
 }
 
 /**

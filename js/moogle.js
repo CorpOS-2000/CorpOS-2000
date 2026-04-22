@@ -3,7 +3,7 @@
  */
 import { escapeHtml } from './identity.js';
 import { getState } from './gameState.js';
-import { getWorldNetSiteDirectoryLinks } from './worldnet-routes.js';
+import { getWorldNetSiteDirectoryLinks, worldNetRegistryNavAttrs } from './worldnet-routes.js';
 
 const FILLER_RESULTS = [
   {
@@ -219,14 +219,44 @@ function escSubAttr(raw) {
 function resultRow(r) {
   const subAttr = escSubAttr(r.sub || '');
   const titleInner = r.nav
-    ? `<a data-nav="${escapeHtml(r.nav)}" data-wnet-subpath="${subAttr}">${escapeHtml(r.title)}</a>`
+    ? `<a href="#" data-nav="${escapeHtml(r.nav)}" data-wnet-subpath="${subAttr}">${escapeHtml(r.title)}</a>`
     : `<span>${escapeHtml(r.title)}</span>`;
   const showUrl = r.url.startsWith('http') ? r.url : `http://${r.url}`;
+  const urlInner = r.nav
+    ? `<a href="#" data-nav="${escapeHtml(r.nav)}" data-wnet-subpath="${subAttr}" style="color:#1a0dab;text-decoration:underline;">${escapeHtml(showUrl)}</a>`
+    : `<a href="#" data-wnet-nav="${escapeHtml(showUrl)}" style="color:#1a0dab;text-decoration:underline;">${escapeHtml(showUrl)}</a>`;
   return `<div class="moogle-result">
   <div class="moogle-result-title">${titleInner}</div>
   <p class="moogle-result-desc">${escapeHtml(r.desc)}</p>
-  <p class="moogle-result-url">${escapeHtml(showUrl)}</p>
-  <p class="moogle-result-meta"><a data-nav="stub">Cached</a> - <a data-nav="stub">Similar pages</a> - <a data-nav="stub">Note this</a></p>
+  <p class="moogle-result-url">${urlInner}</p>
+  <p class="moogle-result-meta"><a href="#" data-nav="stub">Cached</a> - <a href="#" data-nav="stub">Similar pages</a> - <a href="#" data-nav="stub">Note this</a></p>
+</div>`;
+}
+
+function renderMoogleDirectoryHostTable() {
+  const rows = getWorldNetSiteDirectoryLinks();
+  const siteRows = rows
+    .map((r, i) => {
+      const nav = worldNetRegistryNavAttrs(r.pageKey, r.subPath || '');
+      const bg = i % 2 ? '#f6f9ff' : '#fff';
+      return `<tr style="background:${bg};">
+<td style="padding:5px 8px;font-size:11px;border-bottom:1px solid #ddd;"><a ${nav} style="font-weight:bold;color:#000080;text-decoration:underline;">${escapeHtml(r.title)}</a></td>
+<td style="padding:5px 8px;font-size:10px;font-family:Consolas,monospace;border-bottom:1px solid #ddd;word-break:break-all;"><a ${nav} style="color:#006600;text-decoration:underline;">${escapeHtml(r.url)}</a></td>
+</tr>`;
+    })
+    .join('');
+  return `<div class="moogle-dir-hosts" style="margin-top:20px;border:1px solid #ccc;background:#fff;">
+<h2 style="font-size:15px;margin:0;padding:8px 10px;background:#e8eef8;border-bottom:1px solid #ccc;">WorldNet hostnames</h2>
+<p style="font-size:10px;color:#555;margin:0;padding:8px 10px;border-bottom:1px solid #eee;line-height:1.4;">
+  Federal mirror of the <a href="#" data-nav="net99669">99669.net</a> directory and the <a href="#" data-nav="web_registry">World Wide Web Registry</a>.
+  Click a site name or address to open it in WorldNet Explorer.
+</p>
+<div style="max-height:280px;overflow-y:auto;">
+<table style="width:100%;border-collapse:collapse;font-size:11px;">
+<tr style="background:#336699;color:#fff;font-size:10px;"><th style="text-align:left;padding:5px 8px;">Site</th><th style="text-align:left;padding:5px 8px;">Address</th></tr>
+${siteRows}
+</table>
+</div>
 </div>`;
 }
 
@@ -415,7 +445,8 @@ ${topNav()}
   <h1>Moogle Directory</h1>
   <p style="color:#666;font-size:12px;">Open Directory–style index. Editors welcome.</p>
   <ul class="moogle-dir-list">${list}</ul>
-  <p style="margin-top:20px;"><a data-nav="moogle_home">Moogle Home</a></p>
+  ${renderMoogleDirectoryHostTable()}
+  <p style="margin-top:20px;"><a href="#" data-nav="moogle_home">Moogle Home</a></p>
 </div>
 </div>`;
 }

@@ -215,13 +215,20 @@
   },
   {
     "actor_id": "ACT-KYLE-HARGROVE",
-    "relationship_score": 64,
+    "relationship_score": 72,
     "favor_balance": 0,
     "discovered_date": "2000-01-01T07:03:14.988Z",
-    "last_contact_date": "2000-01-01T07:25:07.998Z",
+    "last_contact_date": "2000-01-01T07:16:06.096Z",
     "agenda_known": false,
     "intel_level": 0,
     "memory": [
+      {
+        "at": "2000-01-01T07:16:06.096Z",
+        "description": "First call — professional and helpful",
+        "delta": 8,
+        "score": 72,
+        "tier": "Favorable"
+      },
       {
         "at": "2000-01-01T07:25:07.998Z",
         "description": "First call — professional and helpful",
@@ -702,6 +709,157 @@
     "memory": [
       {
         "at": "2000-01-01T20:58:06.312Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-DEG58UN5",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-POEK400Y",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-FG3XDRLG",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-QEP497NB",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-I7HP88Y9",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-9JFDVNVO",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-2ZSDXR4U",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-84CH3U1O",
+    "relationship_score": 0,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": null,
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
         "description": "Synced from your phone book.",
         "delta": 0,
         "score": 0,
