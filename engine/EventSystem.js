@@ -37,6 +37,19 @@ export const EventSystem = {
     const completed = getState().completedEvents || [];
     completed.forEach(id => this._firedIds.add(id));
 
+    if (this._firedIds.has('evt_website_first_publish_bonus') && !this._firedIds.has('evt_website_first_publish')) {
+      this._firedIds.add('evt_website_first_publish');
+      patchState((st) => {
+        const c = st.completedEvents || [];
+        st.completedEvents = [
+          ...new Set(
+            c.map((id) => (id === 'evt_website_first_publish_bonus' ? 'evt_website_first_publish' : id))
+          )
+        ];
+        return st;
+      });
+    }
+
     on('hour',       (payload) => this._onHour(payload));
     on('dayChanged', (payload) => this._onDay(payload));
 
@@ -139,7 +152,7 @@ export const EventSystem = {
   // ── FIRE AN EVENT ─────────────────────────────────────────────────
   _fireEvent(def, _contextData, simMs) {
     let resolution = { success: true, passMargin: 10 };
-    if (def.dc != null) {
+    if (typeof def.dc === 'number' && def.dc > 0) {
       const modifier = this._computeModifier(def);
       resolution = resolveAgainstDC({ dc: def.dc, modifier });
     }
@@ -505,6 +518,10 @@ export const EventSystem = {
   hasFired(id)  { return this._firedIds.has(id); },
   forceEvent(id) {
     const def = this._registry.find(d => d.id === id);
-    if (def) this._fireEvent(def, {}, getState().sim?.elapsedMs || 0);
+    if (def) {
+      this._fireEvent(def, {}, getState().sim?.elapsedMs || 0);
+    } else {
+      console.warn(`[EventSystem] forceEvent: ID not found in registry — ${id}`);
+    }
   },
 };

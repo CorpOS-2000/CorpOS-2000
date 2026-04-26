@@ -35,6 +35,8 @@ export const FederalAuditSequence = {
 
     this._el.style.display = 'flex';
     this._el.style.opacity = '1';
+    this._auditRef = String(Date.now()).slice(-6);
+    this._lastAuditResult = null;
     this.runStage('standby');
   },
 
@@ -45,6 +47,35 @@ export const FederalAuditSequence = {
     clearTimeout(this._analysisTimeout);
     this._copyTimeout = null;
     this._analysisTimeout = null;
+
+    // After Stage 3 (completed), branch: real violations vs clean path.
+    if (stage === 'completed') {
+      this._timeout = setTimeout(() => {
+        const hasViolations = this._checkForViolations();
+        this.runStage(hasViolations ? 'noncompliance_found' : 'no_violations');
+      }, 2500);
+      this.render({
+        label: 'FEDERAL AUDIT COMPLETED',
+        color: '#ffffff',
+        bgColor: 'rgba(10, 36, 106, 0.92)',
+        borderColor: '#a6b5e7',
+        showTimer: false
+      });
+      return;
+    }
+
+    if (stage === 'finish_clean') {
+      this._lastAuditResult = { clean: true, suspicious: [], tampered: false, notable: [] };
+      this.fireComplianceNotification();
+      this.cleanup();
+      return;
+    }
+
+    if (stage === 'finish_violation') {
+      this.fireComplianceNotification();
+      this.cleanup();
+      return;
+    }
 
     const stages = {
       standby: {
@@ -67,14 +98,24 @@ export const FederalAuditSequence = {
         next: 'completed',
         showTimer: true
       },
-      completed: {
-        label: 'FEDERAL AUDIT COMPLETED',
-        color: '#ffffff',
-        bgColor: 'rgba(10, 36, 106, 0.92)',
-        borderColor: '#a6b5e7',
+      no_violations: {
+        label: 'NO VIOLATIONS FOUND',
+        color: '#00cc44',
+        bgColor: 'rgba(0, 20, 0, 0.95)',
+        borderColor: '#00aa33',
         duration: 2.5,
         showTimer: false,
-        next: 'noncompliance_found'
+        next: 'clean_complete'
+      },
+      clean_complete: {
+        label: 'AUDIT COMPLETE — COMPLIANT',
+        color: '#00cc44',
+        bgColor: 'rgba(0, 20, 0, 0.95)',
+        borderColor: '#00aa33',
+        duration: 4,
+        timerColor: '#00aa33',
+        next: 'finish_clean',
+        showTimer: true
       },
       noncompliance_found: {
         label: 'NONCOMPLIANCE FOUND',
@@ -111,21 +152,10 @@ export const FederalAuditSequence = {
         borderColor: '#cc0000',
         duration: 10,
         timerColor: '#cc0000',
-        next: 'complete',
+        next: 'finish_violation',
         showTimer: true
-      },
-      complete: {
-        label: null,
-        duration: 0,
-        next: null
       }
     };
-
-    if (stage === 'complete') {
-      this.fireComplianceNotification();
-      this.cleanup();
-      return;
-    }
 
     const cfg = stages[stage];
     if (!cfg) return;
@@ -144,7 +174,7 @@ export const FederalAuditSequence = {
       this._analysisTimeout = setTimeout(() => {
         this._analysisTimeout = null;
         const result = window.ActivityLog?.agentAnalyzeLog?.();
-        this._lastAuditResult = result || null;
+        this._lastAuditResult = result || this._lastAuditResult || null;
       }, Math.max(0, delayMs - 1000));
     }
 
@@ -155,6 +185,35 @@ export const FederalAuditSequence = {
     } else {
       this._timeout = setTimeout(() => this.runStage(cfg.next), cfg.duration * 1000);
     }
+  },
+
+  _checkForViolations() {
+    if (window.ActivityLog?.hasAgentCopy?.()) {
+      const result = window.ActivityLog.agentAnalyzeLog?.();
+      if (result) {
+        this._lastAuditResult = result;
+        return (result.suspicious?.length ?? 0) > 0 || result.tampered === true;
+      }
+    }
+    const notoriety = getState().corporateProfile?.notoriety || 0;
+    if (notoriety >= 50) {
+      this._lastAuditResult = {
+        suspicious: [
+          {
+            ts: '—',
+            type: 'PROFILE',
+            detail: 'Corporate notoriety exceeds federal review threshold',
+            flag: 'FLAGGED'
+          }
+        ],
+        notable: [],
+        totalEntries: 1,
+        tampered: false,
+        analysis: 'FEDERAL AUDIT ANALYSIS REPORT (Supplemental)\nNotoriety-based threshold triggered. Operator profile requires enhanced oversight.'
+      };
+      return true;
+    }
+    return false;
   },
 
   render(cfg) {
@@ -263,47 +322,43 @@ export const FederalAuditSequence = {
     const opId = p.operatorId || '00-2000-0000';
     const ref = this._auditRef || String(Date.now()).slice(-6);
     const simMs = getState().sim?.elapsedMs ?? 0;
-    const result = this._lastAuditResult;
-    const suspCount = result?.suspicious?.length ?? 0;
-    const tampered = result?.tampered ?? false;
+    const result = this._lastAuditResult || {};
+    const isClean = result.clean === true;
+    const suspCount = result.suspicious?.length ?? 0;
+    const tampered = result.tampered ?? false;
 
-    const body = tampered
-      ? `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
-        `CRITICAL: Evidence of log tampering detected. Class III violation recorded. ` +
-        `FBCE has been notified. A compliance officer will contact you. Operator: ${opId}`
-      : suspCount > 0
-      ? `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
-        `${suspCount} suspicious activit${suspCount === 1 ? 'y' : 'ies'} detected and reported to FBCE. ` +
-        `A full report has been sent to your registered JeeMail address. Operator: ${opId}`
-      : `COMPLIANCE NOTICE — Audit ref FOCS-${ref} complete. ` +
-        `No violations detected. Your operator record has been updated. Operator: ${opId}`;
+    const smsBody = isClean
+      ? `COMPLIANCE NOTICE — Audit ref. FOCS-${ref} complete. No violations detected. Your operator record has been updated. Operator: ${opId}`
+      : tampered
+      ? `COMPLIANCE NOTICE — Audit ref. FOCS-${ref} complete. CRITICAL: Log tampering detected. Class III violation recorded. FBCE notified. Operator: ${opId}`
+      : `COMPLIANCE NOTICE — Audit ref. FOCS-${ref} complete. ${suspCount} violation${suspCount === 1 ? '' : 's'} detected and reported to FBCE. A compliance officer will be in contact. Operator: ${opId}`;
 
-    SMS.send({ from: 'CORPOS_SYSTEM', message: body, gameTime: simMs });
+    SMS.send({ from: 'CORPOS_SYSTEM', message: smsBody, gameTime: simMs });
 
-    if (result?.analysis) {
+    if (!isClean && result.analysis) {
       deliverAuditReportEmail(result.analysis, ref, opId);
     }
 
     PeekManager.show({
       sender: 'CORPOS COMPLIANCE',
-      preview: tampered
+      preview: isClean
+        ? 'Audit complete — no violations found'
+        : tampered
         ? 'CRITICAL: Log tampering detected — FBCE notified'
-        : suspCount > 0
-        ? `Audit complete — ${suspCount} violation${suspCount > 1 ? 's' : ''} reported`
-        : 'Audit complete — no violations found',
+        : `Audit complete — ${suspCount} violation${suspCount > 1 ? 's' : ''} reported`,
       type: 'compliance',
       targetId: 'CORPOS_SYSTEM',
-      icon: tampered ? '🚨' : suspCount > 0 ? '⚠' : '✓'
+      icon: isClean ? '✓' : tampered ? '🚨' : '⚠'
     });
 
     ToastManager.fire({
       key: TOAST_KEYS.FEDERAL_AUDIT_RESULT,
       title: 'Federal Audit',
-      message: tampered
-        ? 'Audit complete — log tampering reported to FBCE.'
-        : suspCount > 0
-        ? 'Audit completed. Review compliance notice and JeeMail.'
-        : 'Audit completed — no violations found.',
+      message: isClean
+        ? 'No violations found. Record updated.'
+        : tampered
+        ? 'Tampering detected. FBCE notified.'
+        : `${suspCount} violation${suspCount > 1 ? 's' : ''} reported to FBCE.`,
       icon: '🏛'
     });
   },

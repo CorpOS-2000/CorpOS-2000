@@ -7,6 +7,7 @@
     "fireOnDay": 7,
     "fireOnHour": 9,
     "condition": { "type": "flag_not_set", "flag": "firstWeekWarningSent" },
+    "dc": null,
     "outcomes": {
       "default": {
         "sms": {
@@ -25,6 +26,7 @@
     "fireOnDay": 3,
     "fireOnHour": 14,
     "condition": { "type": "flag_not_set", "flag": "initialComplianceSent" },
+    "dc": null,
     "outcomes": {
       "default": {
         "sms": {
@@ -61,10 +63,10 @@
   },
   {
     "id": "evt_notoriety_spike_warning",
-    "title": "Compliance Alert — Elevated Activity",
+    "title": "Compliance Alert",
     "type": "triggered",
     "condition": { "type": "notoriety_above", "value": 50 },
-    "oneShot": true,
+    "oneShot": false,
     "dc": 14,
     "modifiers": { "notoriety": -1 },
     "outcomes": {
@@ -75,7 +77,7 @@
         },
         "peek": {
           "sender": "Compliance Monitor",
-          "message": "Compliance rating elevated — review activity",
+          "message": "Compliance rating elevated — review your activity",
           "type": "compliance",
           "targetId": "COMPLIANCE_MONITOR",
           "icon": "⚠"
@@ -95,7 +97,7 @@
     "title": "Low Balance Warning",
     "type": "triggered",
     "condition": { "type": "bank_balance_below", "value": 1000 },
-    "oneShot": true,
+    "dc": null,
     "outcomes": {
       "default": {
         "sms": {
@@ -104,7 +106,7 @@
         },
         "peek": {
           "sender": "FRA",
-          "message": "Account balance critically low",
+          "message": "Account balance critically low — action required",
           "type": "compliance",
           "targetId": "FRA",
           "icon": "⚠"
@@ -113,11 +115,12 @@
     }
   },
   {
-    "id": "evt_website_first_publish_bonus",
-    "title": "Website Published — Visibility Boost",
+    "id": "evt_website_first_publish",
+    "title": "Website Published",
     "type": "triggered",
     "oneShot": true,
     "condition": { "type": "website_published" },
+    "dc": null,
     "outcomes": {
       "default": {
         "toast": {
@@ -143,16 +146,16 @@
       "pass": {
         "sms": {
           "from": "CORPOS_SYSTEM",
-          "message": "SCHEDULED REVIEW — Day 14 compliance review initiated. Please stand by."
+          "message": "SCHEDULED REVIEW — Day 14 compliance review has been initiated. Please stand by."
         },
         "triggerAudit": 1
       },
       "fail": {
+        "notorietyDelta": 10,
         "sms": {
           "from": "CORPOS_SYSTEM",
-          "message": "COMPLIANCE NOTICE — Irregularities detected. Enhanced monitoring has been applied to your operator account."
-        },
-        "notorietyDelta": 10
+          "message": "COMPLIANCE NOTICE — Irregularities detected in Day 14 review. Enhanced monitoring applied to your operator account."
+        }
       }
     }
   },
@@ -169,7 +172,7 @@
       "default": {
         "sms": {
           "from": "ACT-KYLE-HARGROVE",
-          "message": "Hey — one of our partner companies is looking for someone to build their WorldNet presence. Pays $4,500 on delivery. They need a published site with at least a Hero Banner and a Contact Form. Interested? Log into CorpOS and accept the contract from your Active Tasks."
+          "message": "Hey — one of our partner companies is looking for someone to build their WorldNet presence. Pays $4,500 on delivery. They need a published site with at least a Hero Banner and a Contact Form. Interested? Open WebEx Publisher when you're ready."
         },
         "setFlag": "firstWebsiteContractOffered",
         "scheduleFollowUp": {
@@ -181,7 +184,7 @@
   },
   {
     "id": "evt_website_contract_create",
-    "title": "Create Website Contract Task",
+    "title": "Create Website Contract",
     "type": "triggered",
     "oneShot": true,
     "condition": { "type": "flag_set", "flag": "firstWebsiteContractOffered" },

@@ -964,6 +964,13 @@ function bootDesktop() {
     if (st.flags?.kyleCallCompleted) return;
     triggerKyleCall();
   }, 10000);
+  try {
+    const st = getState();
+    const oid = st.player?.operatorId || 'UNREGISTERED';
+    window.ActivityLog?.log?.('SESSION_START', `CorpOS session started — operator ${oid}`);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function doShutdown() {
@@ -971,7 +978,7 @@ export function doShutdown() {
   try {
     const ms = getState().sim?.elapsedMs ?? 0;
     const dur = ms > 0 ? `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m` : '0m';
-    window.ActivityLog?.log?.('SESSION_END', `CorpOS session terminated — duration ${dur}`);
+    window.ActivityLog?.log?.('SESSION_END', `Session terminated — system shutdown. (uptime ${dur})`);
   } catch {
     /* ignore */
   }

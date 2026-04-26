@@ -718,13 +718,20 @@
   },
   {
     "actor_id": "ACT-MOM-DEG58UN5",
-    "relationship_score": 50,
+    "relationship_score": 52,
     "favor_balance": 0,
     "discovered_date": "2000-01-01T06:00:00.000Z",
-    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-04T11:59:28.926Z",
     "agenda_known": false,
     "intel_level": 0,
     "memory": [
+      {
+        "at": "2000-01-04T11:59:28.926Z",
+        "description": "Pleasant conversation",
+        "delta": 2,
+        "score": 52,
+        "tier": "Favorable"
+      },
       {
         "at": "2000-01-01T06:00:00.000Z",
         "description": "Family bond — Mom",
@@ -858,6 +865,56 @@
     "agenda_known": false,
     "intel_level": 0,
     "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-BIKCWY7W",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-8H2SSJ7Q",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-01T06:00:00.000Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
       {
         "at": "2000-01-01T06:00:00.000Z",
         "description": "Synced from your phone book.",

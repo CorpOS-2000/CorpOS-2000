@@ -52578,18 +52578,19 @@
   },
   {
     "actor_id": "PLAYER_PRIMARY",
-    "full_legal_name": "William Moore",
-    "first_name": "William",
-    "last_name": "Moore",
+    "full_legal_name": "Sarah Wilson",
+    "first_name": "Sarah",
+    "last_name": "Wilson",
     "aliases": [
-      "williammoore"
+      "sarahwilson"
     ],
-    "ssn": "769-15-8378",
+    "ssn": "676-81-0291",
     "phone_numbers": [
-      "(559) 842-8573"
+      "(559) 498-4200"
     ],
     "emails": [
-      "william.moore@jeemail.net"
+      "sarah.wilson@jeemail.net",
+      "vdoe@jeemail.net"
     ],
     "home_address": {
       "street": "1188 Hazel Court, Hargrove, CA 94523",
@@ -52598,8 +52599,8 @@
       "zip": "93720"
     },
     "hargrove_address_id": "addr_01463",
-    "dob": "April 20, 1950",
-    "age": 76,
+    "dob": "January 21, 1948",
+    "age": 78,
     "household_id": "HH_PLAYER",
     "employer_id": null,
     "profession": "Entrepreneur",
@@ -52619,7 +52620,7 @@
     },
     "relationships": [
       {
-        "actor_id": "ACT-MOM-DEG58UN5",
+        "actor_id": "ACT-MOM-8H2SSJ7Q",
         "type": "family",
         "subtype": "mother",
         "strength": 10
@@ -52650,7 +52651,7 @@
       "government": "legal"
     },
     "public_profile": {
-      "display_name": "William Moore",
+      "display_name": "Sarah Wilson",
       "bio": "Entrepreneur.",
       "occupation": "Business Operator",
       "avatar_description": "Young professional"
@@ -54623,7 +54624,14 @@
       "mood": "warm",
       "last_event": null
     },
-    "memory": [],
+    "memory": [
+      {
+        "event": "conversation_option",
+        "optionId": "generic_chat",
+        "usedAtSimMs": 280768926.00000286,
+        "useCount": 1
+      }
+    ],
     "activity_schedule": {
       "platforms": [],
       "peak_hours": [
@@ -54658,6 +54666,218 @@
       "trust_check": 4
     },
     "welcomeMessage": "William, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-BIKCWY7W",
+    "full_legal_name": "Marilyn Garcia",
+    "first_name": "Marilyn",
+    "last_name": "Garcia",
+    "maiden_name": "Hayes",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "689-45-4025",
+    "phone_numbers": [
+      "(559) 929-2920"
+    ],
+    "emails": [
+      "marilyn.garcia532@corpnet.local"
+    ],
+    "home_address": {
+      "street": "2274 Magnolia Court",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94523"
+    },
+    "hargrove_address_id": "addr_04097",
+    "dob": "1945-06-25",
+    "age": 80,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Homemaker",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Marilyn Garcia",
+      "bio": "",
+      "occupation": "Homemaker",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Hi honey! Just checking in on your first day. I made your favorite last night - there's some in the freezer if you want it. Good luck today. Love, Mom",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother"
+  },
+  {
+    "actor_id": "ACT-MOM-8H2SSJ7Q",
+    "full_legal_name": "Ruth Wilson",
+    "first_name": "Ruth",
+    "last_name": "Wilson",
+    "maiden_name": "Miller",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "653-46-4421",
+    "phone_numbers": [
+      "(559) 932-1116"
+    ],
+    "emails": [
+      "ruth.wilson938@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "7267 Spruce Street",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94525"
+    },
+    "hargrove_address_id": "addr_02431",
+    "dob": "1937-03-10",
+    "age": 89,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Homemaker",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Ruth Wilson",
+      "bio": "",
+      "occupation": "Homemaker",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Sarah, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.",
     "moneyGivenCount": 0,
     "rudeness_count": 0,
     "rudeness_sms_sent": 0,

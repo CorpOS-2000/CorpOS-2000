@@ -282,6 +282,13 @@ function openRow(item) {
     return;
   }
   if (item.kind === 'file' && item.vfs && item.entry) {
+    if (item.entry.id === LOG_PATH_NODE_ID) {
+      try {
+        ActivityLog.onPlayerModified('opened');
+      } catch {
+        /* ignore */
+      }
+    }
     if (vfsFileLooksLikeAudio(item)) {
       window.openW?.('media-player');
       try {
@@ -327,14 +334,14 @@ function isSystemEntry(entry) {
 
 function deleteVfsEntry(item) {
   if (!item?.vfs || !item.entry) return;
-  if (isSystemEntry(item.entry)) {
+  const eid = item.entry.id;
+  if (isSystemEntry(item.entry) && eid !== LOG_PATH_NODE_ID) {
     try { window.toast?.({ title: 'Access Denied', message: 'This is a protected system file and cannot be deleted.', icon: '🛑', autoDismiss: 5000 }); } catch { /* ignore */ }
     return;
   }
-  const eid = item.entry.id;
   const name = item.entry.name || item.name;
   if (eid === LOG_PATH_NODE_ID) {
-    ActivityLog.recordAuditFileDeletionEvent();
+    ActivityLog.onPlayerModified('deleted');
   } else {
     ActivityLog.log('FILE_DELETE', `Deleted: ${name}`, {
       suspicious: /AUDITLOG/i.test(name) || item.entry?.system === true
@@ -507,6 +514,12 @@ function createVfsItemInNode(nodeId, kind) {
     entries.push(row);
     return st;
   });
+  const path = addressPathForNode(nodeId);
+  try {
+    ActivityLog.log('FILE_CREATE', `Created: ${name} in ${path}`);
+  } catch {
+    /* ignore */
+  }
   setStatus(isFolder ? 'Created folder' : 'Created text document');
   renderAll();
 }
@@ -542,13 +555,14 @@ function showRowContext(e, item) {
   const menu = document.createElement('div');
   menu.className = 'fx-ctx';
   const isVfs = !!item.vfs;
-  const isSys = isVfs && isSystemEntry(item.entry);
-  const showRename = isVfs && !isSys && vfsEntryRenamable(item.entry);
+  const isAudit = isVfs && item.entry?.id === LOG_PATH_NODE_ID;
+  const isSys = isVfs && isSystemEntry(item.entry) && !isAudit;
+  const showRename = isVfs && !isSys && !isAudit && vfsEntryRenamable(item.entry);
   menu.innerHTML = `
     <button type="button" data-a="open">${item.kind === 'folder' ? 'Open' : 'Open'}</button>
     <button type="button" data-a="rename" ${!showRename ? 'disabled' : ''}>Rename</button>
     <hr />
-    <button type="button" data-a="cut" ${!isVfs || isSys ? 'disabled' : ''}>Cut</button>
+    <button type="button" data-a="cut" ${!isVfs || isSys || isAudit ? 'disabled' : ''}>Cut</button>
     <button type="button" data-a="copy" ${!isVfs ? 'disabled' : ''}>Copy</button>
     <button type="button" data-a="delete" ${!isVfs || isSys ? 'disabled' : ''}>Delete</button>
     <button type="button" data-a="paste" ${!canPasteInto(currentNodeId) ? 'disabled' : ''}>Paste</button>

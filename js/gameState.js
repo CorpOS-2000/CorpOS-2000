@@ -1200,11 +1200,9 @@ export function queueSoftwareInstall(appId) {
   try {
     const host = app.sourceHost || 'WorldNet';
     const priceStr = price > 0 ? `$${price.toFixed(2)}` : '$0.00';
-    window.ActivityLog?.log?.(
-      'APP_INSTALL_START',
-      `Download initiated: ${app.label} from ${host} — ${priceStr}`,
-      { notable: app.trustLevel !== 'verified' }
-    );
+    window.ActivityLog?.log?.('APP_INSTALL_START', `Download initiated: ${app.label} from ${host} — ${priceStr}`, {
+      suspicious: app.trustLevel === 'unverified'
+    });
   } catch {
     /* ignore */
   }

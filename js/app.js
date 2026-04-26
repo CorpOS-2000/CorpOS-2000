@@ -80,6 +80,7 @@ import { EventSystem } from '../engine/EventSystem.js';
 import { verifyAppIntegrity, seedAllProgramFiles, seedProgramFiles, showAppErrorDialog } from './program-files.js';
 import { initWebExploiter } from './webexploiter.js';
 import { WebExploiter } from '../engine/WebExploiter.js';
+import { ActivityLog } from '../engine/ActivityLog.js';
 
 let newsItems = [];
 const CONTENT_TOAST_DEBOUNCE_MS = 700;
@@ -512,7 +513,10 @@ async function main() {
       seedProgramFiles(app.id);
       refreshInstallableAppVisibility();
       try {
-        window.ActivityLog?.log?.('APP_INSTALL_DONE', `Install complete: ${app.label}`);
+        const meta = getInstallableApp(app.id);
+        window.ActivityLog?.log?.('APP_INSTALL_DONE', `Install complete: ${app.label}`, {
+          suspicious: meta?.trustLevel === 'unverified'
+        });
       } catch {
         /* ignore */
       }
@@ -562,6 +566,9 @@ async function main() {
   }
   EventSystem.init();
   window.EventSystem = EventSystem;
+
+  ActivityLog.init();
+  window.ActivityLog = ActivityLog;
 
   renderProfilesFromState();
   syncSpeedButtons();

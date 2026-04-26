@@ -5,6 +5,8 @@ import { getGameEpochMs, getState, patchState } from '../js/gameState.js';
 import { getSessionState, patchSession } from '../js/sessionState.js';
 import { PeekManager } from '../js/peek-manager.js';
 
+let _inited = false;
+
 export const LOG_PATH_NODE_ID = 'system-auditlog';
 export const LOG_PATH_DISPLAY = 'C:\\CORPOS\\SYSTEM\\AUDITLOG.TXT';
 export const LOG_VFS_PARENT_ID = 'folder-system';
@@ -25,9 +27,11 @@ export const ActivityLog = {
   _entries: [],
   _sealed: false,
   _tampered: false,
-  _agentCopy: '',
+  _agentCopy: null,
 
   init() {
+    if (_inited) return;
+    _inited = true;
     const st = getState();
     const vfsEntry = st.virtualFs?.entries?.find((e) => e.id === LOG_PATH_NODE_ID);
     if (vfsEntry?.content) {
@@ -143,7 +147,7 @@ export const ActivityLog = {
   },
 
   agentAnalyzeLog() {
-    if (!this._agentCopy) {
+    if (this._agentCopy == null || this._agentCopy === '') {
       return {
         suspicious: [],
         notable: [],
@@ -155,11 +159,11 @@ export const ActivityLog = {
 
     const liveContent =
       getState().virtualFs?.entries?.find((e) => e.id === LOG_PATH_NODE_ID)?.content || '';
-    const expected = this.expectedContent();
-    const tampered = liveContent !== expected;
+    /** Tamper = live file (possibly edited or deleted) differs from agent snapshot at Stage 2. */
+    const tampered = String(liveContent) !== String(this._agentCopy);
     this._tampered = tampered;
 
-    const entries = this._parseEntries(this._agentCopy);
+    const entries = this._parseEntries(/** @type {string} */ (this._agentCopy));
     const suspicious = entries.filter((e) => e.flag === 'FLAGGED');
     const notable = entries.filter((e) => e.flag === 'NOTABLE');
 
@@ -220,13 +224,35 @@ export const ActivityLog = {
     return this._sealed;
   },
 
+  hasAgentCopy() {
+    return this._agentCopy != null && this._agentCopy !== '';
+  },
+
+  /**
+   * Player action on the audit file (view / edit / delete in Explorer). Delete does not call
+   * log() (which would recreate AUDITLOG.TXT in VFS); in-memory only via recordAuditFileDeletionEvent.
+   * @param {'deleted' | 'opened' | 'saved' | string} action
+   */
+  onPlayerModified(action) {
+    const a = String(action || '');
+    if (a === 'deleted') {
+      this.recordAuditFileDeletionEvent();
+      return;
+    }
+    if (a === 'opened') {
+      this.log('FILE_EDIT', 'AUDITLOG.TXT — opened for viewing by operator');
+      return;
+    }
+    this.log('FILE_EDIT', `AUDITLOG.TXT — system log ${a} by operator`, { suspicious: true });
+  },
+
   /** User saved AUDITLOG.TXT from Explorer — replace parsed entries, then log the edit event. */
   applyUserSavedAuditContent(fileText) {
     this._entries = this._parseEntries(fileText);
     this.log('FILE_EDIT', 'AUDITLOG.TXT — saved after manual edit in Explorer', { suspicious: true });
   },
 
-  /** File removed from VFS; record violation without recreating the file. */
+  /** File removed from VFS; record in memory only — do not persist (would recreate the file). */
   recordAuditFileDeletionEvent() {
     const simMs = getState().sim?.elapsedMs ?? 0;
     this._entries.push({

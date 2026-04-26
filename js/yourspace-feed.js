@@ -213,7 +213,11 @@ export function tickYourspaceRtc(simElapsedMs) {
     if (!s.yourspace.rtcCounts) s.yourspace.rtcCounts = {};
     if (!s.yourspace.rtcVote) s.yourspace.rtcVote = {};
     if (s.yourspace.rtcNextDueSimMs == null) s.yourspace.rtcNextDueSimMs = 0;
-    ensureRtcRowIds(s);
+
+    const feed = s.yourspace.rtcFeed;
+    if (Array.isArray(feed) && feed.some((row) => !row.id)) {
+      ensureRtcRowIds(s);
+    }
 
     let due = Number(s.yourspace.rtcNextDueSimMs) || 0;
     if (!due) {
@@ -221,16 +225,27 @@ export function tickYourspaceRtc(simElapsedMs) {
       s.yourspace.rtcNextDueSimMs = due;
     }
 
+    if (t < due) return;
+
+    const raw = window.ActorDB?.getAllRaw?.();
+    const actors = Array.isArray(raw) ? raw.filter((a) => a?.active !== false && a?.actor_id) : [];
+    const MAX_BATCHES = 8;
     let safety = 0;
-    while (t >= due && safety < 64) {
+    while (t >= due && safety < MAX_BATCHES) {
       safety += 1;
-      const raw = window.ActorDB?.getAllRaw?.();
-      const actors = Array.isArray(raw) ? raw.filter((a) => a?.active !== false && a?.actor_id) : [];
       if (actors.length) {
         const roll = rollD20();
         const n = Math.min(roll, actors.length);
         const rng = mulberry32((t ^ due ^ safety) >>> 0);
-        const picks = shuffleWithSeed(actors, rng).slice(0, n);
+        const pool = actors.slice();
+        const picks = [];
+        for (let i = 0; i < n && i < pool.length; i++) {
+          const j = i + Math.floor(rng() * (pool.length - i));
+          const tmp = pool[i];
+          pool[i] = pool[j];
+          pool[j] = tmp;
+          picks.push(pool[i]);
+        }
         const gameDate = getCurrentGameDate();
         const timeLabel = formatGameDateTime(gameDate);
         const batchTag = (t ^ due) >>> 0;
@@ -260,6 +275,9 @@ export function tickYourspaceRtc(simElapsedMs) {
       s.yourspace.rtcNextDueSimMs = due;
       s.yourspace.lastRtcBoundarySimMs = t;
     }
+    if (t >= due) {
+      s.yourspace.rtcNextDueSimMs = t + rollD4() * SIM_HOUR_MS;
+    }
 
     if (s.yourspace.rtcFeed.length > 500) {
       s.yourspace.rtcFeed = s.yourspace.rtcFeed.slice(-500);
@@ -269,7 +287,7 @@ export function tickYourspaceRtc(simElapsedMs) {
 
 function syncRtcDom() {
   const el = rootEl?.querySelector('#ys-rtc-feed');
-  if (!el) return;
+  if (!el || !document.contains(el)) return;
   el.innerHTML = renderRtcPane();
 }
 
