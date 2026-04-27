@@ -8,6 +8,7 @@ import { renderWebexWidgetSection } from './webex-widgets.js';
 import { deriveTemplateSlots, getAdPlacementById, layoutTemplateForCategory } from './worldnet-ad-schema.js';
 import { renderLiveThreadHtml } from './pipeline-live-comments.js';
 import { renderY2kSiteHtml } from './worldnet-y2k-renderer.js';
+import { renderWebexRtcModuleInner } from './webex-site-rtc.js';
 
 /**
  * @param {object} pageDef
@@ -43,53 +44,293 @@ export function renderPageDefinitionHtml(pageDef, ctx = {}) {
   return renderTemplateLayout(pageDef, { navBar, parts, foot, slots });
 }
 
+/**
+ * @param {object} pageDef
+ * @returns {object} view model for WebEx public site
+ */
+function buildWebExSiteView(pageDef) {
+  return {
+    siteName: pageDef.siteName || pageDef.title || 'Site',
+    siteTagline: pageDef.siteTagline || 'Welcome to our site',
+    colorPrimary: pageDef.colorPrimary || '#0a246a',
+    colorSecondary: pageDef.colorSecondary || '#1a3a8f',
+    colorBackground: pageDef.colorBackground || '#ffffff',
+    colorText: pageDef.colorText || '#222222',
+    titleFontStack: pageDef.webExTitleFontStack || 'Arial,Helvetica,sans-serif',
+    titleSizePx: Math.min(32, Math.max(10, Number(pageDef.webExTitleSizePx) || 12)),
+    textBlockContent: pageDef.textBlockContent || 'About us — content coming soon.',
+    aboutContent: pageDef.aboutContent || 'We are a Hargrove-based business.',
+    publishedPageId: pageDef.pageId || '',
+    faqItems: Array.isArray(pageDef.faqItems) ? pageDef.faqItems : null
+  };
+}
+
+/**
+ * @param {object} [cell] layout cell { slotId, w, h, x, y, moduleId }
+ * @param {string} modId
+ * @param {ReturnType<typeof buildWebExSiteView>} proj
+ * @param {object} pageDef
+ * @param {object} ctx
+ */
+function renderWebExModule(modId, proj, pageDef, ctx, cell = null) {
+  if (!modId) return '';
+  const id = modId;
+  const label = String(modId).replace(/_/g, ' ');
+  const slotD = cell?.slotId && pageDef.webExSlotModuleData ? pageDef.webExSlotModuleData[cell.slotId] : null;
+  const inGrid = !!cell;
+  const pad = inGrid ? '10px 12px' : '32px 40px';
+  const textMaxW = inGrid ? '100%' : '760px';
+  const heroPad = inGrid ? '20px 16px' : '60px 40px';
+  const h1Size = inGrid ? Math.max(10, Math.min(28, Number(proj.titleSizePx) * 0.9)) : proj.titleSizePx;
+  const tagSize = inGrid ? '12px' : '15px';
+  const heroName = (slotD?.headline && String(slotD.headline).trim()) ? String(slotD.headline).trim() : (proj.siteName || '');
+  const heroTag = (slotD?.body && String(slotD.body).trim()) ? String(slotD.body).trim() : (proj.siteTagline || 'Welcome to our site');
+  const textFromSlot =
+    slotD && (slotD.body != null && String(slotD.body).trim())
+      ? String(slotD.body)
+      : (slotD?.headline && String(slotD.headline).trim() ? String(slotD.headline) : '');
+  const textBlockBody =
+    (id === 'text_block' || id === 'custom_text_box') && textFromSlot
+      ? textFromSlot
+      : proj.textBlockContent || 'About us — content coming soon.';
+  const aboutBody =
+    id === 'about_section' && slotD && (slotD.body != null && String(slotD.body).trim())
+      ? String(slotD.body)
+      : (id === 'about_section' && slotD?.headline)
+        ? String(slotD.headline)
+        : proj.aboutContent || 'We are a Hargrove-based business.';
+
+  switch (id) {
+    case 'hero_banner':
+      return `<div class="wx-site-hero" style="background:linear-gradient(135deg, ${escapeHtml(
+        proj.colorPrimary
+      )} 0%, ${escapeHtml(proj.colorSecondary)} 100%);padding:${heroPad};text-align:center;color:#fff;min-height:0;box-sizing:border-box;">
+        <h1 style="font-family:${escapeHtml(proj.titleFontStack)};font-size:${h1Size}px;margin:0 0 8px;word-wrap:break-word;">
+          ${escapeHtml(heroName || '')}
+        </h1>
+        <p style="font-size:${tagSize};opacity:0.85;margin:0;word-wrap:break-word;">
+          ${escapeHtml(heroTag)}
+        </p>
+      </div>`;
+
+    case 'text_block':
+    case 'custom_text_box':
+      return `<div class="wx-site-text" style="padding:${pad};max-width:${textMaxW};margin:0 auto;line-height:1.6;color:#222;box-sizing:border-box;">
+        <p style="margin:0;font-size:12px;">${escapeHtml(textBlockBody)}</p>
+      </div>`;
+
+    case 'about_section':
+      return `<div class="wx-site-about" style="padding:${pad};background:#f8f8f8;border:1px solid #ddd;box-sizing:border-box;">
+        <h2 style="font-size:15px;margin:0 0 6px;color:#333">About</h2>
+        <p style="color:#555;line-height:1.5;margin:0;font-size:12px;">${escapeHtml(aboutBody)}</p>
+      </div>`;
+
+    case 'contact_form': {
+      const cpad = inGrid ? '10px 12px' : '32px 40px';
+      return `<div class="wx-site-contact" style="padding:${cpad};box-sizing:border-box;">
+        <h2 style="font-size:18px;margin:0 0 16px;color:#333">Contact Us</h2>
+        <form class="wx-contact-form" data-wx-contact-form>
+          <div style="margin-bottom:10px"><label style="display:block;font-size:12px;color:#555;margin-bottom:4px">Name</label>
+            <input type="text" name="name" style="width:100%;max-width:360px;padding:6px 8px;border:1px solid #ccc;font-size:13px"></div>
+          <div style="margin-bottom:10px"><label style="display:block;font-size:12px;color:#555;margin-bottom:4px">Email</label>
+            <input type="email" name="email" style="width:100%;max-width:360px;padding:6px 8px;border:1px solid #ccc;font-size:13px"></div>
+          <div style="margin-bottom:14px"><label style="display:block;font-size:12px;color:#555;margin-bottom:4px">Message</label>
+            <textarea name="message" rows="4" style="width:100%;max-width:360px;padding:6px 8px;border:1px solid #ccc;font-size:13px"></textarea></div>
+          <button type="submit" style="padding:8px 20px;background:${escapeHtml(
+            proj.colorPrimary
+          )};color:#fff;border:none;font-size:13px;cursor:pointer">Send Message</button>
+        </form>
+      </div>`;
+    }
+
+    case 'guestbook': {
+      const pid = escapeHtml(proj.publishedPageId || '');
+      return `<div class="wx-site-guestbook" style="padding:32px 40px;" data-wx-guestbook data-page-id="${pid}">
+        <h2 style="font-size:18px;margin:0 0 16px;color:#333">Guestbook</h2>
+        <div class="wx-guestbook-entries" id="guestbook-${escapeHtml(
+          String(proj.publishedPageId || '').replace(/[^a-zA-Z0-9_-]/g, '_')
+        )}" style="margin-bottom:16px;max-height:320px;overflow-y:auto;">
+          <div class="wx-gb-empty" style="color:#888;font-size:13px;font-style:italic">No entries yet. Be the first to sign!</div>
+        </div>
+        <div class="wx-gb-form" style="border-top:1px solid #eee;padding-top:14px">
+          <input type="text" placeholder="Your name" data-wx-gb-name style="padding:5px 8px;font-size:13px;border:1px solid #ccc;margin-right:8px;width:160px">
+          <input type="text" placeholder="Leave a message..." data-wx-gb-msg style="padding:5px 8px;font-size:13px;border:1px solid #ccc;width:280px;margin-right:8px">
+          <button type="button" data-wx-gb-submit style="padding:5px 14px;background:${escapeHtml(
+            proj.colorPrimary
+          )};color:#fff;border:none;cursor:pointer;font-size:13px">Sign</button>
+        </div>
+      </div>`;
+    }
+
+    case 'shop':
+    case 'product_listing': {
+      const pid = escapeHtml(proj.publishedPageId || '');
+      const store = pageDef.shopId && ctx.getShopById ? ctx.getShopById(pageDef.shopId) : null;
+      const grid =
+        store && pageDef.hasShop
+          ? renderShopProductGridHtml(store, { maxItems: 12 })
+          : `<div style="color:#888;font-size:13px;font-style:italic">Products coming soon.</div>`;
+      return `<div class="wx-site-shop" style="padding:32px 40px;" data-wx-shop data-page-id="${pid}">
+        <h2 style="font-size:18px;margin:0 0 16px;color:#333">Shop</h2>
+        <div class="wx-product-grid" style="display:flex;flex-wrap:wrap;gap:16px;" id="shop-${escapeHtml(
+          String(proj.publishedPageId || '').replace(/[^a-zA-Z0-9_-]/g, '_')
+        )}">
+          ${grid}
+        </div>
+      </div>`;
+    }
+
+    case 'newsletter_signup':
+      return `<div class="wx-site-newsletter" style="padding:24px 40px;background:#f0f4ff;border-top:1px solid #dde8f0;text-align:center;">
+        <h3 style="margin:0 0 8px;font-size:16px;color:${escapeHtml(proj.colorPrimary)}">Stay Updated</h3>
+        <p style="font-size:12px;color:#666;margin:0 0 12px">Sign up for our newsletter</p>
+        <input type="email" placeholder="your@email.com" style="padding:6px 10px;font-size:13px;border:1px solid #ccc;width:220px;margin-right:8px">
+        <button type="button" style="padding:6px 16px;background:${escapeHtml(
+          proj.colorPrimary
+        )};color:#fff;border:none;font-size:13px;cursor:pointer">Subscribe</button>
+      </div>`;
+
+    case 'footer':
+      return `<div class="wx-site-footer" style="padding:20px 40px;background:#222;color:#aaa;font-size:12px;text-align:center;margin-top:auto;">
+        &copy; 2000 ${escapeHtml(proj.siteName || '')} &middot; Built with WebEx-Publisher&trade; &middot; Hargrove, CA
+      </div>`;
+
+    case 'banner_ad_slot': {
+      const pid = escapeHtml(proj.publishedPageId || '');
+      return `<div class="wx-site-ad" style="padding:10px 40px;text-align:center;" data-wx-ad-slot data-page-id="${pid}">
+        <div style="width:468px;height:60px;background:#f0f0f0;border:1px solid #ccc;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+          <span style="color:#999;font-size:11px">Advertisement</span>
+        </div>
+      </div>`;
+    }
+
+    case 'faq_block': {
+      const items = proj.faqItems || [
+        { q: 'What are your hours?', a: 'We are open Monday through Friday, 9AM to 5PM.' },
+        { q: 'How do I contact you?', a: 'Use the contact form above or call us directly.' }
+      ];
+      return `<div class="wx-site-faq" style="padding:32px 40px;">
+        <h2 style="font-size:18px;margin:0 0 16px;color:#333">FAQ</h2>
+        ${items
+          .map(
+            (item) => `
+          <div style="margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:12px">
+            <div style="font-weight:bold;color:#333;font-size:13px;margin-bottom:4px">${escapeHtml(item.q)}</div>
+            <div style="color:#555;font-size:13px">${escapeHtml(item.a)}</div>
+          </div>`
+          )
+          .join('')}
+      </div>`;
+    }
+
+    case 'live_chat': {
+      const pid = String(pageDef.pageId || proj.publishedPageId || '');
+      return renderWebexRtcModuleInner(
+        pid,
+        { colorPrimary: proj.colorPrimary, colorText: pageDef.colorText || proj.colorText || '#222' },
+        { compact: inGrid }
+      );
+    }
+
+    default: {
+      const dpad = inGrid ? '10px' : '24px 40px';
+      return `<div class="wx-site-module" style="padding:${dpad};border-top:1px solid #eee;box-sizing:border-box;">
+        <div style="color:#888;font-size:11px">${escapeHtml(label)}</div>
+      </div>`;
+    }
+  }
+}
+
 function renderWebExMirrorPage(pageDef, ctx) {
   const L = pageDef.webExLayout;
-  const bg = escapeHtml(pageDef.backgroundColor || '#fff');
-  const cols = L.columns || 3;
-  const rows = L.rows || 3;
-  const gap = L.gapPx ?? 4;
-  const rowPx = L.rowMinPx ?? 80;
-  const siteName = pageDef.siteName || pageDef.title || 'Site';
-  const titleFont = escapeHtml(pageDef.webExTitleFontStack || 'Tahoma, Geneva, sans-serif');
-  const titleSize = Math.min(32, Math.max(10, Number(pageDef.webExTitleSizePx) || 12));
-  const ux =
-    pageDef.uxScore != null
-      ? `<span style="font-weight:bold;font-size:10px;background:#0a246a;color:#fff;padding:2px 8px;border-radius:2px;">UX: ${escapeHtml(
-          String(pageDef.uxScore)
-        )}</span>`
-      : '';
+  const cells = (L && L.cells) || [];
+  const modSequence = cells.filter((c) => c.moduleId).map((c) => c.moduleId);
+  const view = buildWebExSiteView(pageDef);
+  const navShowShop = modSequence.some((m) => m === 'shop' || m === 'product_listing');
+  const navShowAbout = modSequence.includes('about_section');
+  const navShowContact = modSequence.includes('contact_form');
+  const pageIdAttr = escapeHtml(pageDef.pageId || '');
+  const colCount = L?.columns != null ? Math.max(1, Number(L.columns) || 1) : 3;
+  const rowCount = L?.rows != null ? Math.max(1, Number(L.rows) || 1) : 1;
+  const gap = L?.gapPx != null ? Math.max(0, Number(L.gapPx) || 0) : 4;
+  const rowMin = L?.rowMinPx != null ? Math.max(40, Number(L.rowMinPx) || 80) : 80;
+  const gridItems = (cells || [])
+    .map((cell) => {
+      const gcol = `${cell.x + 1} / span ${cell.w || 1}`;
+      const grow = `${cell.y + 1} / span ${cell.h || 1}`;
+      const modInner = !cell.moduleId
+        ? `<div class="wx-site-cell wx-site-cell--empty" style="min-height:40px;flex:1;background:linear-gradient(135deg,#f5f5f5 0%,#ebebeb 100%);border:1px dashed #c8c8c8;box-sizing:border-box;"></div>`
+        : `<div class="wx-site-cell wx-site-cell--mod" data-wx-cell-slot="${escapeHtml(
+            cell.slotId || ''
+          )}" style="flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid #d8d8d8;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,0.04);box-sizing:border-box;overflow:hidden;">${renderWebExModule(
+            cell.moduleId,
+            view,
+            pageDef,
+            ctx,
+            cell
+          )}</div>`;
+      return `<div class="wx-site-grid-item" style="grid-column:${gcol};grid-row:${grow};min-width:0;min-height:0;display:flex;flex-direction:column;align-content:stretch;">${modInner}</div>`;
+    })
+    .join('');
 
-  let grid = `<div class="wx-live-grid" style="display:grid;grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},minmax(${rowPx}px,auto));gap:${gap}px;width:100%;box-sizing:border-box;">`;
-  for (const c of L.cells) {
-    const empty = !c.moduleId;
-    const border = empty
-      ? 'border:2px dashed #a0a0a0;background:#f8f4ec;'
-      : 'border:2px solid #6a9a50;background:#e0f0d8;';
-    const inner = (c.sections || []).map((s) => renderSection(s, pageDef, ctx)).join('');
-    const placeholder = empty
-      ? '<span class="wx-live-slot-plus" style="font-size:22px;color:#a0a0a0;line-height:1;">+</span>'
-      : '';
-    grid += `<div class="wx-live-slot${empty ? ' wx-live-slot-empty' : ''}" style="grid-column:${c.x + 1}/span ${c.w};grid-row:${c.y + 1}/span ${c.h};${border}box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:${empty ? 'center' : 'flex-start'};min-height:0;padding:2px;overflow:auto;text-align:${empty ? 'center' : 'left'};">
-      <div class="wx-live-slot-inner" style="width:100%;min-height:0;flex:1;font-size:11px;">${inner || placeholder}</div>
-    </div>`;
-  }
-  grid += '</div>';
-
-  const foot = pageDef.footerText
-    ? `<div style="margin-top:6px;font-size:10px;color:#888;border-top:1px solid #ccc;padding-top:6px;">${escapeHtml(pageDef.footerText)}</div>`
-    : '';
-
-  return `<div class="iebody wnet-webex-mirror" data-page-id="${escapeHtml(
-    pageDef.pageId || ''
-  )}" style="background:${bg};font-family:Tahoma,Arial,sans-serif;font-size:11px;padding:6px;box-sizing:border-box;">
-<div class="wx-live-canvas-header" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-  <div style="flex:1;font-weight:bold;font-size:${titleSize}px;border:2px inset #c0c0c0;padding:3px 5px;background:#fff;font-family:${titleFont};line-height:1.2;">${escapeHtml(siteName)}</div>
-  ${ux}
-</div>
-${grid}
-${foot}
+  const modHtml = `<div class="wx-site-grid" style="display:grid;box-sizing:border-box;grid-template-columns:repeat(${colCount}, minmax(0, 1fr));grid-template-rows:repeat(${rowCount}, minmax(${rowMin}px, auto));grid-auto-rows:minmax(${rowMin}px, auto);gap:${gap}px;padding:10px;flex:1;min-height:0;align-content:start;">
+${gridItems}
 </div>`;
+
+  return `<div class="iebody wnet-webex-mirror wx-site-fragment" data-page-id="${pageIdAttr}" style="font-family:Tahoma,Arial,sans-serif;font-size:11px;padding:0;box-sizing:border-box;">
+  <div class="wx-site-wrap" style="min-height:100%;display:flex;flex-direction:column;background:${escapeHtml(
+    view.colorBackground
+  )};color:${escapeHtml(view.colorText)};">
+    <nav class="wx-nav" style="background:${escapeHtml(view.colorPrimary)};color:#fff;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div class="wx-nav-title" style="font-size:18px;font-weight:bold;letter-spacing:1px;">${escapeHtml(
+        view.siteName
+      )}</div>
+      <div class="wx-nav-links" style="display:flex;gap:20px;">
+        <a href="#" data-action="webex_site_nav_stub" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;">Home</a>
+        ${navShowShop ? '<a href="#" data-action="webex_site_nav_stub" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;">Shop</a>' : ''}
+        ${navShowAbout ? '<a href="#" data-action="webex_site_nav_stub" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;">About</a>' : ''}
+        ${navShowContact ? '<a href="#" data-action="webex_site_nav_stub" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;">Contact</a>' : ''}
+      </div>
+    </nav>
+    ${modHtml}
+  </div>
+</div>`;
+}
+
+/**
+ * Fill guestbook entries in the WorldNet content root for a published page.
+ * @param {ParentNode} container
+ * @param {string} pageId
+ */
+export function hydrateWebExGuestbook(container, pageId) {
+  if (!container || !pageId) return;
+  const st = getState();
+  const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === pageId);
+  const entries = page?.guestbook || [];
+  const wrap = Array.from(container.querySelectorAll('[data-wx-guestbook]')).find(
+    (w) => w.getAttribute('data-page-id') === pageId
+  );
+  if (!wrap) return;
+  const gbEl = wrap.querySelector('.wx-guestbook-entries');
+  if (!gbEl) return;
+  if (!entries.length) {
+    gbEl.innerHTML =
+      '<div class="wx-gb-empty" style="color:#888;font-size:13px;font-style:italic">No entries yet. Be the first to sign!</div>';
+    return;
+  }
+  gbEl.innerHTML = entries
+    .slice(-20)
+    .reverse()
+    .map(
+      (e) => `<div style="border-bottom:1px solid #f0f0f0;padding:10px 0;">
+  <div style="font-weight:bold;font-size:13px;color:#333;margin-bottom:2px">
+    ${escapeHtml(e.actorName || 'Anonymous')}
+    <span style="font-size:10px;color:#999;font-weight:normal;margin-left:8px">${escapeHtml(e.timeLabel || '')}</span>
+  </div>
+  <div style="font-size:13px;color:#555">${escapeHtml(e.message || '')}</div>
+</div>`
+    )
+    .join('');
 }
 
 function renderSection(sec, pageDef, ctx) {

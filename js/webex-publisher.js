@@ -17,6 +17,7 @@ import { toast, TOAST_KEYS } from './toast.js';
 import { createStore, getStoreById } from './worldnet-shop.js';
 import { newPageId, defaultPageDef } from './pipeline/website-editor.js';
 import { setPipelinePageRoutes } from './worldnet-routes.js';
+import { on } from './events.js';
 
 let _modules = [];
 let _rootEl = null;
@@ -28,6 +29,47 @@ let _mainTab = 'editor';
 
 let _autoSaveTimer = null;
 const AUTO_SAVE_DEBOUNCE_MS = 1500;
+/** @type {(() => void) | null} */
+let _webexStateOff = null;
+let _integSyncTimer = null;
+/** @type {string | null} */
+let _modulePickerOpenSlot = null;
+/** @type {((e: KeyboardEvent) => void) | null} */
+let _modulePickerKeyHandler = null;
+
+const DEFAULT_WEBEX_THEME = {
+  colorPrimary: '#0a246a',
+  colorSecondary: '#1a3a8f',
+  colorBackground: '#ffffff',
+  colorText: '#222222'
+};
+
+function ensureProjectTheme(proj) {
+  if (!proj) return { ...DEFAULT_WEBEX_THEME };
+  return {
+    colorPrimary: proj.colorPrimary || DEFAULT_WEBEX_THEME.colorPrimary,
+    colorSecondary: proj.colorSecondary || DEFAULT_WEBEX_THEME.colorSecondary,
+    colorBackground: proj.colorBackground || DEFAULT_WEBEX_THEME.colorBackground,
+    colorText: proj.colorText || DEFAULT_WEBEX_THEME.colorText
+  };
+}
+
+function collectWebExPublishText(proj) {
+  let textBlockContent = '';
+  let aboutContent = '';
+  for (const s of proj.slots || []) {
+    const d = proj.slotModuleData?.[s.slotId];
+    if (s.moduleId === 'text_block' || s.moduleId === 'custom_text_box') {
+      if (d?.body && !textBlockContent) textBlockContent = String(d.body);
+    }
+    if (s.moduleId === 'about_section') {
+      if (d?.body && !aboutContent) aboutContent = String(d.body);
+    }
+  }
+  if (!textBlockContent) textBlockContent = 'About us — content coming soon.';
+  if (!aboutContent) aboutContent = 'We are a Hargrove-based business.';
+  return { textBlockContent, aboutContent };
+}
 
 const MODULE_CATEGORY_ORDER = ['Content', 'Commerce', 'Engagement', 'Media', 'Security'];
 
@@ -379,6 +421,12 @@ function publishProjectSilent(proj) {
   upsertWebExCommerceStore(storeId, fullHost, proj.siteName.trim(), proj);
   const { webExLayout, commerce } = buildWebExMirrorLayout(proj, storeId);
   const placedModuleIds = proj.slots.filter((s) => s.moduleId).map((s) => s.moduleId);
+  const th = ensureProjectTheme(proj);
+  const { textBlockContent, aboutContent } = collectWebExPublishText(proj);
+  const webExSlotModuleData =
+    proj?.slotModuleData && typeof proj.slotModuleData === 'object'
+      ? JSON.parse(JSON.stringify(proj.slotModuleData))
+      : {};
 
   patchState((s) => {
     if (!s.contentRegistry) s.contentRegistry = { pages: [], companies: [], npcs: [], government: {} };
@@ -398,6 +446,13 @@ function publishProjectSilent(proj) {
       shopId: commerce ? storeId : undefined,
       modules: placedModuleIds,
       uxScore: computeUxScore(proj),
+      colorPrimary: th.colorPrimary,
+      colorSecondary: th.colorSecondary,
+      colorBackground: th.colorBackground,
+      colorText: th.colorText,
+      textBlockContent,
+      aboutContent,
+      webExSlotModuleData,
       webExProjectId: proj.id,
       layoutTemplate: 'webex_mirror',
       webExLayout,
@@ -575,6 +630,100 @@ function renderPropertiesPanel(proj) {
       <p>Open or create a project to view <b>Website Properties</b>.</p>
     </div>`;
   }
+  const st0 = getState();
+  const livePage = proj.publishedPageId
+    ? (st0.contentRegistry?.pages || []).find((p) => p.pageId === proj.publishedPageId)
+    : null;
+  const liveBlock = !livePage
+    ? `<div class="prop-section-title">Published site</div>
+<div class="prop-row"><span class="prop-label">Status</span>
+  <span class="prop-value">Draft — not published</span></div>`
+    : (() => {
+        const stats = livePage.stats || {};
+        const guestbook = livePage.guestbook || [];
+        const intLog = livePage.integrationLog || [];
+        const visits = intLog.filter((e) => e.type === 'npc_visit').length;
+        const sales = intLog.filter((e) => e.type === 'commerce').length;
+        const isOnline = (stats.health != null ? stats.health : 100) > 0;
+        return `<div class="prop-section-title">Website &mdash; ${escapeHtml(
+          proj.siteName || livePage.title || 'Untitled'
+        )}</div>
+<div class="prop-row">
+  <span class="prop-label">URL</span>
+  <span class="prop-value prop-mono">${escapeHtml(livePage.url || '')}</span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Status</span>
+  <span class="prop-value" style="color:${isOnline ? '#006600' : '#cc0000'}">
+    ${isOnline ? '&#9679; Online' : '&#9760; Offline'}
+  </span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Health</span>
+  <span class="prop-value">
+    <div class="prop-bar"><div class="prop-bar-fill" style="width:${
+      stats.health != null ? Math.min(100, Math.max(0, stats.health)) : 100
+    }%;background:${
+      (stats.health != null ? stats.health : 100) > 50 ? '#006600' : '#cc0000'
+    }"></div></div>
+    ${Math.round(stats.health != null ? stats.health : 100)}%
+  </span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Traffic</span>
+  <span class="prop-value">
+    <div class="prop-bar"><div class="prop-bar-fill" style="width:${Math.min(
+      100,
+      Math.round(stats.traffic || 0)
+    )}%;background:#0a246a"></div></div>
+    ${Math.round(stats.traffic || 0)}
+  </span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Security</span>
+  <span class="prop-value">
+    <div class="prop-bar"><div class="prop-bar-fill" style="width:${Math.min(
+      100,
+      Math.round(stats.security || 0)
+    )}%;background:#448844"></div></div>
+    ${Math.round(stats.security || 0)}
+  </span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Uptime</span>
+  <span class="prop-value">
+    <div class="prop-bar"><div class="prop-bar-fill" style="width:${Math.min(
+      100,
+      Math.round(stats.uptime != null ? stats.uptime : 100)
+    )}%;background:#224488"></div></div>
+    ${Math.round(stats.uptime != null ? stats.uptime : 100)}%
+  </span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Total Visitors</span>
+  <span class="prop-value">${visits}</span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Guestbook</span>
+  <span class="prop-value">${guestbook.length} entries</span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Commerce Sales</span>
+  <span class="prop-value">${sales}</span>
+</div>
+<div class="prop-row">
+  <span class="prop-label">Modules</span>
+  <span class="prop-value">${(livePage.modules || []).length} installed</span>
+</div>
+${
+  (livePage.equippedDefenses || []).length
+    ? `<div class="prop-row">
+  <span class="prop-label">Security Modules</span>
+  <span class="prop-value">${livePage.equippedDefenses.length} equipped</span>
+</div>`
+    : ''
+}`;
+      })();
   const st = computeWebsiteProperties(proj);
   const diskPct = Math.min(100, (st.diskUsedMb / st.diskCapMb) * 100);
   const tradeHint =
@@ -585,7 +734,7 @@ function renderPropertiesPanel(proj) {
   return `<div class="wx-properties">
     <h2 class="wx-prop-title">Website Properties</h2>
     <p class="wx-prop-lead">Stats interconnect: more modules → heavier load &amp; slower loads; ads &amp; trackers → money but angrier visitors.</p>
-
+    <div class="wx-prop-live">${liveBlock}</div>
     <div class="wx-prop-section">
       <div class="wx-prop-label">Hosting space</div>
       <div class="wx-prop-diskbar-wrap">
@@ -789,6 +938,18 @@ function buildModuleSections(modId, sid, commerce, storeId, proj, slotId) {
         }
       ];
     }
+    case 'about_section': {
+      const data = proj?.slotModuleData?.[slotId] || {};
+      return [
+        {
+          type: 'text',
+          sectionId: sid,
+          headline: 'About',
+          body: data.body || 'We are a Hargrove-based business. Right-click to edit.',
+          webexPlain: true
+        }
+      ];
+    }
     case 'shop':
       return [
         {
@@ -873,6 +1034,15 @@ function buildModuleSections(modId, sid, commerce, storeId, proj, slotId) {
           title: 'Comments',
           commentContext: 'generic',
           commentFlavor: 'generic'
+        }
+      ];
+    case 'live_chat':
+      return [
+        {
+          type: 'text',
+          sectionId: sid,
+          headline: 'Live chat',
+          body: 'Real-time sim chat (WebEx RTC) on your published WorldNet page — same engine as yourspace.net.'
         }
       ];
     case 'reviews':
@@ -991,8 +1161,44 @@ function buildWebExMirrorLayout(proj, storeId) {
 
 // ─── Rendering ───────────────────────────────────────────────────────────────
 
+/**
+ * Replaces only the site integrations panel DOM so clock ticks do not
+ * nuke the module list scroll or module picker.
+ */
+function syncWebExIntegrationLogFromState() {
+  if (!_rootEl || _mainTab !== 'editor') return;
+  const leftScroll = _rootEl.querySelector('.wx-left-preset-area');
+  const leftScrollPos = leftScroll ? leftScroll.scrollTop : 0;
+  const rightStack = _rootEl.querySelector('.wx-right-stack');
+  const rightScroll = rightStack ? rightStack.scrollTop : 0;
+  const ent = _rootEl.querySelector('[data-wx-integ-entries]');
+  const entScroll = ent ? ent.scrollTop : 0;
+  const el = _rootEl.querySelector('#webex-site-integ-log');
+  if (!el) return;
+  const w = document.createElement('div');
+  w.innerHTML = renderIntegrationLog();
+  const replacement = w.firstElementChild;
+  if (!replacement) return;
+  el.replaceWith(replacement);
+  const left2 = _rootEl.querySelector('.wx-left-preset-area');
+  if (left2) left2.scrollTop = leftScrollPos;
+  if (rightStack) rightStack.scrollTop = rightScroll;
+  const e2 = _rootEl.querySelector('[data-wx-integ-entries]');
+  if (e2) e2.scrollTop = entScroll;
+}
+
+function closeModulePicker() {
+  if (_modulePickerKeyHandler) {
+    document.removeEventListener('keydown', _modulePickerKeyHandler, true);
+    _modulePickerKeyHandler = null;
+  }
+  document.querySelectorAll('.wx-picker-overlay[data-wx-module-picker="1"]').forEach((n) => n.remove());
+  _modulePickerOpenSlot = null;
+}
+
 function render() {
   if (!_rootEl) return;
+  closeModulePicker();
   if (_priceOverlay) {
     _priceOverlay.remove();
     _priceOverlay = null;
@@ -1001,6 +1207,9 @@ function render() {
     _textOverlay.remove();
     _textOverlay = null;
   }
+  const prevLeft = _rootEl.querySelector('.wx-left-preset-area')?.scrollTop || 0;
+  const prevRight = _rootEl.querySelector('.wx-right-stack')?.scrollTop || 0;
+  const prevInteg = _rootEl.querySelector('[data-wx-integ-entries]')?.scrollTop || 0;
   const proj = currentProject();
   const editorDisplay = _mainTab === 'editor' ? 'flex' : 'none';
   const propsDisplay = _mainTab === 'properties' ? 'flex' : 'none';
@@ -1012,9 +1221,12 @@ function render() {
       </div>
       <div class="wx-tab-views">
         <div class="wx-editor-layout" style="display:${editorDisplay};">
-          <div class="wx-left">${renderPresets(proj)}</div>
+          <div class="wx-left wx-left-stack">
+            <div class="wx-left-preset-area">${renderPresets(proj)}</div>
+            <div class="wx-left-integ-wrap">${renderIntegrationLog()}</div>
+          </div>
           <div class="wx-center">${proj ? renderCanvas(proj) : renderNoProject()}</div>
-          <div class="wx-right">${renderModulePanel()}</div>
+          <div class="wx-right wx-right-stack">${renderModulePanel()}${renderColorPanel()}</div>
         </div>
         <div class="wx-properties-layout" style="display:${propsDisplay};">
           ${renderPropertiesPanel(proj)}
@@ -1023,6 +1235,12 @@ function render() {
     </div>
   `;
   bindEvents();
+  const nl = _rootEl.querySelector('.wx-left-preset-area');
+  const nr = _rootEl.querySelector('.wx-right-stack');
+  const ne = _rootEl.querySelector('[data-wx-integ-entries]');
+  if (nl) nl.scrollTop = prevLeft;
+  if (nr) nr.scrollTop = prevRight;
+  if (ne) ne.scrollTop = prevInteg;
 }
 
 function renderNoProject() {
@@ -1317,6 +1535,121 @@ function renderModulePanel() {
 </div>`;
     }).join('')
   );
+}
+
+function renderColorPanel() {
+  const proj = currentProject();
+  if (!proj) return '';
+  const th = ensureProjectTheme(proj);
+
+  const PALETTES = [
+    { name: 'Corporate', primary: '#0a246a', secondary: '#1a3a8f', bg: '#ffffff', text: '#222222' },
+    { name: 'Slate', primary: '#2d3748', secondary: '#4a5568', bg: '#f7fafc', text: '#1a202c' },
+    { name: 'Forest', primary: '#276749', secondary: '#38a169', bg: '#f0fff4', text: '#1c4532' },
+    { name: 'Crimson', primary: '#9b2335', secondary: '#c53030', bg: '#fff5f5', text: '#1a0000' },
+    { name: 'Midnight', primary: '#1a1a2e', secondary: '#16213e', bg: '#0f3460', text: '#e0e0e0' },
+    { name: 'Sand', primary: '#8b6914', secondary: '#c49a2a', bg: '#fffdf0', text: '#3d2b00' },
+    { name: 'Teal Corp', primary: '#006666', secondary: '#008080', bg: '#f0fafa', text: '#003333' },
+    { name: 'Monochrome', primary: '#1a1a1a', secondary: '#444444', bg: '#ffffff', text: '#111111' }
+  ];
+
+  return (
+    `<div class="wx-color-panel">` +
+    `<div class="wx-color-panel-title">SITE COLORS</div>` +
+    `<div class="wx-color-pickers">` +
+    `<div class="wx-color-row">` +
+    `<label class="wx-color-label">Primary</label>` +
+    `<input type="color" class="wx-color-input" data-wx-color="colorPrimary" value="${escapeHtml(
+      th.colorPrimary
+    )}" title="Nav bar, hero, buttons">` +
+    `<span class="wx-color-hex">${escapeHtml(th.colorPrimary)}</span></div>` +
+    `<div class="wx-color-row">` +
+    `<label class="wx-color-label">Accent</label>` +
+    `<input type="color" class="wx-color-input" data-wx-color="colorSecondary" value="${escapeHtml(
+      th.colorSecondary
+    )}" title="Secondary accent color">` +
+    `<span class="wx-color-hex">${escapeHtml(th.colorSecondary)}</span></div>` +
+    `<div class="wx-color-row">` +
+    `<label class="wx-color-label">Background</label>` +
+    `<input type="color" class="wx-color-input" data-wx-color="colorBackground" value="${escapeHtml(
+      th.colorBackground
+    )}" title="Page background">` +
+    `<span class="wx-color-hex">${escapeHtml(th.colorBackground)}</span></div>` +
+    `<div class="wx-color-row">` +
+    `<label class="wx-color-label">Text</label>` +
+    `<input type="color" class="wx-color-input" data-wx-color="colorText" value="${escapeHtml(
+      th.colorText
+    )}" title="Body text color">` +
+    `<span class="wx-color-hex">${escapeHtml(th.colorText)}</span></div></div>` +
+    `<div class="wx-palette-title">PRESETS</div><div class="wx-palettes">` +
+    PALETTES.map(
+      (pal) =>
+        `<div class="wx-palette-chip" data-wx-palette="${encodeURIComponent(
+          JSON.stringify(pal)
+        )}" title="${escapeHtml(pal.name)}">` +
+        `<div class="wx-pal-swatch" style="background:${escapeHtml(pal.primary)}"></div>` +
+        `<div class="wx-pal-swatch" style="background:${escapeHtml(pal.secondary)}"></div>` +
+        `<div class="wx-pal-swatch" style="background:${escapeHtml(pal.bg)};border:1px solid #ccc"></div>` +
+        `<div class="wx-pal-name">${escapeHtml(pal.name)}</div></div>`
+    ).join('') +
+    `</div></div>`
+  );
+}
+
+function renderIntegrationLog() {
+  const proj = currentProject();
+  if (!proj?.publishedPageId) {
+    return `<div class="wx-integ-log" id="webex-site-integ-log">
+  <div class="wx-integ-log-title">SITE INTEGRATIONS</div>
+  <div class="wx-integ-standby">
+    <div class="wx-integ-standby-icon">&#128225;</div>
+    <div class="wx-integ-standby-txt">Standby for Publishing</div>
+    <div class="wx-integ-standby-sub">Publish your site to begin tracking visitor activity.</div>
+  </div>
+</div>`;
+  }
+  const st = getState();
+  const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === proj.publishedPageId);
+  if (!page) {
+    return `<div class="wx-integ-log" id="webex-site-integ-log"><div class="wx-integ-log-title">SITE INTEGRATIONS</div><div class="wx-integ-empty">Page not found in registry.</div></div>`;
+  }
+  const log = page.integrationLog || [];
+  const stats = page.stats || {};
+  const guestbook = page.guestbook || [];
+  const recentLog = log.slice(-20).reverse();
+  const typeIcon = {
+    npc_visit: '&#128100;',
+    guestbook_entry: '&#128214;',
+    ad_click: '&#128226;',
+    commerce: '&#128722;',
+    form_submit: '&#9993;',
+    page_view: '&#128065;',
+    attack: '&#9889;',
+    repair: '&#128295;',
+    security: '&#128737;'
+  };
+  const logHtml = recentLog.length
+    ? recentLog
+        .map(
+          (entry) => `<div class="wx-integ-row">
+    <span class="wx-integ-icon">${typeIcon[entry.type] || '&#9670;'}</span>
+    <span class="wx-integ-actor">${escapeHtml(entry.actorName || entry.type || 'System')}</span>
+    <span class="wx-integ-action">${escapeHtml(entry.action || '')}</span>
+    <span class="wx-integ-time">${escapeHtml(entry.timeLabel || '')}</span>
+  </div>`
+        )
+        .join('')
+    : '<div class="wx-integ-empty">No activity yet. Waiting for visitors...</div>';
+  return `<div class="wx-integ-log" id="webex-site-integ-log" data-wx-integ-v="1">
+  <div class="wx-integ-log-title">SITE INTEGRATIONS <span class="wx-integ-live-dot" aria-hidden="true"></span></div>
+  <div class="wx-integ-stats-row">
+    <span class="wx-integ-stat">&#128065; ${Math.round(stats.traffic || 0)}</span>
+    <span class="wx-integ-stat">&#10084; ${Math.round(stats.health != null ? stats.health : 100)}%</span>
+    <span class="wx-integ-stat">&#128737; ${Math.round(stats.security || 0)}</span>
+    <span class="wx-integ-stat">&#128214; ${guestbook.length} entries</span>
+  </div>
+  <div class="wx-integ-entries" data-wx-integ-entries>${logHtml}</div>
+</div>`;
 }
 
 function equipSecurityModule(modId) {
@@ -1780,7 +2113,7 @@ function showSlotContextMenu(clientX, clientY, slotId, modId) {
     items = `<div class="wx-ctx-item" data-wx-ctx="prices">Edit prices</div>
     <div class="wx-ctx-item" data-wx-ctx="inventory">Manage inventory</div>
     <div class="wx-ctx-item" data-wx-ctx="settings">Module settings</div>`;
-  } else if (modId === 'custom_text_box' || modId === 'text_block') {
+  } else if (modId === 'custom_text_box' || modId === 'text_block' || modId === 'about_section') {
     items = `<div class="wx-ctx-item" data-wx-ctx="edittext">Edit text</div>
     <div class="wx-ctx-item" data-wx-ctx="settings">Module settings</div>`;
   } else {
@@ -1981,6 +2314,29 @@ function bindEvents() {
   if (!_rootEl.dataset.wxDelegatedBound) {
     _rootEl.dataset.wxDelegatedBound = '1';
     _rootEl.addEventListener('click', (e) => {
+      const palChip = e.target.closest('[data-wx-palette]');
+      if (palChip) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          const pal = JSON.parse(decodeURIComponent(palChip.getAttribute('data-wx-palette') || ''));
+          patchState((st) => {
+            const p = (st.player?.webExProjects || []).find((x) => x.id === _currentProjectId);
+            if (p) {
+              p.colorPrimary = pal.primary;
+              p.colorSecondary = pal.secondary;
+              p.colorBackground = pal.bg;
+              p.colorText = pal.text;
+            }
+            return st;
+          });
+          scheduleAutoSave();
+          render();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
       const catHeader = e.target.closest('[data-wx-cat-toggle]');
       if (catHeader) {
         const cat = catHeader.getAttribute('data-wx-cat-toggle');
@@ -2014,6 +2370,27 @@ function bindEvents() {
       if (handoffBtn && !handoffBtn.disabled) {
         renderHandoffConfirmation();
         return;
+      }
+    });
+  }
+
+  if (!_rootEl.dataset.wxColorInputBound) {
+    _rootEl.dataset.wxColorInputBound = '1';
+    _rootEl.addEventListener('input', (e) => {
+      const colorInput = e.target && /** @type {Element} */ (e.target).closest?.('[data-wx-color]');
+      if (colorInput) {
+        const key = colorInput.getAttribute('data-wx-color');
+        const val = /** @type {HTMLInputElement} */ (colorInput).value;
+        if (!key) return;
+        patchState((st) => {
+          const p = (st.player?.webExProjects || []).find((x) => x.id === _currentProjectId);
+          if (p) p[key] = val;
+          return st;
+        });
+        const row = colorInput.closest('.wx-color-row');
+        const hex = row && row.querySelector('.wx-color-hex');
+        if (hex) hex.textContent = val;
+        scheduleAutoSave();
       }
     });
   }
@@ -2119,6 +2496,7 @@ function showModulePicker(slotId) {
   if (!proj) return;
   const slot = (LAYOUT_PRESETS.find(p => p.id === proj.layoutPresetId)?.slots || []).find(s => s.slotId === slotId);
   if (!slot) return;
+  closeModulePicker();
   const compatible = _modules.filter((m) => {
     if (m.defensiveModule) return false;
     const sz = m.slotSize || m.slot || 'medium';
@@ -2128,21 +2506,41 @@ function showModulePicker(slotId) {
   });
   const menu = document.createElement('div');
   menu.className = 'wx-picker-overlay';
-  menu.innerHTML = `<div class="wx-picker">
+  menu.dataset.wxModulePicker = '1';
+  menu.setAttribute('role', 'dialog');
+  menu.setAttribute('aria-modal', 'true');
+  menu.innerHTML = `<div class="wx-picker" tabindex="-1">
     <div class="wx-picker-title">Select Module for "${escapeHtml(slot.label)}"</div>
     ${compatible.map(m => `<div class="wx-picker-item" data-pick="${m.id}">
       ${m.icon} ${escapeHtml(m.label)} <span class="wx-mod-stats">+${m.utilityScore}/${-m.clutterScore}</span>
     </div>`).join('')}
-    <button class="wx-btn wx-picker-cancel">Cancel</button>
+    <button type="button" class="wx-btn wx-picker-cancel">Cancel</button>
   </div>`;
-  _rootEl.appendChild(menu);
-  menu.querySelector('.wx-picker-cancel')?.addEventListener('click', () => menu.remove());
-  menu.querySelectorAll('[data-pick]').forEach(el => {
+  document.body.appendChild(menu);
+  _modulePickerOpenSlot = slotId;
+  const dismiss = (e) => {
+    if (e.target === menu) closeModulePicker();
+  };
+  menu.addEventListener('mousedown', dismiss);
+  const inner = /** @type {HTMLElement | null} */ (menu.querySelector('.wx-picker'));
+  inner?.addEventListener('mousedown', (e) => e.stopPropagation());
+  _modulePickerKeyHandler = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModulePicker();
+    }
+  };
+  document.addEventListener('keydown', _modulePickerKeyHandler, true);
+  menu.querySelector('.wx-picker-cancel')?.addEventListener('click', () => closeModulePicker());
+  menu.querySelectorAll('[data-pick]').forEach((el) => {
     el.addEventListener('click', () => {
-      placeModuleInSlot(slotId, el.getAttribute('data-pick'));
-      menu.remove();
+      const pick = el.getAttribute('data-pick');
+      if (pick) placeModuleInSlot(slotId, pick);
+      closeModulePicker();
     });
   });
+  inner?.focus?.();
 }
 
 function addWebsiteListing(stockItemId) {
@@ -2197,6 +2595,10 @@ function createNewProject(presetId) {
     domainTld: '.net',
     titleFontId: 'tahoma',
     titleSizePx: 12,
+    colorPrimary: DEFAULT_WEBEX_THEME.colorPrimary,
+    colorSecondary: DEFAULT_WEBEX_THEME.colorSecondary,
+    colorBackground: DEFAULT_WEBEX_THEME.colorBackground,
+    colorText: DEFAULT_WEBEX_THEME.colorText,
     slotModuleData: {},
     layoutPresetId: preset.id,
     slots: preset.slots.map(s => ({ slotId: s.slotId, moduleId: null })),
@@ -2248,6 +2650,15 @@ function placeModuleInSlot(slotId, moduleId) {
         };
       }
     }
+    if (moduleId === 'about_section') {
+      if (!p.slotModuleData) p.slotModuleData = {};
+      if (!p.slotModuleData[slotId]) {
+        p.slotModuleData[slotId] = {
+          headline: '',
+          body: 'We are a Hargrove-based business. Right-click this slot to edit about text.'
+        };
+      }
+    }
     return s;
   });
   setStatus(`Placed "${mod.label}".`);
@@ -2265,7 +2676,9 @@ function removeModuleFromSlot(slotId) {
     if (slot) {
       if (
         p.slotModuleData &&
-        (slot.moduleId === 'custom_text_box' || slot.moduleId === 'text_block') &&
+        (slot.moduleId === 'custom_text_box' ||
+          slot.moduleId === 'text_block' ||
+          slot.moduleId === 'about_section') &&
         p.slotModuleData[slotId]
       ) {
         delete p.slotModuleData[slotId];
@@ -2325,6 +2738,12 @@ function publishProject() {
 
   const { webExLayout, commerce } = buildWebExMirrorLayout(proj, storeId);
   const placedModuleIds = proj.slots.filter((s) => s.moduleId).map((s) => s.moduleId);
+  const th = ensureProjectTheme(proj);
+  const { textBlockContent, aboutContent } = collectWebExPublishText(proj);
+  const webExSlotModuleData =
+    proj?.slotModuleData && typeof proj.slotModuleData === 'object'
+      ? JSON.parse(JSON.stringify(proj.slotModuleData))
+      : {};
 
   patchState((s) => {
     if (shouldChargeDomain) {
@@ -2351,6 +2770,13 @@ function publishProject() {
       shopId: commerce ? storeId : undefined,
       modules: placedModuleIds,
       uxScore: computeUxScore(proj),
+      colorPrimary: th.colorPrimary,
+      colorSecondary: th.colorSecondary,
+      colorBackground: th.colorBackground,
+      colorText: th.colorText,
+      textBlockContent,
+      aboutContent,
+      webExSlotModuleData,
       webExProjectId: proj.id,
       layoutTemplate: 'webex_mirror',
       webExLayout,
@@ -2363,6 +2789,22 @@ function publishProject() {
     };
     if (prevPage?.stats) {
       pageDef.stats = { ...prevPage.stats };
+    }
+    if (prevPage?.integrationLog) {
+      pageDef.integrationLog = [...prevPage.integrationLog];
+    }
+    if (prevPage?.guestbook) {
+      pageDef.guestbook = [...prevPage.guestbook];
+    }
+    if (prevPage?.webexRtc) {
+      const wr = prevPage.webexRtc;
+      pageDef.webexRtc = {
+        feed: Array.isArray(wr.feed) ? wr.feed.map((r) => ({ ...r })) : [],
+        rtcNextDueSimMs: wr.rtcNextDueSimMs,
+        lastRtcBoundarySimMs: wr.lastRtcBoundarySimMs,
+        rtcCounts: { ...wr.rtcCounts },
+        rtcVote: { ...wr.rtcVote }
+      };
     }
     ensureWebsiteStats(pageDef);
     pageDef.equippedDefenses = [...(proj.securityModules || [])];
@@ -2476,6 +2918,22 @@ export async function initWebExPublisher(loadJson) {
     st.player = st.player || {};
     st.player.lastActiveWebExProjectId = _currentProjectId;
     return st;
+  });
+  if (_webexStateOff) {
+    _webexStateOff();
+    _webexStateOff = null;
+  }
+  if (_integSyncTimer) {
+    clearTimeout(_integSyncTimer);
+    _integSyncTimer = null;
+  }
+  _webexStateOff = on('stateChanged', () => {
+    if (!_rootEl || !document.body.contains(_rootEl)) return;
+    if (_integSyncTimer) clearTimeout(_integSyncTimer);
+    _integSyncTimer = setTimeout(() => {
+      _integSyncTimer = null;
+      syncWebExIntegrationLogFromState();
+    }, 100);
   });
   render();
 }

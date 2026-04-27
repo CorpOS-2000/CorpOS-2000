@@ -7,7 +7,14 @@
 
 import { on } from '../js/events.js';
 import { resolveAgainstDC } from '../js/d20.js';
-import { getState, patchState, setWebsiteContract } from '../js/gameState.js';
+import {
+  getState,
+  getGameEpochMs,
+  patchState,
+  setWebsiteContract,
+  siteIntegrationLog,
+  siteGuestbookAppend
+} from '../js/gameState.js';
 import { getSessionState } from '../js/sessionState.js';
 import { ActorDB } from './ActorDB.js';
 import { SMS } from '../js/bc-sms.js';
@@ -456,32 +463,160 @@ export const EventSystem = {
     SMS.send({ from: senderKey, message: msg, gameTime: simMs });
   },
 
-  // ── WEBSITE WORLD TICK (daily) ─────────────────────────────────────
+  // ── WEBSITE WORLD TICK (hourly) ────────────────────────────────────
   _tickWebsiteWorld(simMs) {
-    const st = getState();
-    const playerPages = (st.contentRegistry?.pages || []).filter(p => p.webExProjectId);
+    const playerPages = (getState().contentRegistry?.pages || []).filter(
+      (p) => p.webExProjectId && !p.ownedByCompany
+    );
     if (!playerPages.length) return;
 
-    let actors;
+    let allActors;
     try {
-      actors = ActorDB.getAllRaw().filter(a => a.active !== false);
-    } catch { return; }
+      allActors = ActorDB.getAllRaw().filter((a) => a.active !== false && a.actor_id);
+    } catch {
+      return;
+    }
+    if (!allActors.length) return;
+
+    const gameDate = new Date(getGameEpochMs() + simMs);
+    const timeLabel = `${gameDate.getUTCMonth() + 1}/${gameDate.getUTCDate()} ${gameDate.getUTCHours()}:00`;
+    const modulesOf = (page) => page.modules || [];
 
     for (const page of playerPages) {
-      const visitors = actors.filter(() => Math.random() < 0.03);
+      if (page.stats?.health <= 0) continue;
+
+      const trafficMod = (page.stats?.traffic || 50) / 100;
+      const visitChance = 0.03 * trafficMod;
+      const visitors = allActors.filter(() => Math.random() < visitChance);
       if (!visitors.length) continue;
 
-      for (let i = 0; i < visitors.length; i++) {
-        const slug = String(page.pageId || page.title || 'site').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      for (const actor of visitors) {
+        const slug = String(page.pageId || page.title || 'site')
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, '_');
         recordHashtagEvent(slug, 'mention');
+
+        const actorName =
+          actor.public_profile?.display_name ||
+          (actor.full_legal_name && String(actor.full_legal_name).split(' ')[0]) ||
+          actor.actor_id;
+
+        siteIntegrationLog(page.pageId, {
+          type: 'npc_visit',
+          actorId: actor.actor_id,
+          actorName,
+          action: 'visited your site',
+          timeLabel,
+          simMs
+        });
+
+        patchState((s) => {
+          const pg = (s.contentRegistry?.pages || []).find((p) => p.pageId === page.pageId);
+          if (pg?.stats) {
+            pg.stats.traffic = Math.min(100, (pg.stats.traffic || 0) + 0.1);
+          }
+          return s;
+        });
+
+        const hasGuestbook = modulesOf(page).includes('guestbook');
+        if (hasGuestbook) {
+          const tags = actor.taglets || [];
+          const willSign = tags.includes('vocal') || tags.includes('transactional')
+            ? Math.random() < 0.4
+            : Math.random() < 0.08;
+
+          if (willSign) {
+            const messages = [
+              `Great site! Really impressed with what you have here.`,
+              `Found you through Wahoo! Keep up the good work.`,
+              `Excellent content. Will be returning for sure.`,
+              `Nice to see a local business on WorldNet. Support from Hargrove!`,
+              `Very professional. Bookmarked for later.`,
+              `This is exactly what I was looking for. Thank you!`,
+              `Good stuff. Shared with a few colleagues.`,
+              `First time here. Won't be the last.`
+            ];
+            const msg = messages[Math.floor(Math.random() * messages.length)];
+            siteGuestbookAppend(page.pageId, {
+              actorId: actor.actor_id,
+              actorName,
+              message: msg,
+              timeLabel,
+              simMs
+            });
+            siteIntegrationLog(page.pageId, {
+              type: 'guestbook_entry',
+              actorId: actor.actor_id,
+              actorName,
+              action: `signed guestbook: "${msg.slice(0, 40)}..."`,
+              timeLabel,
+              simMs
+            });
+          }
+        }
+
+        const hasShop =
+          page.hasShop ||
+          modulesOf(page).some(
+            (m) => m === 'shop' || m === 'product_listing' || m === 'checkout_widget'
+          );
+        if (hasShop) {
+          const tags = actor.taglets || [];
+          const uxScore = page.uxScore || 50;
+          const buyChance = (uxScore / 200) * (tags.includes('transactional') ? 0.35 : 0.08);
+          if (Math.random() < buyChance && page.shopId) {
+            siteIntegrationLog(page.pageId, {
+              type: 'commerce',
+              actorId: actor.actor_id,
+              actorName,
+              action: 'purchased from your shop',
+              timeLabel,
+              simMs
+            });
+            const revenue = Math.round(20 + Math.random() * 80);
+            patchState((s) => {
+              const primary = (s.accounts || []).find((a) => a.id === 'fncb');
+              if (primary) primary.balance = (primary.balance || 0) + revenue;
+              const pg = (s.contentRegistry?.pages || []).find((p) => p.pageId === page.pageId);
+              if (pg?.stats) {
+                pg.stats.traffic = Math.min(100, (pg.stats.traffic || 0) + 0.5);
+              }
+              return s;
+            });
+          }
+        }
+
+        if (modulesOf(page).includes('banner_ad_slot') && Math.random() < 0.15) {
+          siteIntegrationLog(page.pageId, {
+            type: 'ad_click',
+            actorId: actor.actor_id,
+            actorName,
+            action: 'engaged with advertisement',
+            timeLabel,
+            simMs
+          });
+        }
+
+        if (modulesOf(page).includes('contact_form') && Math.random() < 0.05) {
+          siteIntegrationLog(page.pageId, {
+            type: 'form_submit',
+            actorId: actor.actor_id,
+            actorName,
+            action: 'submitted contact form',
+            timeLabel,
+            simMs
+          });
+        }
       }
 
-      const totalVisits = st.marketBuzz?.[String(page.pageId || '').toLowerCase().replace(/[^a-z0-9_]/g, '_')]?.mentions || 0;
+      const st = getState();
+      const pEntry = (st.contentRegistry?.pages || []).find((p) => p.pageId === page.pageId);
+      const totalVisits = (pEntry?.integrationLog || []).filter((e) => e.type === 'npc_visit').length;
       const milestones = [10, 50, 100, 500, 1000];
       for (const m of milestones) {
         const flagKey = `site_traffic_milestone_${page.pageId}_${m}`;
         if (totalVisits >= m && !st.flags?.[flagKey]) {
-          patchState(s => {
+          patchState((s) => {
             if (!s.flags) s.flags = {};
             s.flags[flagKey] = true;
             return s;
@@ -489,8 +624,8 @@ export const EventSystem = {
           ToastManager.fire({
             key: flagKey,
             title: 'Website Traffic',
-            message: `${page.title || page.pageId} reached ${m} visitors`,
-            icon: '🌐',
+            message: `${page.title || page.pageId} has reached ${m} visitors.`,
+            icon: '🌐'
           });
         }
       }

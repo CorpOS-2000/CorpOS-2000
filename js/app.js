@@ -61,6 +61,7 @@ import { initAxis, hydrateAxisFromSave } from './axis.js';
 import { SaveManager } from '../engine/SaveManager.js';
 import { initSocialComments } from './social-comments.js';
 import { initYourspaceFeed, tickYourspaceRtc } from './yourspace-feed.js';
+import { tickWebexSiteRtcPages } from './webex-site-rtc.js';
 import { tickReviewBomberNpc, warmReviewBomberPosts } from './review-bomber-feed.js';
 import { tickMytubeNpcComments, warmMytubeCatalog } from './mytube-feed.js';
 import { tickPipelineLiveComments } from './pipeline-live-comments.js';
@@ -486,6 +487,7 @@ async function main() {
     });
     const simMs = typeof elapsedMs === 'number' ? elapsedMs : getState().sim.elapsedMs;
     tickYourspaceRtc(simMs);
+    tickWebexSiteRtcPages(simMs);
     tickReviewBomberNpc(simMs);
     tickMytubeNpcComments(simMs);
     tickPipelineLiveComments(simMs);

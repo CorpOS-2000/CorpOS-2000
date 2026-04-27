@@ -33,6 +33,46 @@ export function migrateWebsiteStats(st) {
   return st;
 }
 
+/**
+ * Append to a published page's integration log (visitor activity, etc.).
+ * @param {string} pageId
+ * @param {object} entry
+ */
+export function siteIntegrationLog(pageId, entry) {
+  patchState((st) => {
+    const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === pageId);
+    if (!page) return st;
+    page.integrationLog = page.integrationLog || [];
+    page.integrationLog.push(entry);
+    if (page.integrationLog.length > 100) {
+      page.integrationLog = page.integrationLog.slice(-100);
+    }
+    return st;
+  });
+}
+
+/**
+ * Append a guestbook entry (player or NPC). One sign per actor per in-game day.
+ * @param {string} pageId
+ * @param {object} entry
+ */
+export function siteGuestbookAppend(pageId, entry) {
+  patchState((st) => {
+    const page = (st.contentRegistry?.pages || []).find((p) => p.pageId === pageId);
+    if (!page) return st;
+    const today = Math.floor((st.sim?.elapsedMs || 0) / 86400000);
+    page.guestbook = page.guestbook || [];
+    const alreadyToday = page.guestbook.some(
+      (e) => e.actorId === entry.actorId && e.dayIndex === today
+    );
+    if (!alreadyToday) {
+      page.guestbook.push({ ...entry, dayIndex: today });
+      if (page.guestbook.length > 200) page.guestbook.shift();
+    }
+    return st;
+  });
+}
+
 export function getWebsiteContract(st) {
   return st?.websiteContract || null;
 }

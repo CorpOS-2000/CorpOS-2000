@@ -5,8 +5,14 @@ import { worldnetPages } from './worldnet-pages.js';
 import { BANK_META } from './bank-pages.js';
 import { bankHtmlForPageKey, bindBankRoot, installBankWindowGlobals } from './bank-ui.js';
 import {
-  getGameEpochMs, getState, patchState,
-  cancelSoftwareInstall, getInstallStatus, queueSoftwareInstall
+  getGameEpochMs,
+  getState,
+  patchState,
+  cancelSoftwareInstall,
+  getInstallStatus,
+  queueSoftwareInstall,
+  siteGuestbookAppend,
+  siteIntegrationLog
 } from './gameState.js';
 import { smsToPlayer } from './black-cherry.js';
 import { getSessionState, patchSession } from './sessionState.js';
@@ -20,7 +26,9 @@ import {
   titleForWorldNetPage,
   worldNetRegistryNavAttrs
 } from './worldnet-routes.js';
-import { renderPageDefinitionHtml } from './worldnet-page-renderer.js';
+import { renderPageDefinitionHtml, hydrateWebExGuestbook } from './worldnet-page-renderer.js';
+import { applyWebexRtcVote, hydrateWebExRtc, pageHasWebexLiveChat } from './webex-site-rtc.js';
+import { on } from './events.js';
 import { getStoreById } from './worldnet-shop.js';
 import { renderDmbPage, dispatchDmbAction, dmbPageTitle } from './david-mitchell-bank.js';
 import { initWorldNetAds, getAdsApi, mountPage } from './worldnet-ads.js';
@@ -71,6 +79,7 @@ let historyIndex = -1;
 let notFoundAddress = '';
 let activeTransferDialogAppId = '';
 let transferDialogDelegated = false;
+let _wnetWebexRtcRefreshAt = 0;
 
 export let currentPageKey = 'moogle_home';
 export let currentSubPath = '';
@@ -1248,6 +1257,12 @@ function navigate(key, sub = '', opts = {}) {
     if (pageDef) {
       mountPipelineLiveComments(content, pageDef);
       if (pageDef.style === 'y2k') mountY2kForms(content, pageDef);
+      if ((pageDef.modules || []).includes('guestbook') && (pageDef.stats?.health == null || pageDef.stats?.health > 0)) {
+        hydrateWebExGuestbook(content, pageDef.pageId);
+      }
+      if (pageHasWebexLiveChat(pageDef)) {
+        hydrateWebExRtc(content, pageDef.pageId);
+      }
     }
   }
   if (currentPageKey === 'bizreg') mountBizRegForm(content);
@@ -1398,6 +1413,7 @@ function mountBizRegForm(container) {
 
 function dispatchAction(action, rootEl, sourceEl = null) {
   if (!action) return false;
+  if (action === 'webex_site_nav_stub') return true;
   if (dispatchDmbAction(action, { navigate, toast })) return true;
   if (action === 'install-app') {
     const appId =
@@ -1851,6 +1867,48 @@ function bindWorldNetContent(root) {
       const node = /** @type {HTMLElement} */ (el);
       if (node.hasAttribute('data-bank-nav') || node.hasAttribute('data-bank-action') || node.hasAttribute('data-bank-subpath')) return;
       if (node.hasAttribute('onclick')) return;
+      if (node.hasAttribute('data-wx-gb-submit')) {
+        const wrap = node.closest('[data-wx-guestbook]');
+        if (wrap) {
+          ev.preventDefault();
+          const pageId = wrap.getAttribute('data-page-id');
+          const nameEl = wrap.querySelector('[data-wx-gb-name]');
+          const msgEl = wrap.querySelector('[data-wx-gb-msg]');
+          const name = nameEl && nameEl.value ? String(nameEl.value).trim() : '';
+          const msg = msgEl && msgEl.value ? String(msgEl.value).trim() : '';
+          if (name && msg && pageId) {
+            const simMs = getState().sim?.elapsedMs || 0;
+            const gameDate = new Date(getGameEpochMs() + simMs);
+            const timeLabel = `${gameDate.getUTCMonth() + 1}/${gameDate.getUTCDate()}`;
+            siteGuestbookAppend(pageId, { actorId: 'player', actorName: name, message: msg, timeLabel, simMs });
+            siteIntegrationLog(pageId, {
+              type: 'guestbook_entry',
+              actorId: 'player',
+              actorName: name,
+              action: 'signed the guestbook',
+              timeLabel,
+              simMs
+            });
+            if (nameEl) nameEl.value = '';
+            if (msgEl) msgEl.value = '';
+            hydrateWebExGuestbook(root, pageId);
+          }
+        }
+        return;
+      }
+      if (node.hasAttribute('data-wx-rtc-vote')) {
+        const pageId = node.getAttribute('data-page-id') || '';
+        const postId = node.getAttribute('data-wx-rtc-pid') || '';
+        const v = node.getAttribute('data-wx-rtc-vote') || '';
+        const actorId = node.getAttribute('data-wx-rtc-actor') || '';
+        if (pageId && postId && (v === 'up' || v === 'down')) {
+          ev.preventDefault();
+          applyWebexRtcVote(pageId, postId, v, actorId);
+          const mount = node.closest('.iebody') || root;
+          hydrateWebExRtc(/** @type {ParentNode} */ (mount), pageId);
+        }
+        return;
+      }
       const action = node.getAttribute('data-action');
       if (dispatchAction(action, root, node)) {
         ev.preventDefault();
@@ -1947,6 +2005,16 @@ export async function initWorldNet(loadJsonText) {
     if (!e.target.closest('#wnet-fav-btn') && !e.target.closest('#wnet-fav-panel')) {
       toggleFavorites(false);
     }
+  });
+
+  on('stateChanged', () => {
+    if (currentPageKey !== 'pipeline_page') return;
+    const t = Date.now();
+    if (t - _wnetWebexRtcRefreshAt < 200) return;
+    _wnetWebexRtcRefreshAt = t;
+    const c = document.getElementById('wnet-content');
+    if (!c || !c.querySelector('[data-webex-rtc-root]')) return;
+    hydrateWebExRtc(c, currentSubPath);
   });
 }
 
