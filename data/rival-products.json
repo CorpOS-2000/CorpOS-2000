@@ -1,0 +1,2805 @@
+{
+  "version": 1,
+  "products": [
+    {
+      "id": "moogle-search-pro",
+      "companyId": "moogle-inc",
+      "name": "Moogle Search Pro",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 88,
+      "tags": [
+        "search",
+        "moogle",
+        "software"
+      ],
+      "description": "The search engine. 1.24 billion pages indexed."
+    },
+    {
+      "id": "moogle-ads",
+      "companyId": "moogle-inc",
+      "name": "Moogle AdWords",
+      "category": "advertising",
+      "priceUsd": 299,
+      "quality": 80,
+      "tags": [
+        "ads",
+        "moogle",
+        "advertising"
+      ],
+      "description": "Targeted ad placement across Moogle properties."
+    },
+    {
+      "id": "moogle-maps-api",
+      "companyId": "moogle-inc",
+      "name": "Moogle Maps API",
+      "category": "software",
+      "priceUsd": 49.99,
+      "quality": 85,
+      "tags": [
+        "maps",
+        "moogle",
+        "api"
+      ],
+      "description": "Location data API for developer integration."
+    },
+    {
+      "id": "moogle-mail-enterprise",
+      "companyId": "moogle-inc",
+      "name": "Moogle Mail Enterprise",
+      "category": "software",
+      "priceUsd": 9.99,
+      "quality": 77,
+      "tags": [
+        "email",
+        "moogle",
+        "enterprise"
+      ],
+      "description": "Business email hosted by Moogle. Encrypted. Probably."
+    },
+    {
+      "id": "moogle-groups",
+      "companyId": "moogle-inc",
+      "name": "Moogle Groups Beta",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 65,
+      "tags": [
+        "groups",
+        "moogle",
+        "community"
+      ],
+      "description": "Community forum platform. Still in beta since 1999."
+    },
+    {
+      "id": "moogle-toolbar",
+      "companyId": "moogle-inc",
+      "name": "Moogle Toolbar",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 55,
+      "tags": [
+        "toolbar",
+        "moogle",
+        "browser"
+      ],
+      "description": "Browser toolbar. Installs three other things."
+    },
+    {
+      "id": "moogle-desktop",
+      "companyId": "moogle-inc",
+      "name": "Moogle Desktop Search",
+      "category": "software",
+      "priceUsd": 19.99,
+      "quality": 72,
+      "tags": [
+        "desktop",
+        "moogle",
+        "search"
+      ],
+      "description": "Indexes your local files. Sends aggregate data to Moogle."
+    },
+    {
+      "id": "moogle-calendar",
+      "companyId": "moogle-inc",
+      "name": "Moogle Calendar",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 78,
+      "tags": [
+        "calendar",
+        "moogle",
+        "productivity"
+      ],
+      "description": "Web-based calendar. Reads your email to suggest events."
+    },
+    {
+      "id": "moogle-translate",
+      "companyId": "moogle-inc",
+      "name": "Moogle Translate v0.1",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 40,
+      "tags": [
+        "translate",
+        "moogle",
+        "language"
+      ],
+      "description": "Translates between English and five languages. Results vary."
+    },
+    {
+      "id": "moogle-image-search",
+      "companyId": "moogle-inc",
+      "name": "Moogle Image Search",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 82,
+      "tags": [
+        "images",
+        "moogle",
+        "search"
+      ],
+      "description": "Search by image. Powered by 14 interns and an algorithm."
+    },
+    {
+      "id": "moogle-analytics",
+      "companyId": "moogle-inc",
+      "name": "Moogle Analytics Pro",
+      "category": "software",
+      "priceUsd": 99,
+      "quality": 86,
+      "tags": [
+        "analytics",
+        "moogle",
+        "data"
+      ],
+      "description": "Website traffic analytics. Very detailed. Very Moogle."
+    },
+    {
+      "id": "moogle-news",
+      "companyId": "moogle-inc",
+      "name": "Moogle News Aggregator",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 74,
+      "tags": [
+        "news",
+        "moogle",
+        "media"
+      ],
+      "description": "Aggregates news from 200 sources including the Herald."
+    },
+    {
+      "id": "moogle-drive",
+      "companyId": "moogle-inc",
+      "name": "Moogle Drive (Alpha)",
+      "category": "software",
+      "priceUsd": 4.99,
+      "quality": 61,
+      "tags": [
+        "storage",
+        "moogle",
+        "cloud"
+      ],
+      "description": "Cloud storage. 50MB free. More costs money. Alpha."
+    },
+    {
+      "id": "moogle-voice",
+      "companyId": "moogle-inc",
+      "name": "Moogle Voice Beta",
+      "category": "telecom",
+      "priceUsd": 0,
+      "quality": 58,
+      "tags": [
+        "voice",
+        "moogle",
+        "telecom"
+      ],
+      "description": "VoIP calls over WorldNet. Quality reflects the year 2000."
+    },
+    {
+      "id": "moogle-shop",
+      "companyId": "moogle-inc",
+      "name": "Moogle Shopping",
+      "category": "commerce",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "shopping",
+        "moogle",
+        "commerce"
+      ],
+      "description": "Product search across Hargrove retailers."
+    },
+    {
+      "id": "moogle-docs",
+      "companyId": "moogle-inc",
+      "name": "Moogle Docs (Prototype)",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 48,
+      "tags": [
+        "docs",
+        "moogle",
+        "productivity"
+      ],
+      "description": "Browser-based word processor. Save often."
+    },
+    {
+      "id": "moogle-api-key",
+      "companyId": "moogle-inc",
+      "name": "Moogle Developer API Key",
+      "category": "software",
+      "priceUsd": 199,
+      "quality": 90,
+      "tags": [
+        "api",
+        "moogle",
+        "developer"
+      ],
+      "description": "Full API access to Moogle data. Powerful. Expensive."
+    },
+    {
+      "id": "moogle-hardware",
+      "companyId": "moogle-inc",
+      "name": "Moogle Search Appliance",
+      "category": "hardware",
+      "priceUsd": 2999,
+      "quality": 83,
+      "tags": [
+        "hardware",
+        "moogle",
+        "enterprise"
+      ],
+      "description": "Physical box that runs Moogle search inside your intranet."
+    },
+    {
+      "id": "moogle-cert",
+      "companyId": "moogle-inc",
+      "name": "Moogle Certification",
+      "category": "education",
+      "priceUsd": 149,
+      "quality": 65,
+      "tags": [
+        "cert",
+        "moogle",
+        "training"
+      ],
+      "description": "Certified Moogle Advertising Professional. Frame it."
+    },
+    {
+      "id": "moogle-beta-access",
+      "companyId": "moogle-inc",
+      "name": "Moogle Labs Beta Access",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 50,
+      "tags": [
+        "beta",
+        "moogle",
+        "experimental"
+      ],
+      "description": "Early access to unreleased Moogle products. Experimental."
+    },
+    {
+      "id": "amazone-prime",
+      "companyId": "amazone-corp",
+      "name": "Amazone Prime",
+      "category": "subscription",
+      "priceUsd": 79,
+      "quality": 85,
+      "tags": [
+        "amazone",
+        "prime",
+        "delivery"
+      ],
+      "description": "2-day delivery to all 12 Hargrove districts. Worth it."
+    },
+    {
+      "id": "amazone-seller-account",
+      "companyId": "amazone-corp",
+      "name": "Amazone Seller Account",
+      "category": "service",
+      "priceUsd": 39.99,
+      "quality": 78,
+      "tags": [
+        "amazone",
+        "seller",
+        "commerce"
+      ],
+      "description": "Sell on Amazone's marketplace. 15% commission on everything."
+    },
+    {
+      "id": "amazone-cloud",
+      "companyId": "amazone-corp",
+      "name": "Amazone Cloud Storage",
+      "category": "software",
+      "priceUsd": 9.99,
+      "quality": 88,
+      "tags": [
+        "amazone",
+        "cloud",
+        "storage"
+      ],
+      "description": "Reliable cloud hosting. Powers 30% of the WorldNet."
+    },
+    {
+      "id": "amazone-pay",
+      "companyId": "amazone-corp",
+      "name": "Amazone Pay",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 82,
+      "tags": [
+        "amazone",
+        "payment",
+        "fintech"
+      ],
+      "description": "One-click checkout across all Amazone properties."
+    },
+    {
+      "id": "amazone-logistics",
+      "companyId": "amazone-corp",
+      "name": "Amazone Fulfillment",
+      "category": "logistics",
+      "priceUsd": 299,
+      "quality": 80,
+      "tags": [
+        "amazone",
+        "logistics",
+        "delivery"
+      ],
+      "description": "Third-party fulfillment from Amazone's Southside warehouse."
+    },
+    {
+      "id": "amazone-ads",
+      "companyId": "amazone-corp",
+      "name": "Amazone Sponsored Products",
+      "category": "advertising",
+      "priceUsd": 149,
+      "quality": 75,
+      "tags": [
+        "amazone",
+        "ads",
+        "sponsored"
+      ],
+      "description": "Promoted listings on Amazone product pages."
+    },
+    {
+      "id": "amazone-fresh",
+      "companyId": "amazone-corp",
+      "name": "Amazone Fresh Groceries",
+      "category": "food",
+      "priceUsd": 0,
+      "quality": 68,
+      "tags": [
+        "amazone",
+        "fresh",
+        "groceries"
+      ],
+      "description": "Grocery delivery. Pilot program in Districts 1 and 4."
+    },
+    {
+      "id": "amazone-kindle",
+      "companyId": "amazone-corp",
+      "name": "Amazone Reader Device",
+      "category": "hardware",
+      "priceUsd": 399,
+      "quality": 72,
+      "tags": [
+        "amazone",
+        "reader",
+        "hardware"
+      ],
+      "description": "Digital reading device. Ships with 3 Dan Brown books."
+    },
+    {
+      "id": "amazone-music",
+      "companyId": "amazone-corp",
+      "name": "Amazone Music Unlimited",
+      "category": "subscription",
+      "priceUsd": 9.99,
+      "quality": 70,
+      "tags": [
+        "amazone",
+        "music",
+        "streaming"
+      ],
+      "description": "Streaming music service. Library of 2 million tracks."
+    },
+    {
+      "id": "amazone-video",
+      "companyId": "amazone-corp",
+      "name": "Amazone Video On Demand",
+      "category": "subscription",
+      "priceUsd": 12.99,
+      "quality": 73,
+      "tags": [
+        "amazone",
+        "video",
+        "streaming"
+      ],
+      "description": "Video streaming. WorldNet bandwidth permitting."
+    },
+    {
+      "id": "amazone-basics-cable",
+      "companyId": "amazone-corp",
+      "name": "Amazone Basics USB Cable",
+      "category": "hardware",
+      "priceUsd": 7.99,
+      "quality": 60,
+      "tags": [
+        "amazone",
+        "cable",
+        "hardware"
+      ],
+      "description": "USB cable. It's fine. Probably not the issue."
+    },
+    {
+      "id": "amazone-basics-batteries",
+      "companyId": "amazone-corp",
+      "name": "Amazone Basics Batteries",
+      "category": "consumer",
+      "priceUsd": 12.99,
+      "quality": 65,
+      "tags": [
+        "amazone",
+        "batteries",
+        "consumer"
+      ],
+      "description": "AA batteries. 20-pack. Generic but reliable."
+    },
+    {
+      "id": "amazone-business",
+      "companyId": "amazone-corp",
+      "name": "Amazone Business Account",
+      "category": "service",
+      "priceUsd": 179,
+      "quality": 82,
+      "tags": [
+        "amazone",
+        "business",
+        "b2b"
+      ],
+      "description": "B2B purchasing account with tax exemption support."
+    },
+    {
+      "id": "amazone-gift-card",
+      "companyId": "amazone-corp",
+      "name": "Amazone Gift Card",
+      "category": "consumer",
+      "priceUsd": 50,
+      "quality": 90,
+      "tags": [
+        "amazone",
+        "gift",
+        "card"
+      ],
+      "description": "Digital gift card. Redeemable on all Amazone properties."
+    },
+    {
+      "id": "amazone-echo-device",
+      "companyId": "amazone-corp",
+      "name": "Amazone Echo (Prototype)",
+      "category": "hardware",
+      "priceUsd": 179,
+      "quality": 55,
+      "tags": [
+        "amazone",
+        "echo",
+        "voice"
+      ],
+      "description": "Voice-activated device. Listens. Responds. Probably only listens."
+    },
+    {
+      "id": "amazone-warehouse-deal",
+      "companyId": "amazone-corp",
+      "name": "Amazone Warehouse Deals",
+      "category": "commerce",
+      "priceUsd": 0,
+      "quality": 62,
+      "tags": [
+        "amazone",
+        "warehouse",
+        "deals"
+      ],
+      "description": "Discounted open-box and refurbished items."
+    },
+    {
+      "id": "amazone-subscribe-save",
+      "companyId": "amazone-corp",
+      "name": "Amazone Subscribe & Save",
+      "category": "subscription",
+      "priceUsd": 0,
+      "quality": 76,
+      "tags": [
+        "amazone",
+        "subscribe",
+        "savings"
+      ],
+      "description": "Auto-order recurring items. 5-15% discount."
+    },
+    {
+      "id": "amazone-handmade",
+      "companyId": "amazone-corp",
+      "name": "Amazone Handmade Store",
+      "category": "commerce",
+      "priceUsd": 0,
+      "quality": 71,
+      "tags": [
+        "amazone",
+        "handmade",
+        "artisan"
+      ],
+      "description": "Artisan and handmade goods marketplace. Human-made."
+    },
+    {
+      "id": "amazone-brand-registry",
+      "companyId": "amazone-corp",
+      "name": "Amazone Brand Registry",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 80,
+      "tags": [
+        "amazone",
+        "brand",
+        "protection"
+      ],
+      "description": "Brand protection and trademark enforcement on Amazone."
+    },
+    {
+      "id": "amazone-affiliate",
+      "companyId": "amazone-corp",
+      "name": "Amazone Associates Program",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 74,
+      "tags": [
+        "amazone",
+        "affiliate",
+        "revenue"
+      ],
+      "description": "Earn 4-8% referral commission on Amazone sales."
+    },
+    {
+      "id": "rem-loyalty",
+      "companyId": "rapid-e-mart",
+      "name": "RapidCard Loyalty Program",
+      "category": "consumer",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "rapidmart",
+        "loyalty",
+        "card"
+      ],
+      "description": "Free rewards card. Collects significantly more than points."
+    },
+    {
+      "id": "rem-insights",
+      "companyId": "rapid-e-mart",
+      "name": "Shopper Insights Package",
+      "category": "data",
+      "priceUsd": 499,
+      "quality": 90,
+      "tags": [
+        "rapidmart",
+        "data",
+        "insights"
+      ],
+      "description": "Anonymized purchase pattern data. Third parties only. Probably."
+    },
+    {
+      "id": "rem-warehouse-club",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Warehouse Club",
+      "category": "subscription",
+      "priceUsd": 49,
+      "quality": 75,
+      "tags": [
+        "rapidmart",
+        "warehouse",
+        "bulk"
+      ],
+      "description": "Bulk purchasing membership. Major discounts. Minor privacy."
+    },
+    {
+      "id": "rem-data-pack",
+      "companyId": "rapid-e-mart",
+      "name": "Consumer Data Pack (B2B)",
+      "category": "data",
+      "priceUsd": 2999,
+      "quality": 88,
+      "tags": [
+        "rapidmart",
+        "data",
+        "b2b"
+      ],
+      "description": "Aggregated consumer behavioral profiles. Not sold to individuals."
+    },
+    {
+      "id": "rem-express",
+      "companyId": "rapid-e-mart",
+      "name": "RapidExpress Delivery",
+      "category": "logistics",
+      "priceUsd": 29.99,
+      "quality": 72,
+      "tags": [
+        "rapidmart",
+        "delivery",
+        "express"
+      ],
+      "description": "Same-district delivery in 4 hours. Does not include Mountain Heights."
+    },
+    {
+      "id": "rem-electronics",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Electronics",
+      "category": "hardware",
+      "priceUsd": 0,
+      "quality": 65,
+      "tags": [
+        "rapidmart",
+        "electronics",
+        "retail"
+      ],
+      "description": "Consumer electronics section. Extended warranty recommended."
+    },
+    {
+      "id": "rem-grocery",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Grocery",
+      "category": "food",
+      "priceUsd": 0,
+      "quality": 68,
+      "tags": [
+        "rapidmart",
+        "grocery",
+        "food"
+      ],
+      "description": "Fresh produce. Prices competitive. Data collection extensive."
+    },
+    {
+      "id": "rem-pharmacy",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Pharmacy",
+      "category": "health",
+      "priceUsd": 0,
+      "quality": 74,
+      "tags": [
+        "rapidmart",
+        "pharmacy",
+        "health"
+      ],
+      "description": "Full-service pharmacy. Purchase history synced to profile."
+    },
+    {
+      "id": "rem-credit-card",
+      "companyId": "rapid-e-mart",
+      "name": "RapidCard Credit Account",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 60,
+      "tags": [
+        "rapidmart",
+        "credit",
+        "card"
+      ],
+      "description": "22% APR. Generous credit limits. No annual fee. Extensive tracking."
+    },
+    {
+      "id": "rem-app",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Mobile App",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 62,
+      "tags": [
+        "rapidmart",
+        "app",
+        "mobile"
+      ],
+      "description": "Shop on your phone. Location services required. Always."
+    },
+    {
+      "id": "rem-ad-network",
+      "companyId": "rapid-e-mart",
+      "name": "RapidAds Network",
+      "category": "advertising",
+      "priceUsd": 199,
+      "quality": 82,
+      "tags": [
+        "rapidmart",
+        "ads",
+        "network"
+      ],
+      "description": "Retargeted ads based on purchase history. Very targeted."
+    },
+    {
+      "id": "rem-returns",
+      "companyId": "rapid-e-mart",
+      "name": "RapidReturn Guarantee",
+      "category": "service",
+      "priceUsd": 9.99,
+      "quality": 55,
+      "tags": [
+        "rapidmart",
+        "returns",
+        "service"
+      ],
+      "description": "Extended return window. 30 days. Fine print applies."
+    },
+    {
+      "id": "rem-gifting",
+      "companyId": "rapid-e-mart",
+      "name": "RapidGift Center",
+      "category": "consumer",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "rapidmart",
+        "gifts",
+        "consumer"
+      ],
+      "description": "Gift wrapping and messaging service."
+    },
+    {
+      "id": "rem-auto",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Auto Department",
+      "category": "automotive",
+      "priceUsd": 0,
+      "quality": 66,
+      "tags": [
+        "rapidmart",
+        "auto",
+        "parts"
+      ],
+      "description": "Automotive accessories and parts. Batteries, wiper blades, hope."
+    },
+    {
+      "id": "rem-home",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Home & Garden",
+      "category": "home",
+      "priceUsd": 0,
+      "quality": 69,
+      "tags": [
+        "rapidmart",
+        "home",
+        "garden"
+      ],
+      "description": "Furniture, appliances, and garden supplies."
+    },
+    {
+      "id": "rem-clothing",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Apparel",
+      "category": "fashion",
+      "priceUsd": 0,
+      "quality": 57,
+      "tags": [
+        "rapidmart",
+        "clothing",
+        "fashion"
+      ],
+      "description": "Affordable clothing. Origin of materials not specified."
+    },
+    {
+      "id": "rem-optical",
+      "companyId": "rapid-e-mart",
+      "name": "RapidVision Optical Center",
+      "category": "health",
+      "priceUsd": 0,
+      "quality": 71,
+      "tags": [
+        "rapidmart",
+        "optical",
+        "health"
+      ],
+      "description": "Eye exams and prescription glasses. Eye data stored 7 years."
+    },
+    {
+      "id": "rem-portrait",
+      "companyId": "rapid-e-mart",
+      "name": "RapidPortrait Photo Studio",
+      "category": "services",
+      "priceUsd": 24.99,
+      "quality": 62,
+      "tags": [
+        "rapidmart",
+        "photo",
+        "portrait"
+      ],
+      "description": "In-store portrait photography. Facial data not retained. We think."
+    },
+    {
+      "id": "rem-fuel",
+      "companyId": "rapid-e-mart",
+      "name": "RapidFuel Gas Station",
+      "category": "automotive",
+      "priceUsd": 0,
+      "quality": 64,
+      "tags": [
+        "rapidmart",
+        "fuel",
+        "gas"
+      ],
+      "description": "Fuel at 12 Hargrove locations. RapidCard discount: $0.03/gallon."
+    },
+    {
+      "id": "rem-prepaid",
+      "companyId": "rapid-e-mart",
+      "name": "RapidMart Prepaid Phone",
+      "category": "telecom",
+      "priceUsd": 29.99,
+      "quality": 52,
+      "tags": [
+        "rapidmart",
+        "prepaid",
+        "phone"
+      ],
+      "description": "No-contract prepaid phone. Service through NetComm network."
+    },
+    {
+      "id": "intek-chip-pro",
+      "companyId": "intek-systems",
+      "name": "Intek Chip Pro 800",
+      "category": "hardware",
+      "priceUsd": 399,
+      "quality": 90,
+      "tags": [
+        "intek",
+        "chip",
+        "hardware"
+      ],
+      "description": "800MHz processor. Powers most CorpOS-certified terminals."
+    },
+    {
+      "id": "intek-workstation",
+      "companyId": "intek-systems",
+      "name": "Intek Business Workstation",
+      "category": "hardware",
+      "priceUsd": 2499,
+      "quality": 87,
+      "tags": [
+        "intek",
+        "workstation",
+        "b2b"
+      ],
+      "description": "Corporate desktop system. 256MB RAM. Built to run MicroCorp OS."
+    },
+    {
+      "id": "intek-server-rack",
+      "companyId": "intek-systems",
+      "name": "Intek Server Rack Unit",
+      "category": "hardware",
+      "priceUsd": 4999,
+      "quality": 92,
+      "tags": [
+        "intek",
+        "server",
+        "enterprise"
+      ],
+      "description": "Rack-mount server. Runs your WorldNet site from the closet."
+    },
+    {
+      "id": "intek-network-card",
+      "companyId": "intek-systems",
+      "name": "Intek PCI Network Card",
+      "category": "hardware",
+      "priceUsd": 89,
+      "quality": 85,
+      "tags": [
+        "intek",
+        "network",
+        "hardware"
+      ],
+      "description": "10/100 Ethernet card. Plug in. No drivers needed (usually)."
+    },
+    {
+      "id": "intek-suite",
+      "companyId": "intek-systems",
+      "name": "Intek Enterprise Suite",
+      "category": "software",
+      "priceUsd": 1299,
+      "quality": 82,
+      "tags": [
+        "intek",
+        "enterprise",
+        "suite"
+      ],
+      "description": "Hardware management, fleet control, and compliance tooling."
+    },
+    {
+      "id": "intek-modem",
+      "companyId": "intek-systems",
+      "name": "Intek 56K Modem",
+      "category": "hardware",
+      "priceUsd": 129,
+      "quality": 78,
+      "tags": [
+        "intek",
+        "modem",
+        "hardware"
+      ],
+      "description": "56Kbps dial-up modem. Still the standard. Still slow."
+    },
+    {
+      "id": "intek-graphics",
+      "companyId": "intek-systems",
+      "name": "Intek Graphics Accelerator",
+      "category": "hardware",
+      "priceUsd": 299,
+      "quality": 80,
+      "tags": [
+        "intek",
+        "graphics",
+        "hardware"
+      ],
+      "description": "16MB VRAM card. Runs every game at the time."
+    },
+    {
+      "id": "intek-memory",
+      "companyId": "intek-systems",
+      "name": "Intek RAM Module 128MB",
+      "category": "hardware",
+      "priceUsd": 149,
+      "quality": 88,
+      "tags": [
+        "intek",
+        "ram",
+        "hardware"
+      ],
+      "description": "128MB RAM. Upgrades your machine from slow to less slow."
+    },
+    {
+      "id": "intek-laptop",
+      "companyId": "intek-systems",
+      "name": "Intek Mobile Pro Laptop",
+      "category": "hardware",
+      "priceUsd": 1999,
+      "quality": 83,
+      "tags": [
+        "intek",
+        "laptop",
+        "mobile"
+      ],
+      "description": "Business laptop. 6-pound. 2-hour battery. DVD drive."
+    },
+    {
+      "id": "intek-cooling",
+      "companyId": "intek-systems",
+      "name": "Intek Tower Cooling Kit",
+      "category": "hardware",
+      "priceUsd": 59,
+      "quality": 75,
+      "tags": [
+        "intek",
+        "cooling",
+        "hardware"
+      ],
+      "description": "CPU cooler and case fans. Recommended for Chip Pro 800."
+    },
+    {
+      "id": "intek-bios-update",
+      "companyId": "intek-systems",
+      "name": "Intek Y2K BIOS Patch",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 95,
+      "tags": [
+        "intek",
+        "y2k",
+        "bios"
+      ],
+      "description": "Free Y2K BIOS update. Should have shipped with the board."
+    },
+    {
+      "id": "intek-warranty",
+      "companyId": "intek-systems",
+      "name": "Intek Extended Warranty",
+      "category": "service",
+      "priceUsd": 199,
+      "quality": 70,
+      "tags": [
+        "intek",
+        "warranty",
+        "service"
+      ],
+      "description": "3-year on-site warranty. Call center in Northside."
+    },
+    {
+      "id": "intek-driver-cd",
+      "companyId": "intek-systems",
+      "name": "Intek Driver CD-ROM",
+      "category": "software",
+      "priceUsd": 14.99,
+      "quality": 65,
+      "tags": [
+        "intek",
+        "driver",
+        "software"
+      ],
+      "description": "All Intek hardware drivers on one disc. Sometimes works."
+    },
+    {
+      "id": "intek-scanner",
+      "companyId": "intek-systems",
+      "name": "Intek FlatScan Pro",
+      "category": "hardware",
+      "priceUsd": 229,
+      "quality": 76,
+      "tags": [
+        "intek",
+        "scanner",
+        "hardware"
+      ],
+      "description": "Flatbed scanner. 600 DPI. TWAIN compatible."
+    },
+    {
+      "id": "intek-printer",
+      "companyId": "intek-systems",
+      "name": "Intek InkJet 200",
+      "category": "hardware",
+      "priceUsd": 179,
+      "quality": 68,
+      "tags": [
+        "intek",
+        "printer",
+        "hardware"
+      ],
+      "description": "Inkjet printer. Ink costs more than the printer."
+    },
+    {
+      "id": "intek-monitor",
+      "companyId": "intek-systems",
+      "name": "Intek 17\" CRT Monitor",
+      "category": "hardware",
+      "priceUsd": 499,
+      "quality": 82,
+      "tags": [
+        "intek",
+        "monitor",
+        "hardware"
+      ],
+      "description": "17-inch CRT. 1024x768. Weighs 38 pounds."
+    },
+    {
+      "id": "intek-keyboard",
+      "companyId": "intek-systems",
+      "name": "Intek Ergonomic Keyboard",
+      "category": "hardware",
+      "priceUsd": 79,
+      "quality": 80,
+      "tags": [
+        "intek",
+        "keyboard",
+        "hardware"
+      ],
+      "description": "Split ergonomic keyboard. Mechanical switches."
+    },
+    {
+      "id": "intek-mouse",
+      "companyId": "intek-systems",
+      "name": "Intek Optical Mouse",
+      "category": "hardware",
+      "priceUsd": 49,
+      "quality": 77,
+      "tags": [
+        "intek",
+        "mouse",
+        "hardware"
+      ],
+      "description": "USB optical mouse. No ball to clean. Revolutionary."
+    },
+    {
+      "id": "intek-hub",
+      "companyId": "intek-systems",
+      "name": "Intek USB Hub 4-Port",
+      "category": "hardware",
+      "priceUsd": 39,
+      "quality": 72,
+      "tags": [
+        "intek",
+        "usb",
+        "hardware"
+      ],
+      "description": "4-port USB hub. Powered. Supports all USB 1.1 devices."
+    },
+    {
+      "id": "intek-cd-burner",
+      "companyId": "intek-systems",
+      "name": "Intek CD-RW Drive",
+      "category": "hardware",
+      "priceUsd": 249,
+      "quality": 85,
+      "tags": [
+        "intek",
+        "cd",
+        "hardware"
+      ],
+      "description": "CD rewriter. 8x write speed. Burns mix CDs faster than rivals."
+    },
+    {
+      "id": "mc-os",
+      "companyId": "microcorp",
+      "name": "MicroCorp OS 2000",
+      "category": "software",
+      "priceUsd": 299,
+      "quality": 75,
+      "tags": [
+        "microcorp",
+        "os",
+        "software"
+      ],
+      "description": "The operating system. 87% market share. Ships with 14 bundled apps."
+    },
+    {
+      "id": "mc-office",
+      "companyId": "microcorp",
+      "name": "MicroCorp Office 2000",
+      "category": "software",
+      "priceUsd": 499,
+      "quality": 82,
+      "tags": [
+        "microcorp",
+        "office",
+        "productivity"
+      ],
+      "description": "Word processor, spreadsheet, presentation app. Industry standard."
+    },
+    {
+      "id": "mc-browser",
+      "companyId": "microcorp",
+      "name": "WorldNet Explorer 5.0",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "microcorp",
+        "browser",
+        "worldnet"
+      ],
+      "description": "Bundled browser. 90% market share. Antitrust case pending."
+    },
+    {
+      "id": "mc-server-os",
+      "companyId": "microcorp",
+      "name": "MicroCorp Server 2000",
+      "category": "software",
+      "priceUsd": 1299,
+      "quality": 80,
+      "tags": [
+        "microcorp",
+        "server",
+        "enterprise"
+      ],
+      "description": "Server operating system. Powers Hargrove's business infrastructure."
+    },
+    {
+      "id": "mc-dev-kit",
+      "companyId": "microcorp",
+      "name": "MicroCorp Developer Kit",
+      "category": "software",
+      "priceUsd": 199,
+      "quality": 84,
+      "tags": [
+        "microcorp",
+        "developer",
+        "sdk"
+      ],
+      "description": "SDK and APIs for MicroCorp OS development."
+    },
+    {
+      "id": "mc-antivirus",
+      "companyId": "microcorp",
+      "name": "MicroCorp Security Center",
+      "category": "software",
+      "priceUsd": 49.99,
+      "quality": 65,
+      "tags": [
+        "microcorp",
+        "security",
+        "antivirus"
+      ],
+      "description": "Built-in virus protection. Catches most known threats."
+    },
+    {
+      "id": "mc-media-player",
+      "companyId": "microcorp",
+      "name": "MicroCorp Media Player",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 72,
+      "tags": [
+        "microcorp",
+        "media",
+        "player"
+      ],
+      "description": "Plays MP3, AVI, WMA. Prompts to register every launch."
+    },
+    {
+      "id": "mc-exchange",
+      "companyId": "microcorp",
+      "name": "MicroCorp Exchange Server",
+      "category": "software",
+      "priceUsd": 799,
+      "quality": 85,
+      "tags": [
+        "microcorp",
+        "email",
+        "enterprise"
+      ],
+      "description": "Enterprise email server. IT departments built careers on this."
+    },
+    {
+      "id": "mc-database",
+      "companyId": "microcorp",
+      "name": "MicroCorp SQL Database",
+      "category": "software",
+      "priceUsd": 999,
+      "quality": 88,
+      "tags": [
+        "microcorp",
+        "database",
+        "sql"
+      ],
+      "description": "Relational database. Used by half of Hargrove's businesses."
+    },
+    {
+      "id": "mc-project",
+      "companyId": "microcorp",
+      "name": "MicroCorp Project Manager",
+      "category": "software",
+      "priceUsd": 599,
+      "quality": 77,
+      "tags": [
+        "microcorp",
+        "project",
+        "management"
+      ],
+      "description": "Gantt charts and task management. Makes chaos look organized."
+    },
+    {
+      "id": "mc-visio",
+      "companyId": "microcorp",
+      "name": "MicroCorp Diagram Studio",
+      "category": "software",
+      "priceUsd": 349,
+      "quality": 78,
+      "tags": [
+        "microcorp",
+        "diagrams",
+        "design"
+      ],
+      "description": "Flow charts, org charts, network diagrams."
+    },
+    {
+      "id": "mc-frontpage",
+      "companyId": "microcorp",
+      "name": "MicroCorp Web Builder",
+      "category": "software",
+      "priceUsd": 149,
+      "quality": 55,
+      "tags": [
+        "microcorp",
+        "web",
+        "builder"
+      ],
+      "description": "WYSIWYG WorldNet page builder. Output quality reflects the price."
+    },
+    {
+      "id": "mc-access",
+      "companyId": "microcorp",
+      "name": "MicroCorp Access Database",
+      "category": "software",
+      "priceUsd": 299,
+      "quality": 71,
+      "tags": [
+        "microcorp",
+        "access",
+        "database"
+      ],
+      "description": "Desktop database for small businesses. Corrupts files occasionally."
+    },
+    {
+      "id": "mc-outlook",
+      "companyId": "microcorp",
+      "name": "MicroCorp Outlook 2000",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 80,
+      "tags": [
+        "microcorp",
+        "outlook",
+        "email"
+      ],
+      "description": "Email client bundled with Office 2000. Calendar included."
+    },
+    {
+      "id": "mc-netmeeting",
+      "companyId": "microcorp",
+      "name": "MicroCorp NetMeeting",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 62,
+      "tags": [
+        "microcorp",
+        "meeting",
+        "video"
+      ],
+      "description": "Video conferencing over WorldNet. 56K users: good luck."
+    },
+    {
+      "id": "mc-backup",
+      "companyId": "microcorp",
+      "name": "MicroCorp Backup Agent",
+      "category": "software",
+      "priceUsd": 79,
+      "quality": 74,
+      "tags": [
+        "microcorp",
+        "backup",
+        "recovery"
+      ],
+      "description": "Scheduled backups to tape or network. Set and forget."
+    },
+    {
+      "id": "mc-licensing",
+      "companyId": "microcorp",
+      "name": "MicroCorp Volume License",
+      "category": "service",
+      "priceUsd": 2999,
+      "quality": 85,
+      "tags": [
+        "microcorp",
+        "license",
+        "volume"
+      ],
+      "description": "Enterprise licensing for 50+ seats. Negotiable. Barely."
+    },
+    {
+      "id": "mc-helpdesk",
+      "companyId": "microcorp",
+      "name": "MicroCorp Support Line",
+      "category": "service",
+      "priceUsd": 199,
+      "quality": 60,
+      "tags": [
+        "microcorp",
+        "support",
+        "helpdesk"
+      ],
+      "description": "Phone support for MicroCorp products. Hold time: variable."
+    },
+    {
+      "id": "mc-certification",
+      "companyId": "microcorp",
+      "name": "MicroCorp Certified Engineer",
+      "category": "education",
+      "priceUsd": 299,
+      "quality": 70,
+      "tags": [
+        "microcorp",
+        "cert",
+        "education"
+      ],
+      "description": "MCSE certification. Guaranteed to appear on every resume in Hargrove."
+    },
+    {
+      "id": "mc-gamepad",
+      "companyId": "microcorp",
+      "name": "MicroCorp SideWinder Pad",
+      "category": "hardware",
+      "priceUsd": 39.99,
+      "quality": 76,
+      "tags": [
+        "microcorp",
+        "gamepad",
+        "gaming"
+      ],
+      "description": "USB gamepad. 8 buttons, D-pad. MicroCorp does gaming now."
+    },
+    {
+      "id": "prfg-high-yield",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG High-Yield Passbook",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 78,
+      "tags": [
+        "pacific",
+        "savings",
+        "fintech"
+      ],
+      "description": "Rate in 6-point type. The footnotes are a novel."
+    },
+    {
+      "id": "prfg-business-loan",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Business Term Loan",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 73,
+      "tags": [
+        "pacific",
+        "loan",
+        "b2b"
+      ],
+      "description": "Collateral, covenants, and a smile that does not reach the eyes."
+    },
+    {
+      "id": "prfg-digital-wallet",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Digital Wallet (Pilot)",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "pacific",
+        "wallet",
+        "fintech"
+      ],
+      "description": "Pilots in two districts. The third district is a cautionary tale."
+    },
+    {
+      "id": "prfg-investment-fund",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Harbor Index Fund",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 72,
+      "tags": [
+        "pacific",
+        "investment",
+        "fintech"
+      ],
+      "description": "Past performance is a window sticker. The engine is a mystery."
+    },
+    {
+      "id": "prfg-corporate-card",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Corporate T&E Card",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 75,
+      "tags": [
+        "pacific",
+        "card",
+        "b2b"
+      ],
+      "description": "Receipts optional. Conscience: also optional per cardholder agreement."
+    },
+    {
+      "id": "prfg-savings",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Premium Savings",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 78,
+      "tags": [
+        "pacific",
+        "savings",
+        "fintech"
+      ],
+      "description": "Rate advertised in 8-point type. The rest is a novella."
+    },
+    {
+      "id": "prfg-cd",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG 12-Month CD",
+      "category": "fintech",
+      "priceUsd": 500,
+      "quality": 80,
+      "tags": [
+        "pacific",
+        "cd",
+        "rate"
+      ],
+      "description": "Minimum deposit enough to make you wince. Early withdrawal worse."
+    },
+    {
+      "id": "prfg-mortgage",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Adjustable Mortgage",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 60,
+      "tags": [
+        "pacific",
+        "mortgage",
+        "lending"
+      ],
+      "description": "Fixed for a while. Then exciting. You signed it."
+    },
+    {
+      "id": "prfg-auto",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Direct Auto Finance",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "pacific",
+        "auto",
+        "lending"
+      ],
+      "description": "Convenient dealer partnerships. The paper stack is a workout."
+    },
+    {
+      "id": "prfg-card-gold",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Gold Rewards Card",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 72,
+      "tags": [
+        "pacific",
+        "card",
+        "rewards"
+      ],
+      "description": "Interest rate: yes. Rewards: a toaster if you're lucky."
+    },
+    {
+      "id": "prfg-merchant",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Point-of-Sale Line",
+      "category": "fintech",
+      "priceUsd": 89,
+      "quality": 75,
+      "tags": [
+        "pacific",
+        "pos",
+        "merchant"
+      ],
+      "description": "For small businesses. Fees are where the art lives."
+    },
+    {
+      "id": "prfg-wire",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Domestic Wire Transfer",
+      "category": "fintech",
+      "priceUsd": 15,
+      "quality": 85,
+      "tags": [
+        "pacific",
+        "wire",
+        "b2b"
+      ],
+      "description": "Same day if you don't blink. Hargrove branch only."
+    },
+    {
+      "id": "prfg-fx",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Currency Window",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 68,
+      "tags": [
+        "pacific",
+        "forex",
+        "b2b"
+      ],
+      "description": "Travel money with a side of spread. Don't look at the spread."
+    },
+    {
+      "id": "prfg-ipo-club",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Pre-IPO Access (Qualified)",
+      "category": "fintech",
+      "priceUsd": 10000,
+      "quality": 55,
+      "tags": [
+        "pacific",
+        "ipo",
+        "vc"
+      ],
+      "description": "You are qualified. PRFG is qualified. The startup maybe isn't."
+    },
+    {
+      "id": "prfg-wealth",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Private Wealth Line",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "pacific",
+        "wealth",
+        "b2b"
+      ],
+      "description": "Dedicated rep. The rep's business card is heavier than your laptop."
+    },
+    {
+      "id": "prfg-card-platinum",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Platinum Reserve",
+      "category": "fintech",
+      "priceUsd": 450,
+      "quality": 79,
+      "tags": [
+        "pacific",
+        "card",
+        "platinum"
+      ],
+      "description": "Annual fee visible from orbit. Concierge holds while you weep."
+    },
+    {
+      "id": "prfg-merchant-loan-2",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Revolving Business Line",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 71,
+      "tags": [
+        "pacific",
+        "line",
+        "b2b"
+      ],
+      "description": "A line you can walk until you can not."
+    },
+    {
+      "id": "prfg-escrow",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Escrow Services",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 74,
+      "tags": [
+        "pacific",
+        "escrow",
+        "b2b"
+      ],
+      "description": "Hold funds until every signature is in triplicate. Twice."
+    },
+    {
+      "id": "prfg-ira",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Self-Directed IRA",
+      "category": "fintech",
+      "priceUsd": 0,
+      "quality": 71,
+      "tags": [
+        "pacific",
+        "retirement",
+        "fintech"
+      ],
+      "description": "Invest in the future. Their fee schedule is already in the present."
+    },
+    {
+      "id": "prfg-risk",
+      "companyId": "pacific-rim-financial",
+      "name": "PRFG Risk Scoring API",
+      "category": "software",
+      "priceUsd": 1200,
+      "quality": 84,
+      "tags": [
+        "pacific",
+        "data",
+        "api"
+      ],
+      "description": "Enterprise credit features. Hargrove landlords whisper about it."
+    },
+    {
+      "id": "netcomm-56k-plan",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm 56K Unlimited",
+      "category": "telecom",
+      "priceUsd": 19.99,
+      "quality": 72,
+      "tags": [
+        "netcomm",
+        "dialup",
+        "isp"
+      ],
+      "description": "The classic plan. America On-Hold."
+    },
+    {
+      "id": "netcomm-business-dsl",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Business DSL Pro",
+      "category": "telecom",
+      "priceUsd": 89,
+      "quality": 80,
+      "tags": [
+        "netcomm",
+        "dsl",
+        "b2b"
+      ],
+      "description": "Distance-to-CO is destiny. They measure it. You pay for the poetry."
+    },
+    {
+      "id": "netcomm-hosting",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Cabinet Colo",
+      "category": "hosting",
+      "priceUsd": 199,
+      "quality": 75,
+      "tags": [
+        "netcomm",
+        "colocation",
+        "hosting"
+      ],
+      "description": "Half rack, full humidity. Generators 'mostly' tested."
+    },
+    {
+      "id": "netcomm-domain-registration",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Gold Domain+DNS",
+      "category": "service",
+      "priceUsd": 12.99,
+      "quality": 83,
+      "tags": [
+        "netcomm",
+        "domain",
+        "dns"
+      ],
+      "description": "WHOIS privacy is extra. The joke is it was always public."
+    },
+    {
+      "id": "netcomm-email-suite",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Hosted Mail Exchange",
+      "category": "software",
+      "priceUsd": 4.99,
+      "quality": 74,
+      "tags": [
+        "netcomm",
+        "email",
+        "b2b"
+      ],
+      "description": "Spam folder occasionally eats payroll. 'Best effort' means something."
+    },
+    {
+      "id": "netcomm-web-host",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Starter WebHost",
+      "category": "hosting",
+      "priceUsd": 9.99,
+      "quality": 70,
+      "tags": [
+        "netcomm",
+        "hosting",
+        "web"
+      ],
+      "description": "50MB. One CGI. Prayers not included."
+    },
+    {
+      "id": "netcomm-ppp-accounts",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Family PPP Pack (3 users)",
+      "category": "telecom",
+      "priceUsd": 29.99,
+      "quality": 68,
+      "tags": [
+        "netcomm",
+        "dialup",
+        "family"
+      ],
+      "description": "Busy signal is a feature. It builds character. Your modem agrees."
+    },
+    {
+      "id": "netcomm-tech-visit",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm CPE Truck Roll",
+      "category": "service",
+      "priceUsd": 75,
+      "quality": 65,
+      "tags": [
+        "netcomm",
+        "field",
+        "b2b"
+      ],
+      "description": "Someone shows up. Sometimes it's the right someone."
+    },
+    {
+      "id": "netcomm-billing-api",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm ISP Billing API",
+      "category": "software",
+      "priceUsd": 500,
+      "quality": 72,
+      "tags": [
+        "netcomm",
+        "api",
+        "b2b"
+      ],
+      "description": "For WISPs. Late fees are part of the brand's mouthfeel."
+    },
+    {
+      "id": "netcomm-leased-line",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Fractional T1 (Pilot)",
+      "category": "telecom",
+      "priceUsd": 499,
+      "quality": 78,
+      "tags": [
+        "netcomm",
+        "enterprise",
+        "isp"
+      ],
+      "description": "Two districts. Still shares your dream with a fax machine."
+    },
+    {
+      "id": "netcomm-cable-pull",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Inside Wiring Upgrade",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 77,
+      "tags": [
+        "netcomm",
+        "wiring",
+        "isp"
+      ],
+      "description": "Copper in the walls. Mysteries in the walls. $/foot."
+    },
+    {
+      "id": "netcomm-spam-guard",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm SpAm Guard",
+      "category": "software",
+      "priceUsd": 2.99,
+      "quality": 64,
+      "tags": [
+        "netcomm",
+        "security",
+        "isp"
+      ],
+      "description": "Blocks 40% of spam. Accidentally 10% of email. Oops."
+    },
+    {
+      "id": "netcomm-ntp",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Stratum-2 NTP",
+      "category": "hosting",
+      "priceUsd": 0,
+      "quality": 88,
+      "tags": [
+        "netcomm",
+        "time",
+        "b2b"
+      ],
+      "description": "When your LAN needs to know what 'now' means, approximately."
+    },
+    {
+      "id": "netcomm-backup",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Nightly ISDN Offsite",
+      "category": "hosting",
+      "priceUsd": 40,
+      "quality": 62,
+      "tags": [
+        "netcomm",
+        "backup",
+        "b2b"
+      ],
+      "description": "ISDN still out there, like a possum. Don't make eye contact."
+    },
+    {
+      "id": "netcomm-webcam",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm EarthCam Hargrove Kit",
+      "category": "hardware",
+      "priceUsd": 199,
+      "quality": 58,
+      "tags": [
+        "netcomm",
+        "webcam",
+        "retail"
+      ],
+      "description": "320x240, the future. Cabling extra. Dignity extra."
+    },
+    {
+      "id": "netcomm-ppp-kids",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Kids' Account",
+      "category": "telecom",
+      "priceUsd": 0,
+      "quality": 55,
+      "tags": [
+        "netcomm",
+        "dialup",
+        "family"
+      ],
+      "description": "White-listed hosts. The list is 4 sites. The filter lags."
+    },
+    {
+      "id": "netcomm-leased-modem",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Branded 56K Modem",
+      "category": "hardware",
+      "priceUsd": 79,
+      "quality": 80,
+      "tags": [
+        "netcomm",
+        "modem",
+        "retail"
+      ],
+      "description": "Works with NetComm plans. Sticker peels to reveal a surprise brand."
+    },
+    {
+      "id": "netcomm-vpn",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm PPTP Business VPN",
+      "category": "software",
+      "priceUsd": 5,
+      "quality": 76,
+      "tags": [
+        "netcomm",
+        "vpn",
+        "b2b"
+      ],
+      "description": "1999 crypto. 2000 problems. But it ships today."
+    },
+    {
+      "id": "netcomm-static-ip",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Static IP Add-on",
+      "category": "service",
+      "priceUsd": 20,
+      "quality": 82,
+      "tags": [
+        "netcomm",
+        "ip",
+        "isp"
+      ],
+      "description": "Your IP, your problem. DDoS is an educational experience."
+    },
+    {
+      "id": "netcomm-outage",
+      "companyId": "netcomm-solutions",
+      "name": "NetComm Proactive Outage Notice Fax",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 90,
+      "tags": [
+        "netcomm",
+        "fax",
+        "b2b"
+      ],
+      "description": "Arrives 6 hours after you're back up. Hargrove reliability, certified."
+    },
+    {
+      "id": "seatech-storage-system",
+      "companyId": "seatech-industries",
+      "name": "Seatech Standard Pallet Rack",
+      "category": "hardware",
+      "priceUsd": 0,
+      "quality": 85,
+      "tags": [
+        "seatech",
+        "warehouse",
+        "b2b"
+      ],
+      "description": "Bolted steel. Hargrove warehouses are mostly Seatech, mostly level."
+    },
+    {
+      "id": "seatech-workbench",
+      "companyId": "seatech-industries",
+      "name": "Seatech 2000 Workbench",
+      "category": "hardware",
+      "priceUsd": 349,
+      "quality": 82,
+      "tags": [
+        "seatech",
+        "industrial",
+        "b2b"
+      ],
+      "description": "Maple top optional. Stains optional. Pride isn't."
+    },
+    {
+      "id": "seatech-components-kit",
+      "companyId": "seatech-industries",
+      "name": "Seatech Component Assortment Kit",
+      "category": "hardware",
+      "priceUsd": 89,
+      "quality": 80,
+      "tags": [
+        "seatech",
+        "components",
+        "b2b"
+      ],
+      "description": "O-rings, bolts, and hope in a plastic organizer."
+    },
+    {
+      "id": "seatech-shelving-pro",
+      "companyId": "seatech-industries",
+      "name": "Seatech Light-Duty Steel Shelving 72\"",
+      "category": "consumer",
+      "priceUsd": 79,
+      "quality": 72,
+      "tags": [
+        "seatech",
+        "shelving",
+        "retail"
+      ],
+      "description": "Garage-grade. Holds memories and poorly labeled Rubbermaid bins."
+    },
+    {
+      "id": "seatech-industrial-tools",
+      "companyId": "seatech-industries",
+      "name": "Seatech Pneumatic Riveter 3/16",
+      "category": "hardware",
+      "priceUsd": 120,
+      "quality": 78,
+      "tags": [
+        "seatech",
+        "tool",
+        "industrial"
+      ],
+      "description": "Holding it wrong voids the warranty, your knuckles, and your illusions."
+    },
+    {
+      "id": "seatech-crate",
+      "companyId": "seatech-industries",
+      "name": "Seatech Export Crate (ISPM-15)",
+      "category": "logistics",
+      "priceUsd": 0,
+      "quality": 80,
+      "tags": [
+        "seatech",
+        "export",
+        "logistics"
+      ],
+      "description": "Stamped wood. Hargrove Harbor uses these when they pretend it's fine."
+    },
+    {
+      "id": "seatech-convey",
+      "companyId": "seatech-industries",
+      "name": "Seatech Gravity Roller Section",
+      "category": "hardware",
+      "priceUsd": 0,
+      "quality": 77,
+      "tags": [
+        "seatech",
+        "conveyor",
+        "b2b"
+      ],
+      "description": "Rolls boxes. Sometimes rolls hands. PPE: not optional, just ignored."
+    },
+    {
+      "id": "seatech-bench-grinder",
+      "companyId": "seatech-industries",
+      "name": "Seatech 6-inch Bench Grinder",
+      "category": "hardware",
+      "priceUsd": 59,
+      "quality": 74,
+      "tags": [
+        "seatech",
+        "tool",
+        "safety"
+      ],
+      "description": "Guards are sold separately. Hargrove safety culture approves, quietly."
+    },
+    {
+      "id": "seatech-sheet",
+      "companyId": "seatech-industries",
+      "name": "Seatech 22ga Galvanized Sheet (4x8)",
+      "category": "industrial",
+      "priceUsd": 0,
+      "quality": 83,
+      "tags": [
+        "seatech",
+        "sheet",
+        "b2b"
+      ],
+      "description": "Edges sharp enough to time-travel. Wear gloves, not bravado."
+    },
+    {
+      "id": "seatech-pump",
+      "companyId": "seatech-industries",
+      "name": "Seatech Sump Pump 1/2 HP",
+      "category": "hardware",
+      "priceUsd": 199,
+      "quality": 79,
+      "tags": [
+        "seatech",
+        "pump",
+        "b2b"
+      ],
+      "description": "Moves water, hope, and liability away from the loading dock."
+    },
+    {
+      "id": "seatech-lathe-mini",
+      "companyId": "seatech-industries",
+      "name": "Seatech Hobby Lathe 8-inch",
+      "category": "hardware",
+      "priceUsd": 450,
+      "quality": 73,
+      "tags": [
+        "seatech",
+        "machining",
+        "hobby"
+      ],
+      "description": "For makers who still believe in shavings."
+    },
+    {
+      "id": "seatech-robot-arm",
+      "companyId": "seatech-industries",
+      "name": "Seatech PickBot Jr (Demo unit)",
+      "category": "hardware",
+      "priceUsd": 0,
+      "quality": 65,
+      "tags": [
+        "seatech",
+        "automation",
+        "pilot"
+      ],
+      "description": "Unions insisted weekends off. The arm filed a memo."
+    },
+    {
+      "id": "seatech-heat-treat",
+      "companyId": "seatech-industries",
+      "name": "Seatech In-house Heat Treat Service",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 81,
+      "tags": [
+        "seatech",
+        "treat",
+        "b2b"
+      ],
+      "description": "Parts go in hard, come out different. Your drawings were suggestions."
+    },
+    {
+      "id": "seatech-weld",
+      "companyId": "seatech-industries",
+      "name": "Seatech MIG/Flux Starter Kit",
+      "category": "hardware",
+      "priceUsd": 229,
+      "quality": 76,
+      "tags": [
+        "seatech",
+        "weld",
+        "b2b"
+      ],
+      "description": "Spatter is a personality."
+    },
+    {
+      "id": "seatech-press",
+      "companyId": "seatech-industries",
+      "name": "Seatech 12-ton Shop Press",
+      "category": "hardware",
+      "priceUsd": 899,
+      "quality": 80,
+      "tags": [
+        "seatech",
+        "press",
+        "b2b"
+      ],
+      "description": "If it fits, you still should not. Read the warnings like poetry."
+    },
+    {
+      "id": "seatech-ladder",
+      "companyId": "seatech-industries",
+      "name": "Seatech Fiberglass Step Ladder 8ft",
+      "category": "hardware",
+      "priceUsd": 99,
+      "quality": 84,
+      "tags": [
+        "seatech",
+        "ladder",
+        "safety"
+      ],
+      "description": "Non-conductive, unless your attitude conducts chaos."
+    },
+    {
+      "id": "seatech-heat-gun",
+      "companyId": "seatech-industries",
+      "name": "Seatech Industrial Heat Gun",
+      "category": "hardware",
+      "priceUsd": 34.99,
+      "quality": 70,
+      "tags": [
+        "seatech",
+        "tool",
+        "b2b"
+      ],
+      "description": "Shrinks wrap. Also shrinks patience."
+    },
+    {
+      "id": "seatech-harness",
+      "companyId": "seatech-industries",
+      "name": "Seatech Fall Arrest Harness (L)",
+      "category": "safety",
+      "priceUsd": 139,
+      "quality": 88,
+      "tags": [
+        "seatech",
+        "harness",
+        "b2b"
+      ],
+      "description": "The harness is real. The net below is a metaphor. Usually."
+    },
+    {
+      "id": "seatech-oem",
+      "companyId": "seatech-industries",
+      "name": "Seatech Co-pack OEM Stamping Run",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 78,
+      "tags": [
+        "seatech",
+        "oem",
+        "b2b"
+      ],
+      "description": "We stamp your part number on your future. Min order: painful."
+    },
+    {
+      "id": "seatech-recycle",
+      "companyId": "seatech-industries",
+      "name": "Seatech Scrap Baling Service (tonnage)",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 75,
+      "tags": [
+        "seatech",
+        "scrap",
+        "b2b"
+      ],
+      "description": "Yesterday's line scrap becomes someone else's rebar."
+    },
+    {
+      "id": "corpnet-ad-placement",
+      "companyId": "corpnet-media",
+      "name": "Herald A1 Display Package (1 wk)",
+      "category": "advertising",
+      "priceUsd": 20000,
+      "quality": 80,
+      "tags": [
+        "corpnet",
+        "herald",
+        "ads"
+      ],
+      "description": "Above-the-fold, below-the-truth."
+    },
+    {
+      "id": "corpnet-press-release",
+      "companyId": "corpnet-media",
+      "name": "CorpNet Wire Embargoed Release",
+      "category": "service",
+      "priceUsd": 499,
+      "quality": 75,
+      "tags": [
+        "corpnet",
+        "wire",
+        "pr"
+      ],
+      "description": "Embargo until the fax machine decides otherwise."
+    },
+    {
+      "id": "corpnet-media-kit",
+      "companyId": "corpnet-media",
+      "name": "CorpNet Press Media Kit (PDF + logos)",
+      "category": "service",
+      "priceUsd": 149,
+      "quality": 76,
+      "tags": [
+        "corpnet",
+        "media",
+        "b2b"
+      ],
+      "description": "B-roll words. Logo pack. A promise to return your call."
+    },
+    {
+      "id": "corpnet-digital-archive",
+      "companyId": "corpnet-media",
+      "name": "Hargrove 1990–1999 DVD Archive (Vol. 1)",
+      "category": "consumer",
+      "priceUsd": 19.99,
+      "quality": 78,
+      "tags": [
+        "corpnet",
+        "archive",
+        "retail"
+      ],
+      "description": "Mostly fires, parades, and a mayor who won't be named on the packaging."
+    },
+    {
+      "id": "corpnet-syndication",
+      "companyId": "corpnet-media",
+      "name": "CorpNet News 60-sec Hot Flash sponsorship",
+      "category": "advertising",
+      "priceUsd": 600,
+      "quality": 71,
+      "tags": [
+        "corpnet",
+        "news",
+        "radio"
+      ],
+      "description": "Hurry while facts are still malleable."
+    },
+    {
+      "id": "cnet-herald-pr-2",
+      "companyId": "corpnet-media",
+      "name": "Herald A1 Display Package (3 day)",
+      "category": "advertising",
+      "priceUsd": 12000,
+      "quality": 78,
+      "tags": [
+        "corpnet",
+        "herald",
+        "ads"
+      ],
+      "description": "Shorter run, same narrative velocity."
+    },
+    {
+      "id": "cnet-radio-30",
+      "companyId": "corpnet-media",
+      "name": "CorpNet Radio 30-sec rotator (14 spots)",
+      "category": "advertising",
+      "priceUsd": 350,
+      "quality": 72,
+      "tags": [
+        "corpnet",
+        "radio",
+        "ads"
+      ],
+      "description": "Drive-time slots. Drive also describes our metrics."
+    },
+    {
+      "id": "cnet-tv-ros",
+      "companyId": "corpnet-media",
+      "name": "CorpNet Hargrove TV Remnant Package",
+      "category": "advertising",
+      "priceUsd": 1200,
+      "quality": 68,
+      "tags": [
+        "corpnet",
+        "tv",
+        "ads"
+      ],
+      "description": "3 a.m. block: cheap if you have insomnia."
+    },
+    {
+      "id": "cnet-bylines",
+      "companyId": "corpnet-media",
+      "name": "Sunday Herald Bylines Feature (1/4 page)",
+      "category": "advertising",
+      "priceUsd": 5000,
+      "quality": 70,
+      "tags": [
+        "corpnet",
+        "herald",
+        "sunday"
+      ],
+      "description": "Soft light on you. Hard light on your enemy's cabinet."
+    },
+    {
+      "id": "cnet-blogger-kit",
+      "companyId": "corpnet-media",
+      "name": "CorpNet 'Citizen Journ' Starter",
+      "category": "merch",
+      "priceUsd": 9.99,
+      "quality": 55,
+      "tags": [
+        "corpnet",
+        "blogger",
+        "y2k"
+      ],
+      "description": "Geocities-era graphics included. We call them interns."
+    },
+    {
+      "id": "cnet-newsroom-tour",
+      "companyId": "corpnet-media",
+      "name": "Herald Newsroom Tour (School groups)",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 65,
+      "tags": [
+        "corpnet",
+        "tour",
+        "outreach"
+      ],
+      "description": "You see a desk. The desk sees 40 years of cynicism."
+    },
+    {
+      "id": "cnet-ad-design",
+      "companyId": "corpnet-media",
+      "name": "CorpNet Display Ad Design (camera-ready)",
+      "category": "service",
+      "priceUsd": 199,
+      "quality": 76,
+      "tags": [
+        "corpnet",
+        "design",
+        "b2b"
+      ],
+      "description": "Camera-ready, soul-not-ready. Clip art tax applies."
+    },
+    {
+      "id": "cnet-legal",
+      "companyId": "corpnet-media",
+      "name": "Media Defense Retainer (Libel triage hour)",
+      "category": "service",
+      "priceUsd": 350,
+      "quality": 82,
+      "tags": [
+        "corpnet",
+        "legal",
+        "b2b"
+      ],
+      "description": "Not your lawyer. Their lawyer. Still cheaper than a paragraph."
+    },
+    {
+      "id": "cnet-pod",
+      "companyId": "corpnet-media",
+      "name": "Hargrove Herald Audio Digest (Cassette)",
+      "category": "consumer",
+      "priceUsd": 2.99,
+      "quality": 58,
+      "tags": [
+        "corpnet",
+        "cassette",
+        "y2k"
+      ],
+      "description": "Monthly. Voice talent sounds like a filing cabinet. That's trust."
+    },
+    {
+      "id": "cnet-print-backissue",
+      "companyId": "corpnet-media",
+      "name": "Herald Backissue Print (single)",
+      "category": "retail",
+      "priceUsd": 0.5,
+      "quality": 90,
+      "tags": [
+        "corpnet",
+        "herald",
+        "print"
+      ],
+      "description": "Microfiche is extra. Tears of nostalgia, included."
+    },
+    {
+      "id": "cnet-classified-legal",
+      "companyId": "corpnet-media",
+      "name": "Classified 'Legal Notices' Bundle (1 col inch)",
+      "category": "advertising",
+      "priceUsd": 40,
+      "quality": 73,
+      "tags": [
+        "corpnet",
+        "legal",
+        "classified"
+      ],
+      "description": "The font is tiny; the impact on your ex-partner is not."
+    },
+    {
+      "id": "cnet-weather",
+      "companyId": "corpnet-media",
+      "name": "Hargrove WeatherMap Sponsorship (Web)",
+      "category": "advertising",
+      "priceUsd": 1200,
+      "quality": 75,
+      "tags": [
+        "corpnet",
+        "weather",
+        "web"
+      ],
+      "description": "Clouds brought to you by a regional lender."
+    },
+    {
+      "id": "cnet-ethics",
+      "companyId": "corpnet-media",
+      "name": "Editorial Hotline (Recorded)",
+      "category": "service",
+      "priceUsd": 0,
+      "quality": 45,
+      "tags": [
+        "corpnet",
+        "ethics",
+        "hotline"
+      ],
+      "description": "Most calls are hang-ups. The ones that aren't are poetry."
+    },
+    {
+      "id": "cnet-photo",
+      "companyId": "corpnet-media",
+      "name": "Herald Photo Re-use License (1 yr, web)",
+      "category": "service",
+      "priceUsd": 250,
+      "quality": 77,
+      "tags": [
+        "corpnet",
+        "photo",
+        "license"
+      ],
+      "description": "You may crop faces. We cropped context years ago."
+    },
+    {
+      "id": "cnet-merch",
+      "companyId": "corpnet-media",
+      "name": "Herald Stress Ball (H-shaped)",
+      "category": "merch",
+      "priceUsd": 1.5,
+      "quality": 88,
+      "tags": [
+        "corpnet",
+        "merch",
+        "retail"
+      ],
+      "description": "Squeezes like fiscal policy."
+    },
+    {
+      "id": "dotboom-seed-round",
+      "companyId": "dotboom-ventures",
+      "name": "DotBoom $250K Seed (SAFE)",
+      "category": "vc",
+      "priceUsd": 0,
+      "quality": 65,
+      "tags": [
+        "dotboom",
+        "seed",
+        "y2k"
+      ],
+      "description": "Money now, dilution later, clarity never. 'SAFE' is a state of mind."
+    },
+    {
+      "id": "dotboom-series-a",
+      "companyId": "dotboom-ventures",
+      "name": "LP Syndicate D (Series 2000A)",
+      "category": "vc",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "dotboom",
+        "lp",
+        "fund"
+      ],
+      "description": "Minimum buy-in: your disbelief. We suspend it. You sign."
+    },
+    {
+      "id": "dotboom-accelerator",
+      "companyId": "dotboom-ventures",
+      "name": "Hargrove Accel (Sticker Pack)",
+      "category": "merch",
+      "priceUsd": 4,
+      "quality": 90,
+      "tags": [
+        "dotboom",
+        "merch",
+        "satire"
+      ],
+      "description": "Stickers say 'Hargrove Accel'. The sticker is the only exit."
+    },
+    {
+      "id": "dotboom-portfolio-fund",
+      "companyId": "dotboom-ventures",
+      "name": "DotBoom 404 'Come Back When Profitable' Mug",
+      "category": "merch",
+      "priceUsd": 12,
+      "quality": 85,
+      "tags": [
+        "dotboom",
+        "merch",
+        "satire"
+      ],
+      "description": "Ceramic. Holds 12oz coffee or 0oz certainty."
+    },
+    {
+      "id": "dotboom-advisory-retainer",
+      "companyId": "dotboom-ventures",
+      "name": "First-Time CEO Coaching (6h)",
+      "category": "service",
+      "priceUsd": 8000,
+      "quality": 60,
+      "tags": [
+        "dotboom",
+        "coach",
+        "vc"
+      ],
+      "description": "We teach you to say 'pivot' without crying."
+    },
+    {
+      "id": "db-mezz",
+      "companyId": "dotboom-ventures",
+      "name": "Hargrove Mezz Warrant Program",
+      "category": "vc",
+      "priceUsd": 0,
+      "quality": 58,
+      "tags": [
+        "dotboom",
+        "warrant",
+        "b2b"
+      ],
+      "description": "Mezz: Italian for 'maybe'."
+    },
+    {
+      "id": "db-termsheet",
+      "companyId": "dotboom-ventures",
+      "name": "Standard Termsheet (PDF, 'aspirational')",
+      "category": "merch",
+      "priceUsd": 0,
+      "quality": 55,
+      "tags": [
+        "dotboom",
+        "term",
+        "y2k"
+      ],
+      "description": "Three pages, six contradictions, one 'standard' that isn't."
+    },
+    {
+      "id": "db-dd",
+      "companyId": "dotboom-ventures",
+      "name": "Rapid Diligence Lite (1 week)",
+      "category": "service",
+      "priceUsd": 15000,
+      "quality": 50,
+      "tags": [
+        "dotboom",
+        "diligence",
+        "vc"
+      ],
+      "description": "We skim your deck, your burn, and your delusions. A memo occurs."
+    },
+    {
+      "id": "db-ipo-bridge",
+      "companyId": "dotboom-ventures",
+      "name": "Pre-IPO Bridge (convertible, spicy)",
+      "category": "vc",
+      "priceUsd": 0,
+      "quality": 52,
+      "tags": [
+        "dotboom",
+        "bridge",
+        "ipo"
+      ],
+      "description": "The bridge to nowhere still charges toll. Rate: competitive with panic."
+    },
+    {
+      "id": "db-angel-dinner",
+      "companyId": "dotboom-ventures",
+      "name": "Hargrove Angel Supper (ticket)",
+      "category": "merch",
+      "priceUsd": 200,
+      "quality": 67,
+      "tags": [
+        "dotboom",
+        "networking",
+        "y2k"
+      ],
+      "description": "Pasta, PowerPoint, and a prayer. Dress code: fleece."
+    },
+    {
+      "id": "db-cap-table",
+      "companyId": "dotboom-ventures",
+      "name": "CapTable Pro (Palm Pilot export)",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 48,
+      "tags": [
+        "dotboom",
+        "captor",
+        "y2k"
+      ],
+      "description": "Palm, Windows CE, and hubris. Syncs poorly with reality."
+    },
+    {
+      "id": "db-ipo-watch",
+      "companyId": "dotboom-ventures",
+      "name": "IPO Watch Fax Alert (Hargrove Edition)",
+      "category": "service",
+      "priceUsd": 9.99,
+      "quality": 72,
+      "tags": [
+        "dotboom",
+        "ipo",
+        "fax"
+      ],
+      "description": "Fax arrives. Market already moved. DotBoom not liable for feelings."
+    },
+    {
+      "id": "db-nda",
+      "companyId": "dotboom-ventures",
+      "name": "Mutual NDA (Template, 'Hargrove Strong')",
+      "category": "merch",
+      "priceUsd": 0,
+      "quality": 88,
+      "tags": [
+        "dotboom",
+        "legal",
+        "y2k"
+      ],
+      "description": "Stronger than the handshake, weaker than the bubble."
+    },
+    {
+      "id": "db-rocket",
+      "companyId": "dotboom-ventures",
+      "name": "RocketFrame Pitch Deck Add-on (ClipArt)",
+      "category": "merch",
+      "priceUsd": 29,
+      "quality": 40,
+      "tags": [
+        "dotboom",
+        "pitch",
+        "y2k"
+      ],
+      "description": "ClipArt rockets, literal trajectory."
+    },
+    {
+      "id": "db-escrow-legal",
+      "companyId": "dotboom-ventures",
+      "name": "Incorp Package + Delaware Fax Bundle",
+      "category": "service",
+      "priceUsd": 199,
+      "quality": 80,
+      "tags": [
+        "dotboom",
+        "incorporation",
+        "y2k"
+      ],
+      "description": "Delaware is a mood. Fax is a lifestyle."
+    },
+    {
+      "id": "db-vesting",
+      "companyId": "dotboom-ventures",
+      "name": "Founder Vesting Calculator (2000, Excel)",
+      "category": "software",
+      "priceUsd": 0,
+      "quality": 62,
+      "tags": [
+        "dotboom",
+        "vesting",
+        "y2k"
+      ],
+      "description": "Four years feels longer when the bubble pops in two."
+    },
+    {
+      "id": "db-press",
+      "companyId": "dotboom-ventures",
+      "name": "PR Blitz 48h (5 outlets, 0 guarantees)",
+      "category": "service",
+      "priceUsd": 12000,
+      "quality": 54,
+      "tags": [
+        "dotboom",
+        "pr",
+        "vc"
+      ],
+      "description": "We promise placement in 'top-tier' — defined in footnote 12."
+    },
+    {
+      "id": "db-liquidation",
+      "companyId": "dotboom-ventures",
+      "name": "Preferred Liquidation Preference (Lawyer not incl.)",
+      "category": "merch",
+      "priceUsd": 0,
+      "quality": 66,
+      "tags": [
+        "dotboom",
+        "liquidation",
+        "y2k"
+      ],
+      "description": "When the down-round comes, the preference floats. You don't."
+    },
+    {
+      "id": "db-zen",
+      "companyId": "dotboom-ventures",
+      "name": "Meditation Room (Office Hours, Financial District)",
+      "category": "merch",
+      "priceUsd": 0,
+      "quality": 75,
+      "tags": [
+        "dotboom",
+        "wellness",
+        "y2k"
+      ],
+      "description": "Silence, oak, a fountain. The fountain is louder than the term sheet."
+    },
+    {
+      "id": "db-portfolio",
+      "companyId": "dotboom-ventures",
+      "name": "LP Annual Letter (Fancy Paper)",
+      "category": "merch",
+      "priceUsd": 0,
+      "quality": 70,
+      "tags": [
+        "dotboom",
+        "lp",
+        "compliance"
+      ],
+      "description": "Paper is heavy. The returns section is not."
+    }
+  ]
+}

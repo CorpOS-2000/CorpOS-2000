@@ -125,19 +125,26 @@
 
 <div id="desktop">
 
-  <div id="ticker-wrap">
-    <div class="tbadge">◆ BREAKING</div>
-    <div class="ttext" id="ttext"></div>
+  <div id="ticker-bar" class="ticker-bar">
+    <div class="ticker-bar-label">
+      <span class="ticker-bar-icon">📰</span>
+      <span class="ticker-bar-name">HERALD</span>
+    </div>
+    <div id="ticker-wrap" class="ticker-wrap">
+      <span id="ttext" class="ticker-text"></span>
+    </div>
+    <button type="button" id="ticker-toggle" class="ticker-toggle" aria-pressed="false" title="Hide news bar" aria-label="Hide news bar">👁</button>
   </div>
 
-  <div class="di" data-open="herald" style="top:28px;left:20px"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
+  <div class="di" data-open="herald" style="top:56px;left:20px"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
   <div class="di" data-open="worldnet" style="top:108px;left:20px"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
   <div class="di" data-icon-slot="properties" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
   <div class="di" data-open="explorer" style="top:348px;left:20px"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
   <div class="di" data-open="tasks" style="top:428px;left:20px"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
-  <div class="di" data-open="personal" style="top:28px;left:110px"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
+  <div class="di" data-open="personal" style="top:56px;left:110px"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
   <div class="di" data-open="corporate" style="top:108px;left:110px"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
   <div class="di" data-icon-slot="ledger" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
+  <div class="di" data-app-id="player-inventory" data-open="player-inventory" style="top:268px;left:20px"><div class="ico">📦</div><div class="lbl">Inventory</div></div>
   <div class="di" data-app-id="media-player" data-open="media-player" style="top:268px;left:110px"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
   <div class="di" data-app-id="admin-npc" data-open="admin-npc" style="top:348px;left:110px"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
   <div class="di" data-app-id="admin-company" data-open="admin-company" style="top:428px;left:110px"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
@@ -146,6 +153,12 @@
   <div class="di" data-app-id="admin-axis" data-open="admin-axis" style="top:588px;left:20px"><div class="ico">📇</div><div class="lbl">Contacts &amp; Relations</div></div>
   <div class="di" data-app-id="webex-publisher" data-open="webex-publisher" style="top:588px;left:110px"><div class="ico">🌐</div><div class="lbl">WebEx-Publisher</div></div>
   <div class="di" data-app-id="webexploiter" data-open="webexploiter" style="top:668px;left:20px"><div class="ico">⚡</div><div class="lbl">WebExploiter</div></div>
+  <div class="di" data-app-id="phantom-press" data-open="phantom-press" style="top:668px;left:110px"><div class="ico">📰</div><div class="lbl">Phantom Press</div></div>
+  <div class="di" data-app-id="market-force" data-open="market-force" style="top:668px;left:200px"><div class="ico">📉</div><div class="lbl">MarketForce</div></div>
+  <div class="di" data-app-id="ghost-corp" data-open="ghost-corp" style="top:668px;left:290px"><div class="ico">👻</div><div class="lbl">GhostCorp</div></div>
+  <div class="di" data-app-id="dataminer-pro" data-open="dataminer-pro" style="top:668px;left:380px"><div class="ico">🔬</div><div class="lbl">DataMiner Pro</div></div>
+  <div class="di" data-app-id="compliance-cannon" data-open="compliance-cannon" style="top:668px;left:470px"><div class="ico">⚖</div><div class="lbl">Compliance Cannon</div></div>
+  <div class="di" data-app-id="signal-scrub" data-open="signal-scrub" style="top:668px;left:560px"><div class="ico">🔇</div><div class="lbl">SignalScrub</div></div>
 
   <div class="ww inactive" id="win-personal" style="width:430px;height:500px;top:60px;left:200px;display:none;">
     <div class="wtb" onmousedown="drag(event,'win-personal')">
@@ -521,6 +534,99 @@
     <div class="wrz" onmousedown="resz(event,'win-webexploiter')">◢</div>
   </div>
 
+  <div class="ww inactive" id="win-phantom-press" style="width:720px;height:540px;top:96px;left:160px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-phantom-press')">
+      <span class="wti">📰</span><span class="wtt">Phantom Press v1.0 — Reputation Warfare</span>
+      <button type="button" class="wcb" onclick="minW('phantom-press')">_</button>
+      <button type="button" class="wcb" onclick="maxW('phantom-press')">□</button>
+      <button type="button" class="wcb" onclick="closeW('phantom-press')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Operations</span><span class="wmi">Targets</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="phantom-press-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">Phantom Press</div><div class="sp">Syndicated narrative control</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-phantom-press')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-market-force" style="width:720px;height:540px;top:104px;left:176px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-market-force')">
+      <span class="wti">📉</span><span class="wtt">MarketForce 2000 — Financial Warfare</span>
+      <button type="button" class="wcb" onclick="minW('market-force')">_</button>
+      <button type="button" class="wcb" onclick="maxW('market-force')">□</button>
+      <button type="button" class="wcb" onclick="closeW('market-force')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Desk</span><span class="wmi">Liquidity</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="market-force-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">MarketForce</div><div class="sp">Hargrove commerce overlay</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-market-force')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-ghost-corp" style="width:720px;height:540px;top:112px;left:192px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-ghost-corp')">
+      <span class="wti">👻</span><span class="wtt">GhostCorp Suite — Shell Operations</span>
+      <button type="button" class="wcb" onclick="minW('ghost-corp')">_</button>
+      <button type="button" class="wcb" onclick="maxW('ghost-corp')">□</button>
+      <button type="button" class="wcb" onclick="closeW('ghost-corp')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Entities</span><span class="wmi">Routing</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="ghost-corp-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">GhostCorp</div><div class="sp">Nominee chain manager</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-ghost-corp')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-dataminer-pro" style="width:720px;height:540px;top:120px;left:208px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-dataminer-pro')">
+      <span class="wti">🔬</span><span class="wtt">DataMiner Pro — Intelligence Console</span>
+      <button type="button" class="wcb" onclick="minW('dataminer-pro')">_</button>
+      <button type="button" class="wcb" onclick="maxW('dataminer-pro')">□</button>
+      <button type="button" class="wcb" onclick="closeW('dataminer-pro')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Query</span><span class="wmi">Exports</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="dataminer-pro-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">DataMiner Pro</div><div class="sp">OSINT aggregation</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-dataminer-pro')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-compliance-cannon" style="width:720px;height:540px;top:128px;left:224px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-compliance-cannon')">
+      <span class="wti">⚖</span><span class="wtt">Compliance Cannon — Legal Warfare</span>
+      <button type="button" class="wcb" onclick="minW('compliance-cannon')">_</button>
+      <button type="button" class="wcb" onclick="maxW('compliance-cannon')">□</button>
+      <button type="button" class="wcb" onclick="closeW('compliance-cannon')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Filings</span><span class="wmi">Evidence</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="compliance-cannon-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">Compliance Cannon</div><div class="sp">Anonymous docket interface</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-compliance-cannon')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-signal-scrub" style="width:720px;height:540px;top:136px;left:240px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-signal-scrub')">
+      <span class="wti">🔇</span><span class="wtt">SignalScrub 1.2 — Counter-Surveillance</span>
+      <button type="button" class="wcb" onclick="minW('signal-scrub')">_</button>
+      <button type="button" class="wcb" onclick="maxW('signal-scrub')">□</button>
+      <button type="button" class="wcb" onclick="closeW('signal-scrub')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">Logs</span><span class="wmi">Noise</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;"><div id="signal-scrub-root" style="height:100%;"></div></div>
+    <div class="wsb"><div class="sp">SignalScrub</div><div class="sp">Audit entropy tools</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-signal-scrub')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-player-inventory" style="width:640px;height:480px;top:100px;left:180px;display:none;flex-direction:column;">
+    <div class="wtb" onmousedown="drag(event,'win-player-inventory')">
+      <span class="wti">📦</span><span class="wtt">Inventory — Carried &amp; Stored</span>
+      <button type="button" class="wcb" onclick="minW('player-inventory')">_</button>
+      <button type="button" class="wcb" onclick="maxW('player-inventory')">□</button>
+      <button type="button" class="wcb" onclick="closeW('player-inventory')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc" style="padding:0;overflow:hidden;flex:1;min-height:0;">
+      <div id="player-inventory-root" style="height:100%;"></div>
+    </div>
+    <div class="wsb"><div class="sp">Player inventory</div><div class="sp">ETradeBay · warehouse</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-player-inventory')">◢</div>
+  </div>
+
   <div id="taskbar">
     <button type="button" id="start-btn" onclick="toggleStart()">
       <svg class="scos" viewBox="0 0 140 140" aria-hidden="true"><rect x="8" y="8" width="124" height="124" rx="6" fill="#0d1a3a" stroke="#a6b5e7" stroke-width="2"/><path d="M14 28 L14 14 L28 14" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 14 L126 14 L126 28" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M14 112 L14 126 L28 126" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><path d="M112 126 L126 126 L126 112" fill="none" stroke="#a6b5e7" stroke-width="2" opacity=".5"/><text x="56" y="74" font-family="Orbitron,monospace" font-weight="900" font-size="68" fill="white" text-anchor="middle" dominant-baseline="middle">C</text><text x="104" y="55" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#a6b5e7" text-anchor="middle" dominant-baseline="middle">O</text><text x="104" y="93" font-family="Orbitron,monospace" font-weight="700" font-size="26" fill="#6688cc" text-anchor="middle" dominant-baseline="middle">S</text></svg>
@@ -551,6 +657,7 @@
         <div class="smitem" onclick="openW('personal');toggleStart()">👤 Personal Profile</div>
         <div class="smitem" onclick="openW('corporate');toggleStart()">🏛️ Corporate Profile</div>
         <div class="smitem">📊 Corp. Ledger</div>
+        <div class="smitem" data-app-id="player-inventory" onclick="openW('player-inventory');toggleStart()">📦 Inventory</div>
         <div class="smitem" data-app-id="media-player" onclick="openW('media-player');toggleStart()">🎵 Media Player</div>
         <div class="smsep"></div>
         <div class="smitem" data-app-id="admin-npc" onclick="openW('admin-npc');toggleStart()">👤 NPC Creator</div>
@@ -560,6 +667,12 @@
         <div class="smitem" data-app-id="admin-axis" onclick="openW('admin-axis');toggleStart()">📇 Contacts &amp; Relations</div>
         <div class="smitem" data-app-id="webex-publisher" onclick="openW('webex-publisher');toggleStart()">🌐 WebEx-Publisher</div>
         <div class="smitem" data-app-id="webexploiter" onclick="openW('webexploiter');toggleStart()">⚡ WebExploiter</div>
+        <div class="smitem" data-app-id="phantom-press" onclick="openW('phantom-press');toggleStart()">📰 Phantom Press</div>
+        <div class="smitem" data-app-id="market-force" onclick="openW('market-force');toggleStart()">📉 MarketForce</div>
+        <div class="smitem" data-app-id="ghost-corp" onclick="openW('ghost-corp');toggleStart()">👻 GhostCorp</div>
+        <div class="smitem" data-app-id="dataminer-pro" onclick="openW('dataminer-pro');toggleStart()">🔬 DataMiner Pro</div>
+        <div class="smitem" data-app-id="compliance-cannon" onclick="openW('compliance-cannon');toggleStart()">⚖ Compliance Cannon</div>
+        <div class="smitem" data-app-id="signal-scrub" onclick="openW('signal-scrub');toggleStart()">🔇 SignalScrub</div>
         <div class="smsep"></div>
         <div class="smitem" onclick="fireNews();toggleStart()">⚡ Fire News Ticker</div>
         <div class="smsep"></div>
@@ -733,7 +846,6 @@
 
   <div id="peek-stack"></div>
   <div id="toasts"></div>
-  <button type="button" id="demo-btn" onclick="fireNews()">⚡ Fire News Ticker Demo</button>
 </div>
 
 <!-- CRT/VHS monitor simulation — body-level so it covers login, desktop, logoff, shutdown -->

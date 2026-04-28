@@ -17,7 +17,7 @@ export function resolveAgainstDC({ dc, modifier = 0 }) {
   const roll = rollD20();
   const total = roll + modifier;
   const success = total >= dc;
-  return { total, roll, modifier, success, passMargin: total - dc };
+  return { total, roll, modifier, dc, success, passMargin: total - dc };
 }
 
 /**

@@ -23,7 +23,8 @@ import {
   resetState,
   migrateStateIfNeeded,
   processWorldNetDeliveriesIfNeeded,
-  processSiteRepairsIfNeeded
+  processSiteRepairsIfNeeded,
+  processMarketplaceSettlementsIfNeeded
 } from './gameState.js';
 import * as bankUi from './bank-ui.js';
 import {
@@ -38,7 +39,11 @@ import {
 import { initBlackCherry, openBlackCherryDock, closeBlackCherryDock, smsToPlayer, tickBlackCherryRudeness } from './black-cherry.js';
 import { DevConsole } from './dev-console.js';
 import { ensureMomExists } from './mom-actor.js';
-import { fireQueuedSmsEvents, generatePlayerAndMomAfterEnrollment } from './world-generation.js';
+import {
+  fireQueuedSmsEvents,
+  generatePlayerAndMomAfterEnrollment,
+  onPlayerExploresDistrict
+} from './world-generation.js';
 import { SMS } from './bc-sms.js';
 import { initTaskHandlerPanel, renderActiveTasksPanel } from './active-tasks.js';
 import { on } from './events.js';
@@ -57,7 +62,7 @@ import {
 import { getInstallStatus, processSoftwareInstallsIfNeeded } from './gameState.js';
 import { getInstallableApp } from './installable-apps.js';
 import { getMouseClickCandidates, loadFirstPlayableAudio } from './boot-audio.js';
-import { initAxis, hydrateAxisFromSave } from './axis.js';
+import { initAxis, hydrateAxisFromSave, tickAxisNpcInitiatedContact } from './axis.js';
 import { SaveManager } from '../engine/SaveManager.js';
 import { initSocialComments } from './social-comments.js';
 import { initYourspaceFeed, tickYourspaceRtc } from './yourspace-feed.js';
@@ -69,21 +74,165 @@ import { processBusinessRegistryApprovals } from './business-registry-tick.js';
 import { initMoogleMaps } from './moogle-maps.js';
 import { initWebExPublisher, tickWebExDomainBilling } from './webex-publisher.js';
 import { tickWarehouseDaily } from './warehouse-tick.js';
-import { initMarketDynamics, tickMarketDaily } from './market-dynamics.js';
+import { initRivalCompanies, tickRivals } from './rival-companies.js';
 import { tickPlayerStore } from './player-store.js';
 import { initPlayerReplies, tickPlayerReplies, wireReplyDeps } from './player-interaction-replies.js';
 import { MediaPlayer } from '../engine/MediaPlayer.js';
 import { initMediaPlayer } from './media-player.js';
 import { initFileExplorer } from './file-explorer.js';
 import { initWritepad } from './writepad.js';
-import { initDailyHerald } from './daily-herald.js';
+import { mountInventoryWindow } from './inventory-ui.js';
+import { tickEconomy, ensureEconomy, ECON_CONSTANTS } from './economy.js';
+import { initMarketDynamics } from './market-dynamics.js';
+import { initDailyHerald, getDailyHeraldTickerArticles } from './daily-herald.js';
 import { EventSystem } from '../engine/EventSystem.js';
 import { verifyAppIntegrity, seedAllProgramFiles, seedProgramFiles, showAppErrorDialog } from './program-files.js';
 import { initWebExploiter } from './webexploiter.js';
+import { initCombatApps } from './combat-console-ui.js';
+import { processPendingCombatEffects } from './combat-pending.js';
+import { tickPhantomSmearCampaignsDaily } from './phantom-press.js';
+import { tickGhostReferralSms } from './ghost-corp.js';
+import { getEffectiveInstallId, COMBAT_PROGRAM_BASE_IDS } from './combat-version.js';
 import { WebExploiter } from '../engine/WebExploiter.js';
 import { ActivityLog } from '../engine/ActivityLog.js';
 
 let newsItems = [];
+
+function refreshNewsItems() {
+  const st = getState();
+  const items = [];
+
+  const heraldSource = getDailyHeraldTickerArticles(st.sim?.elapsedMs ?? 0);
+  for (const article of heraldSource) {
+    if (article.headline) items.push(`◆ ${article.headline}`);
+  }
+
+  const heraldExtra = st.heraldArticles || st.contentRegistry?.herald || [];
+  if (Array.isArray(heraldExtra)) {
+    for (const article of heraldExtra) {
+      if (article?.headline) items.push(`◆ ${article.headline}`);
+    }
+  }
+
+  const news = st.newsRegistry || [];
+  for (const n of news) {
+    if (!n.headline) continue;
+    const sev = Number(n.severity ?? 1);
+    const prefix =
+      sev >= 4 ? '🔴 BREAKING'
+        : sev >= 3 ? '🟡 ALERT'
+          : sev >= 2 ? '◆ NEWS'
+            : '◆';
+    items.push(`${prefix} — ${n.headline}`);
+  }
+
+  items.push(
+    '◆ MARKETS UP — Dot-com boom continues',
+    '◆ RAPIDGATE — One year later',
+    '◆ CORPOS MANDATE — 100% compliance achieved',
+    '◆ HARGROVE WEATHER — Partly cloudy, 68°F',
+    '◆ FEDERAL BUSINESS REGISTRY — Q1 filings open',
+  );
+
+  newsItems = [...new Set(items)];
+  if (typeof window !== 'undefined') {
+    window.newsItems = newsItems;
+    window.__wnetNewsHeadlines = newsItems;
+  }
+}
+
+let _tickerAutoInterval = null;
+let _lastTickerNewsCount = 0;
+/** Single scheduled next headline (replaces chained setTimeouts). */
+let _tickerCycleTimer = null;
+/** Fallback if animationend never fires (low-power devices). */
+let _tickerAnimFallbackTimer = null;
+
+const TICKER_COLLAPSED_LS = 'corpos.ticker.collapsed';
+
+function clearTickerTimers() {
+  if (_tickerCycleTimer) {
+    clearTimeout(_tickerCycleTimer);
+    _tickerCycleTimer = null;
+  }
+  if (_tickerAnimFallbackTimer) {
+    clearTimeout(_tickerAnimFallbackTimer);
+    _tickerAnimFallbackTimer = null;
+  }
+}
+
+function scheduleTickerNews(delayMs) {
+  clearTickerTimers();
+  _tickerCycleTimer = setTimeout(() => fireNews(), delayMs);
+}
+
+function isTickerCollapsed() {
+  return !!document.getElementById('ticker-bar')?.classList.contains('ticker-bar--collapsed');
+}
+
+function pauseTickerBecauseHidden() {
+  clearTickerTimers();
+  document.getElementById('ttext')?.classList.remove('run');
+}
+
+function initTickerChrome() {
+  const bar = document.getElementById('ticker-bar');
+  const btn = document.getElementById('ticker-toggle');
+  if (!bar || !btn) return;
+
+  function applyCollapsed() {
+    let collapsed = false;
+    try {
+      collapsed = localStorage.getItem(TICKER_COLLAPSED_LS) === '1';
+    } catch {
+      collapsed = false;
+    }
+    bar.classList.toggle('ticker-bar--collapsed', collapsed);
+    btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    const t = collapsed ? 'Show Herald news bar' : 'Hide Herald news bar';
+    btn.title = t;
+    btn.setAttribute('aria-label', t);
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const collapsing = !bar.classList.contains('ticker-bar--collapsed');
+    try {
+      localStorage.setItem(TICKER_COLLAPSED_LS, collapsing ? '1' : '0');
+    } catch {
+      /* ignore private mode */
+    }
+    applyCollapsed();
+    clearTickerTimers();
+    if (!collapsing) fireNews();
+    else pauseTickerBecauseHidden();
+  });
+
+  applyCollapsed();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      pauseTickerBecauseHidden();
+      return;
+    }
+    if (!isTickerCollapsed()) scheduleTickerNews(250);
+  });
+}
+
+function startAutoTicker() {
+  if (_tickerAutoInterval) clearInterval(_tickerAutoInterval);
+  _tickerAutoInterval = setInterval(() => {
+    refreshNewsItems();
+    if (newsItems.length > _lastTickerNewsCount && _lastTickerNewsCount > 0 && !isTickerCollapsed()) {
+      scheduleTickerNews(800);
+    }
+    _lastTickerNewsCount = newsItems.length;
+  }, 60000);
+
+  refreshNewsItems();
+  _lastTickerNewsCount = newsItems.length;
+}
 const CONTENT_TOAST_DEBOUNCE_MS = 700;
 const CONTENT_TOAST_STAGGER_MS = 400;
 const STARTUP_LOAD_TOAST_DELAY_MS = 6500;
@@ -201,7 +350,12 @@ async function openW(id) {
     });
     return;
   }
-  const integrityErr = verifyAppIntegrity(id);
+  let integrityId = id;
+  if (COMBAT_PROGRAM_BASE_IDS.includes(id)) {
+    const eff = getEffectiveInstallId(id);
+    if (eff) integrityId = eff;
+  }
+  const integrityErr = verifyAppIntegrity(integrityId);
   if (integrityErr && !integrityErr.warnOnly) {
     await showAppErrorDialog(integrityErr);
     return;
@@ -234,23 +388,84 @@ function toggleStart() {
 }
 
 function fireNews() {
+  const bar = document.getElementById('ticker-bar');
   const wrap = document.getElementById('ticker-wrap');
   const text = document.getElementById('ttext');
-  if (!wrap || !text || !newsItems.length) return;
+  if (!bar || !wrap || !text || !newsItems.length) return;
+
+  if (document.visibilityState === 'hidden') {
+    scheduleTickerNews(45000);
+    return;
+  }
+
+  if (isTickerCollapsed()) {
+    scheduleTickerNews(120000);
+    return;
+  }
+
+  clearTickerTimers();
+
+  const reduceMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   let idx = Number(wrap.dataset.newsIdx || '0');
+  const headline = newsItems[idx % newsItems.length];
+  wrap.dataset.newsIdx = String(idx + 1);
+
   text.classList.remove('run');
-  wrap.classList.remove('ts');
-  setTimeout(() => {
-    text.textContent = newsItems[idx % newsItems.length];
-    wrap.dataset.newsIdx = String(idx + 1);
+  bar.classList.remove('ts', 'breaking');
+  wrap.classList.remove('ts', 'breaking');
+
+  requestAnimationFrame(() => {
+    text.textContent = headline;
+
+    bar.classList.add('ts');
     wrap.classList.add('ts');
-    void text.offsetWidth;
-    text.classList.add('run');
-    setTimeout(() => {
-      wrap.classList.remove('ts');
-      setTimeout(() => text.classList.remove('run'), 500);
-    }, 22500);
-  }, 100);
+
+    const isBreaking = headline.includes('BREAKING') || headline.includes('🔴');
+    if (isBreaking) bar.classList.add('breaking');
+
+    const finishCycle = () => {
+      bar.classList.remove('ts', 'breaking');
+      wrap.classList.remove('ts', 'breaking');
+      text.classList.remove('run');
+      scheduleTickerNews(8000 + Math.random() * 12000);
+    };
+
+    if (reduceMotion) {
+      scheduleTickerNews(11000 + Math.random() * 9000);
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      void text.offsetWidth;
+      text.classList.add('run');
+
+      let cycleFinished = false;
+      const finishOnce = () => {
+        if (cycleFinished) return;
+        cycleFinished = true;
+        finishCycle();
+      };
+
+      const onAnimEnd = (e) => {
+        if (e.animationName !== 'ticker-scroll') return;
+        text.removeEventListener('animationend', onAnimEnd);
+        clearTimeout(_tickerAnimFallbackTimer);
+        _tickerAnimFallbackTimer = null;
+        finishOnce();
+      };
+
+      text.addEventListener('animationend', onAnimEnd);
+
+      _tickerAnimFallbackTimer = setTimeout(() => {
+        text.removeEventListener('animationend', onAnimEnd);
+        _tickerAnimFallbackTimer = null;
+        finishOnce();
+      }, 23000);
+    });
+  });
 }
 
 function wireSpeedControls() {
@@ -312,6 +527,9 @@ async function main() {
   window.closeW = closeW;
   window.toggleStart = toggleStart;
   window.fireNews = fireNews;
+  window.startDesktopNewsTicker = () => {
+    startAutoTicker();
+  };
   loadFirstPlayableAudio(getMouseClickCandidates()).then((audio) => {
     mouseClickAudio = audio;
   });
@@ -356,12 +574,7 @@ async function main() {
     kickBootOnce();
   }
 
-  try {
-    newsItems = await loadJsonFile('news.json');
-  } catch {
-    newsItems = ['CorpOS — News feed unavailable.'];
-  }
-  window.__wnetNewsHeadlines = newsItems;
+  refreshNewsItems();
 
   await loadBiosLines(loadJsonFile);
   bankUi.setBankRerender(refreshIfBank);
@@ -381,6 +594,13 @@ async function main() {
   // NPC population is now generated during the BIOS sequence (world-generation.js).
   // ActorDB.init loads any existing actors from disk; BIOS parallel gen fills if empty.
   ActorEngine.init();
+  try {
+    const dm = getState().districtManifest;
+    if (dm) ActorDB.loadColdManifest(dm);
+  } catch {
+    /* ignore */
+  }
+  window.onPlayerExploresDistrict = onPlayerExploresDistrict;
   await initContentPipeline(loadJsonFile);
   await initMoogleMaps(loadJsonFile);
   // Expose getState for ActorDB.getCompanyName cross-reference
@@ -461,6 +681,7 @@ async function main() {
 
   initWindowChrome();
   initDesktopSystem();
+  initTickerChrome();
   initBlackCherry();
   DevConsole.init();
   initContextMenus();
@@ -469,23 +690,34 @@ async function main() {
 
   await initWebExPublisher(loadJsonFile);
   await initMarketDynamics(loadJsonFile);
+  await initRivalCompanies(loadJsonFile);
+  patchState((s) => {
+    ensureEconomy(s);
+    return s;
+  });
   await initMediaPlayer();
   window.GameSystems = window.GameSystems || {};
   window.GameSystems.mediaPlayer = MediaPlayer;
   await initFileExplorer(loadJsonFile);
+  {
+    const inv = document.getElementById('player-inventory-root');
+    if (inv) mountInventoryWindow(inv);
+  }
   seedAllProgramFiles();
   initWritepad();
   initDailyHerald({ mount: document.getElementById('dh-root') });
   initWebExploiter();
   window.WebExploiter = WebExploiter;
+  initCombatApps();
 
   on('tick', ({ elapsedMs }) => {
     updateClockDisplay();
+    const simMs = typeof elapsedMs === 'number' ? elapsedMs : getState().sim.elapsedMs;
+    processPendingCombatEffects();
     patchState((st) => {
       tickWebExDomainBilling(st);
       return st;
     });
-    const simMs = typeof elapsedMs === 'number' ? elapsedMs : getState().sim.elapsedMs;
     tickYourspaceRtc(simMs);
     tickWebexSiteRtcPages(simMs);
     tickReviewBomberNpc(simMs);
@@ -493,9 +725,20 @@ async function main() {
     tickPipelineLiveComments(simMs);
     tickBlackCherryRudeness();
     tickPlayerReplies(simMs);
+    tickGhostReferralSms();
     ActorEngine.tick(getStateTimeHours());
     for (const m of processWorldNetDeliveriesIfNeeded()) {
       smsToPlayer(m.text);
+    }
+    for (const t of processMarketplaceSettlementsIfNeeded()) {
+      const amt = Number(t.amount || 0);
+      toast({
+        key: `mps_done_${t.id || ''}`,
+        title: 'ETradeBay',
+        message: `Sale settled: $${amt.toFixed(2)} deposited to FNCB.`,
+        icon: '💰',
+        autoDismiss: 6000
+      });
     }
     for (const t of processSiteRepairsIfNeeded()) {
       toast({
@@ -530,13 +773,15 @@ async function main() {
         autoDismiss: 6000
       });
     }
-    if (currentPageKey === 'devtools') {
+    if (currentPageKey === 'devtools' || currentPageKey === 'net99669' || currentPageKey === 'backrooms') {
       const hasActiveInstalls = !!getState().software?.activeInstalls?.length;
       if (hasActiveInstalls) wnetReload();
     }
     refreshTransferDialog();
   });
   on('dayChanged', () => {
+    const simMs = getState().sim?.elapsedMs || 0;
+    tickEconomy(simMs);
     patchState((st) => {
       applyMeridianSavingsInterestIfNeeded(st);
       return st;
@@ -544,9 +789,17 @@ async function main() {
     processBusinessRegistryApprovals();
     tickWarehouseDaily();
     tickMarketDaily();
+    tickRivals(simMs);
+    patchState((s) => {
+      const fncb = s.accounts?.find((a) => a.id === 'fncb');
+      if (fncb) fncb.balance = (fncb.balance || 0) - ECON_CONSTANTS.BASE_DAILY_EXPENSES;
+      return s;
+    });
+    tickPhantomSmearCampaignsDaily();
     tickPlayerStore();
     window.WorldNet?.axis?.processDecay?.();
     WebExploiter.tickSiteRecovery();
+    processPendingCombatEffects();
     for (const m of applyDueRegulatoryFinesPatch()) {
       SMS.send({ from: 'COMPLIANCE_MONITOR', message: m, gameTime: getState().sim?.elapsedMs || 0 });
     }
@@ -558,6 +811,17 @@ async function main() {
     renderActiveTasksPanel();
     refreshInstallableAppVisibility();
     refreshTransferDialog();
+  });
+
+  on('news:breaking', ({ headline } = {}) => {
+    if (headline) {
+      newsItems.unshift(`🔴 BREAKING — ${headline}`);
+      if (typeof window !== 'undefined') {
+        window.newsItems = newsItems;
+        window.__wnetNewsHeadlines = newsItems;
+      }
+      fireNews();
+    }
   });
 
   try {
@@ -581,6 +845,9 @@ async function main() {
   let lastAutosaveKey = '';
   on('hour', ({ gameDate }) => {
     const h = gameDate.getUTCHours();
+    if (h % 6 === 0) {
+      tickAxisNpcInitiatedContact(getState().sim?.elapsedMs || 0);
+    }
     if (h % 6 !== 0) return;
     const key = `${gameDate.getUTCFullYear()}-${gameDate.getUTCMonth()}-${gameDate.getUTCDate()}-${h}`;
     if (key === lastAutosaveKey) return;

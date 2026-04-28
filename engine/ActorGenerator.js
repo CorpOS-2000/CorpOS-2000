@@ -1,6 +1,95 @@
 import { TagletEngine } from './TagletEngine.js';
 import { Validator } from './Validator.js';
 
+/**
+ * Work shift schedule for activity / tiered simulation (hot & warm actors).
+ * @param {string} profession
+ * @param {string} role
+ */
+export function deriveWorkSchedule(profession, role) {
+  if (role === 'investigator') {
+    return {
+      shift: 'day',
+      days: [1, 2, 3, 4, 5],
+      peak_hours: [8, 9, 10, 14, 15, 16],
+      off_hours: [0, 1, 2, 3, 22, 23]
+    };
+  }
+
+  const SHIFT_MAP = {
+    Attorney: 'day',
+    Accountant: 'day',
+    'Financial Advisor': 'day',
+    Banker: 'day',
+    'Real Estate Agent': 'day',
+    'Insurance Agent': 'day',
+    'Government Worker': 'day',
+    Teacher: 'day',
+    Pharmacist: 'day',
+    Doctor: 'day',
+    Engineer: 'day',
+    Architect: 'day',
+    Developer: 'day',
+    'Retail Worker': 'evening',
+    Server: 'evening',
+    Bartender: 'evening',
+    Cook: 'evening',
+    'Customer Service': 'evening',
+    'Security Guard': 'evening',
+    'Personal Trainer': 'evening',
+    Nurse: 'night',
+    'Police Officer': 'night',
+    'Truck Driver': 'night',
+    'Factory Worker': 'night',
+    Janitor: 'night',
+    'Warehouse Worker': 'night',
+    Freelancer: 'flexible',
+    Artist: 'flexible',
+    Musician: 'flexible',
+    Consultant: 'flexible',
+    Journalist: 'flexible',
+    Photographer: 'flexible',
+    Unemployed: 'unemployed',
+    Retired: 'unemployed'
+  };
+
+  const SHIFT_PROFILES = {
+    day: {
+      shift: 'day',
+      days: [1, 2, 3, 4, 5],
+      peak_hours: [9, 10, 11, 14, 15, 16, 17],
+      off_hours: [0, 1, 2, 3, 4, 5, 22, 23]
+    },
+    evening: {
+      shift: 'evening',
+      days: [0, 1, 2, 3, 4, 5, 6],
+      peak_hours: [14, 15, 16, 19, 20, 21, 22],
+      off_hours: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    night: {
+      shift: 'night',
+      days: [0, 1, 2, 3, 4, 5, 6],
+      peak_hours: [21, 22, 23, 0, 1, 2, 3],
+      off_hours: [8, 9, 10, 11, 12, 13, 14, 15]
+    },
+    flexible: {
+      shift: 'flexible',
+      days: [0, 1, 2, 3, 4, 5, 6],
+      peak_hours: [8, 9, 10, 13, 14, 19, 20, 21],
+      off_hours: [2, 3, 4, 5]
+    },
+    unemployed: {
+      shift: 'unemployed',
+      days: [0, 1, 2, 3, 4, 5, 6],
+      peak_hours: [10, 11, 12, 13, 14, 15],
+      off_hours: [0, 1, 2, 3, 4, 5]
+    }
+  };
+
+  const shiftKey = SHIFT_MAP[profession] || 'day';
+  return { ...SHIFT_PROFILES[shiftKey] };
+}
+
 function pickWeighted(pool) {
   if (!Array.isArray(pool) || pool.length === 0) return '';
   const total = pool.reduce((s, p) => s + Number(p.weight || 0), 0);
@@ -190,6 +279,7 @@ export const ActorGenerator = {
     }
     const merged = { ...record, ...overrides, age };
     if (!merged.dcProfile) merged.dcProfile = this.calculateDCProfile(merged);
+    if (!merged.work_schedule) merged.work_schedule = deriveWorkSchedule(merged.profession, merged.role);
     return merged;
   },
 
@@ -349,7 +439,8 @@ export const ActorGenerator = {
       is_key_character: true,
       created_at: '2000-01-01T06:00:00',
       active: true,
-      dcProfile: { affinity_check: 10, gossip_check: 12, info_check: 13, favor_check: 14, bribe_check: 14, intimidation_check: 14, trust_check: 15 }
+      dcProfile: { affinity_check: 10, gossip_check: 12, info_check: 13, favor_check: 14, bribe_check: 14, intimidation_check: 14, trust_check: 15 },
+      work_schedule: deriveWorkSchedule('Entrepreneur', 'player')
     };
   },
 
@@ -436,6 +527,7 @@ export const ActorGenerator = {
       active: true,
       contactDisplayName: 'Mom',
       relationToPlayer: 'Mother',
+      work_schedule: deriveWorkSchedule(profession, 'contact')
     };
     return momRecord;
   },
@@ -487,7 +579,50 @@ export const ActorGenerator = {
       active: true,
       contactDisplayName: 'Kyle Hargrove',
       relationToPlayer: 'CorpOS Account Manager',
+      work_schedule: deriveWorkSchedule('Account Manager', 'contact')
     };
+  },
+
+  /**
+   * Full actor from cold/warm seed (deterministic core fields + generateOne fill).
+   * @param {number} seed
+   * @param {number} _districtId
+   * @param {{ profession?: string, taglets?: string[], work_schedule?: object }} warmActor
+   */
+  generateFromSeed(seed, _districtId, warmActor = {}) {
+    function mulberry32(a) {
+      return function () {
+        let t = (a += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    const rng = mulberry32(seed >>> 0);
+    const pools = this._ctx.pools;
+    const fnArr = pools.first_names || [];
+    const lnArr = pools.last_names || [];
+    const fi = Math.floor(rng() * Math.max(fnArr.length, 1));
+    const li = Math.floor(rng() * Math.max(lnArr.length, 1));
+    const fn = fnArr[fi];
+    const ln = lnArr[li];
+    const firstName = typeof fn === 'object' && fn?.value != null ? fn.value : String(fn || 'Alex');
+    const lastName = typeof ln === 'object' && ln?.value != null ? ln.value : String(ln || 'Taylor');
+    const profession = warmActor.profession || 'Retail Worker';
+    const taglets = Array.isArray(warmActor.taglets) ? [...warmActor.taglets] : [];
+
+    const rec = this.generateOne({
+      role: 'civilian',
+      profession,
+      first_name: firstName,
+      last_name: lastName,
+      taglets,
+      lifestyle_distribution: { middle: 0.6, low: 0.25, wealthy: 0.15 }
+    });
+    rec.taglets = taglets.length ? taglets : rec.taglets;
+    rec.work_schedule = warmActor.work_schedule || deriveWorkSchedule(profession, rec.role);
+    rec._hydratedFromTier = 'warm';
+    return rec;
   }
 };
 

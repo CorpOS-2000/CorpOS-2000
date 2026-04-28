@@ -39,7 +39,7 @@ function tickSim(realDt) {
     prevDate.getUTCMonth() !== nextDate.getUTCMonth() ||
     prevDate.getUTCFullYear() !== nextDate.getUTCFullYear()
   ) {
-    emit('dayChanged', { gameDate: nextDate });
+    emit('dayChanged', { gameDate: nextDate, simMs: nextElapsed });
   }
 }
 

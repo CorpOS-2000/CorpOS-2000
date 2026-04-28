@@ -194,6 +194,258 @@ const APP_MANIFEST = Object.freeze({
       { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
     ]
   },
+  'phantom-press': {
+    folderName: 'Phantom Press v1.0',
+    exe: 'phantom.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'phantom.exe', size: 1536000, type: 'Application', critical: true },
+      { name: 'phmedia.dll', size: 442368, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Phantom Press]\r\nVersion=1.0\r\nSyndication=enabled\r\nNotorietyCap=200\r\n' },
+      { name: 'README.txt', size: 3072, type: 'Text Document',
+        content: 'Phantom Press — reputation warfare console.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'market-force': {
+    folderName: 'MarketForce 2000',
+    exe: 'marketforce.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'marketforce.exe', size: 1769472, type: 'Application', critical: true },
+      { name: 'mfcore.dll', size: 524288, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[MarketForce]\r\nVersion=2000.1\r\nRegion=Hargrove\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'MarketForce — financial warfare console.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'ghost-corp': {
+    folderName: 'GhostCorp Suite',
+    exe: 'ghostcorp.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'ghostcorp.exe', size: 1900544, type: 'Application', critical: true },
+      { name: 'shellcore.dll', size: 614400, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[GhostCorp]\r\nVersion=1.0\r\nObfuscation=maximum\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'GhostCorp — shell entities and layered ownership.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'dataminer-pro': {
+    folderName: 'DataMiner Pro',
+    exe: 'dataminer.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'dataminer.exe', size: 1441792, type: 'Application', critical: true },
+      { name: 'dmintel.dll', size: 458752, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[DataMiner Pro]\r\nVersion=1.0\r\nSources=public\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'DataMiner Pro — OSINT aggregation.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'compliance-cannon': {
+    folderName: 'Compliance Cannon',
+    exe: 'compliance.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'compliance.exe', size: 1622016, type: 'Application', critical: true },
+      { name: 'frafeed.dll', size: 393216, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Compliance Cannon]\r\nVersion=1.0\r\nJurisdiction=Federal\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'Compliance Cannon — anonymous filings interface.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'signal-scrub': {
+    folderName: 'SignalScrub 1.2',
+    exe: 'signalscrub.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'signalscrub.exe', size: 983040, type: 'Application', critical: true },
+      { name: 'logwash.dll', size: 344064, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[SignalScrub]\r\nVersion=1.2\r\nNoiseProfile=high\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'SignalScrub — counter-surveillance utilities.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'phantom-press-v2': {
+    folderName: 'Phantom Press v2.0',
+    exe: 'phantom.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'phantom.exe', size: 1587200, type: 'Application', critical: true },
+      { name: 'phmedia.dll', size: 458752, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Phantom Press]\r\nVersion=2.0\r\nSyndication=stealth\r\nNotorietyCap=200\r\n' },
+      { name: 'README.txt', size: 3072, type: 'Text Document',
+        content: 'Phantom Press v2.0 — refined reputation warfare.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'phantom-press-v3': {
+    folderName: 'Phantom Press v3.0',
+    exe: 'phantom.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'phantom.exe', size: 1658880, type: 'Application', critical: true },
+      { name: 'phmedia.dll', size: 475136, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Phantom Press]\r\nVersion=3.0\r\nSyndication=black\r\nTraceLevel=none\r\n' },
+      { name: 'README.txt', size: 3072, type: 'Text Document',
+        content: 'Phantom Press v3.0 — surgical media operations.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'market-force-v2': {
+    folderName: 'MarketForce 2000 v2.0',
+    exe: 'marketforce.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'marketforce.exe', size: 1835008, type: 'Application', critical: true },
+      { name: 'mfcore.dll', size: 540672, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[MarketForce]\r\nVersion=2000.2\r\nRegion=Hargrove\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'MarketForce v2.0 — refined financial warfare.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'market-force-v3': {
+    folderName: 'MarketForce 2000 v3.0',
+    exe: 'marketforce.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'marketforce.exe', size: 1900544, type: 'Application', critical: true },
+      { name: 'mfcore.dll', size: 557056, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[MarketForce]\r\nVersion=2000.3\r\nGhostRouting=on\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'MarketForce v3.0 — ghost-tier market ops.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'ghost-corp-v2': {
+    folderName: 'GhostCorp Suite v2.0',
+    exe: 'ghostcorp.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'ghostcorp.exe', size: 1966080, type: 'Application', critical: true },
+      { name: 'shellcore.dll', size: 622592, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[GhostCorp]\r\nVersion=2.0\r\nObfuscation=deep\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'GhostCorp v2.0 — multi-layer shells.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'ghost-corp-v3': {
+    folderName: 'GhostCorp Suite v3.0',
+    exe: 'ghostcorp.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'ghostcorp.exe', size: 2031616, type: 'Application', critical: true },
+      { name: 'shellcore.dll', size: 638976, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[GhostCorp]\r\nVersion=3.0\r\nLayers=12\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'GhostCorp v3.0 — twelve-layer architecture.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'dataminer-pro-v2': {
+    folderName: 'DataMiner Pro v2.0',
+    exe: 'dataminer.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'dataminer.exe', size: 1507328, type: 'Application', critical: true },
+      { name: 'dmintel.dll', size: 475136, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[DataMiner Pro]\r\nVersion=2.0\r\nSources=deep\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'DataMiner Pro v2.0 — professional OSINT.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'dataminer-pro-v3': {
+    folderName: 'DataMiner Pro v3.0',
+    exe: 'dataminer.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'dataminer.exe', size: 1572864, type: 'Application', critical: true },
+      { name: 'dmintel.dll', size: 491520, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[DataMiner Pro]\r\nVersion=3.0\r\nSources=classified\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'DataMiner Pro v3.0 — classified intelligence suite.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'compliance-cannon-v2': {
+    folderName: 'Compliance Cannon v2.0',
+    exe: 'compliance.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'compliance.exe', size: 1654784, type: 'Application', critical: true },
+      { name: 'frafeed.dll', size: 409600, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Compliance Cannon]\r\nVersion=2.0\r\nProxyLayers=2\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'Compliance Cannon v2.0 — hardened filings.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'compliance-cannon-v3': {
+    folderName: 'Compliance Cannon v3.0',
+    exe: 'compliance.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'compliance.exe', size: 1720320, type: 'Application', critical: true },
+      { name: 'frafeed.dll', size: 425984, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[Compliance Cannon]\r\nVersion=3.0\r\nJurisdiction=foreign\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'Compliance Cannon v3.0 — ghost-routed legal warfare.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'signal-scrub-v2': {
+    folderName: 'SignalScrub v2.0',
+    exe: 'signalscrub.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'signalscrub.exe', size: 1015808, type: 'Application', critical: true },
+      { name: 'logwash.dll', size: 352256, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[SignalScrub]\r\nVersion=2.0\r\nNoiseProfile=balanced\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'SignalScrub v2.0 — refined counter-surveillance.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
+  'signal-scrub-v3': {
+    folderName: 'SignalScrub v3.0',
+    exe: 'signalscrub.exe',
+    location: 'progfiles',
+    files: [
+      { name: 'signalscrub.exe', size: 1048576, type: 'Application', critical: true },
+      { name: 'logwash.dll', size: 360448, type: 'Application Extension', critical: true },
+      { name: 'config.ini', size: 1536, type: 'Configuration Settings', critical: false,
+        content: '[SignalScrub]\r\nVersion=3.0\r\nNoiseProfile=silent\r\n' },
+      { name: 'README.txt', size: 2048, type: 'Text Document',
+        content: 'SignalScrub v3.0 — military-grade scrub.\r\n' },
+      { name: 'uninstall.dat', size: 1024, type: 'DAT File', critical: false }
+    ]
+  },
   'explorer': {
     folderName: 'System Explorer',
     exe: 'explorer.exe',

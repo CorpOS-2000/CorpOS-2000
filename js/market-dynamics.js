@@ -83,6 +83,8 @@ export function priceMultiplier(tag) {
   const buzz = getState().marketBuzz?.[key];
   if (!buzz) return 1;
 
+  const simMs = getState().sim?.elapsedMs ?? 0;
+
   const sentimentRatio = buzz.likes + buzz.dislikes > 0
     ? (buzz.likes - buzz.dislikes) / (buzz.likes + buzz.dislikes)
     : 0;
@@ -91,8 +93,15 @@ export function priceMultiplier(tag) {
   const mentionHeat = Math.min(buzz.mentions / 50, 1);
 
   // Positive sentiment + high purchase volume → price premium
-  const multiplier = 1 + (sentimentRatio * 0.15) + (purchaseHeat * 0.10) + (mentionHeat * 0.05);
-  return Math.max(0.5, Math.min(1.5, multiplier));
+  let multiplier = 1 + (sentimentRatio * 0.15) + (purchaseHeat * 0.10) + (mentionHeat * 0.05);
+  if (
+    buzz.priceSqueezeUntilSimMs &&
+    simMs < buzz.priceSqueezeUntilSimMs &&
+    buzz.priceSqueezeMultiplier != null
+  ) {
+    multiplier *= Math.max(0.5, Math.min(2.5, Number(buzz.priceSqueezeMultiplier) || 1));
+  }
+  return Math.max(0.5, Math.min(2.0, multiplier));
 }
 
 /**
@@ -147,6 +156,11 @@ export function tickMarketDaily() {
       const sh = s.marketBuzz[key].shortage;
       if (sh?.active && simMs > sh.startSimMs + sh.durationDays * SIM_DAY_MS) {
         delete s.marketBuzz[key].shortage;
+      }
+      const bz = s.marketBuzz[key];
+      if (bz?.priceSqueezeUntilSimMs && simMs >= bz.priceSqueezeUntilSimMs) {
+        delete bz.priceSqueezeUntilSimMs;
+        delete bz.priceSqueezeMultiplier;
       }
     }
     return s;

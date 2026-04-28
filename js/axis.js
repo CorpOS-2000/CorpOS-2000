@@ -5,9 +5,11 @@ import {
   ccrAcknowledgeContract, ccrNegotiate, ccrContractTotal
 } from './gameState.js';
 import { saveAfterMutation } from '../engine/SaveManager.js';
-import { toast } from './toast.js';
+import { toast, ToastManager } from './toast.js';
 import { patchSession } from './sessionState.js';
-import { openBlackCherrySmsTo } from './black-cherry.js';
+import { openBlackCherryDialPreset } from './black-cherry.js';
+import { SMS } from './bc-sms.js';
+import { PeekManager } from './peek-manager.js';
 import {
   MAIN_REQUIREMENTS, getRequirement, getUnlockedModules,
   getModuleById, computeMinTotal
@@ -119,6 +121,7 @@ function ensureEntry(actorId) {
       last_contact_date: null,
       agenda_known: false,
       intel_level: 0,
+      intel_entries: [],
       memory: []
     };
   }
@@ -301,15 +304,208 @@ function favorLabel(entry) {
   return 'No favors';
 }
 
+function buildProfileActions(actorId, entry) {
+  const score = Number(entry.relationship_score || 0);
+  const isHostile = score <= -55;
+  const isFavorable = score >= 21;
+  const canGather = score >= -20 && !isHostile;
+  const owedFavors = (entry.favor_balance || 0) > 0;
+  const actor = window.ActorDB?.getRaw?.(actorId);
+  const hasPhone = !!(actor?.phone_numbers?.[0]);
+  const dis = isHostile ? ' data-axis-disabled="1" title="Not available for hostile contacts"' : '';
+
+  return `<div class="axis-actions">
+    <button type="button" class="axis-action-btn"${isHostile ? ' data-axis-disabled="1" title="Cannot message hostile contacts"' : ''} data-axis-action="send-message">📱 Send Message</button>
+    <button type="button" class="axis-action-btn" data-axis-action="msg-email">📧 Email</button>
+    ${
+  hasPhone
+    ? `<button type="button" class="axis-action-btn" data-axis-action="call-contact"${dis}>📞 Call</button>`
+    : ''
+}
+    <button type="button" class="axis-action-btn" data-axis-action="view-worldnet">🌐 View on YourSpace</button>
+    ${isFavorable ? '<button type="button" class="axis-action-btn axis-action-btn--positive" data-axis-action="grant-favor">🤝 Offer Favor</button>' : ''}
+    ${
+  owedFavors
+    ? `<button type="button" class="axis-action-btn axis-action-btn--positive" data-axis-action="call-favor">📋 Call In Favor (${entry.favor_balance} owed)</button>`
+    : ''
+}
+    ${canGather ? '<button type="button" class="axis-action-btn" data-axis-action="gather-intel">🔍 Gather Intel</button>' : ''}
+    ${
+  !isHostile
+    ? '<button type="button" class="axis-action-btn axis-action-btn--danger" data-axis-action="mark-hostile">⚠ Mark Hostile</button>'
+    : '<button type="button" class="axis-action-btn axis-action-btn--warning" data-axis-action="reconcile">🕊 Attempt Reconcile ($500)</button>'
+}
+  </div>`;
+}
+
+function buildAgendaSurface(taglets, profession, employer, shift) {
+  const lines = [];
+  if (taglets.includes('vocal')) {
+    lines.push(
+      `${profession} at ${employer}. Frequently voices opinions publicly. Will engage on any topic.`
+    );
+  }
+  if (taglets.includes('transactional')) {
+    lines.push('Driven by value and practical outcomes. Decision-making is primarily transactional.');
+  }
+  if (taglets.includes('ambitious')) {
+    lines.push('Career advancement is a primary motivator. Always working an angle.');
+  }
+  if (taglets.includes('cautious')) {
+    lines.push('Risk-averse. Prefers to observe before committing. Hard to win over quickly.');
+  }
+  if (taglets.includes('community_hub')) {
+    lines.push('Deeply invested in the community. Motivated by connections and mutual benefit.');
+  }
+  if (taglets.includes('generous')) {
+    lines.push('Will help others when asked. Motivated by reciprocity and goodwill.');
+  }
+  if (taglets.includes('reclusive')) {
+    lines.push('Private individual. Limited public engagement. Hard to read.');
+  }
+  if (taglets.includes('loyal')) {
+    lines.push('Loyalty-driven. Once committed, reliable. Values long-term relationships.');
+  }
+  if (taglets.includes('information_broker')) {
+    lines.push('Trades in information. Knows more than they share. Motivated by intelligence advantage.');
+  }
+  if (taglets.includes('contrarian')) {
+    lines.push('Challenges established positions. Motivated by disruption and debate.');
+  }
+  if (!lines.length) lines.push(`${profession} at ${employer}. Motivations not yet apparent.`);
+  if (shift === 'night') lines.push('Works nights — daytime contact attempts may go unanswered.');
+  if (shift === 'evening') lines.push('Evening shift worker — early morning contact unlikely.');
+  return lines;
+}
+
+function buildAgendaDeep(taglets, profession, employer, _actor) {
+  const lines = [];
+  if (taglets.includes('ambitious')) {
+    lines.push(
+      'Actively seeking advancement. May be willing to undermine colleagues if it benefits their trajectory.'
+    );
+  }
+  if (taglets.includes('information_broker')) {
+    lines.push("Gathering intelligence on multiple operators simultaneously. You are likely not their only contact.");
+  }
+  if (taglets.includes('transactional')) {
+    lines.push(
+      'Currently evaluating their financial position. Will respond well to offers that improve their net standing.'
+    );
+  }
+  if (taglets.includes('cautious')) {
+    lines.push('Has significant risk exposure they are protecting. Pressure points relate to public perception.');
+  }
+  if (taglets.includes('vocal')) {
+    lines.push('Wants recognition and an audience. Providing a platform creates strong loyalty.');
+  }
+  if (taglets.includes('loyal')) {
+    lines.push(
+      'Has deep ties to a small circle. Access to that circle is the primary value of this relationship.'
+    );
+  }
+  if (!lines.length) lines.push('Deeper profile requires additional intel operations.');
+  return lines;
+}
+
+function buildAgendaLeverage(taglets, _actorId, entry) {
+  const lines = [];
+  if (taglets.includes('cautious')) {
+    lines.push(
+      'Vulnerability: reputation. Public pressure or visibility threats will cause immediate behavioral change.'
+    );
+  }
+  if (taglets.includes('transactional')) {
+    lines.push('Leverage point: financial offer or loss. They will respond to direct economic incentive or threat.');
+  }
+  if (taglets.includes('ambitious')) {
+    lines.push('Leverage point: career threat. Anything that jeopardizes their advancement is a pressure point.');
+  }
+  if (taglets.includes('information_broker')) {
+    lines.push('Leverage point: information reciprocity. They will trade intel for intel — they want what you know.');
+  }
+  if (taglets.includes('loyal')) {
+    lines.push('Leverage point: their inner circle. A threat or offer involving their close contacts will move them.');
+  }
+  if ((entry.favor_balance || 0) > 0) {
+    const n = entry.favor_balance;
+    lines.push(`Active leverage: they owe you ${n} favor${n === 1 ? '' : 's'}. Call them in.`);
+  }
+  if (!lines.length) lines.push('No specific leverage identified at current intel level.');
+  return lines;
+}
+
+function renderActorAgendaPanel(contact) {
+  const { entry, actorId } = contact;
+  const actor = window.ActorDB?.getRaw?.(actorId);
+  const taglets = actor?.taglets || [];
+  const intelLevel = entry.intel_level || 0;
+  const relScore = entry.relationship_score || 0;
+  const profession = actor?.profession || contact.profession || 'Unknown';
+  const employer = actor?.employer_name || actor?.employer_id || contact.employer || 'unknown employer';
+  const shift = actor?.work_schedule?.shift || 'day';
+  const isLocked = intelLevel < 1 && relScore < 21;
+
+  if (isLocked) {
+    return `
+<div class="axis-empty">Agenda unknown.</div>
+<div class="axis-note">Build the relationship to Favorable (21+) or gather intel to unlock.</div>
+<div class="axis-actions">
+  <button type="button" class="axis-action-btn" data-axis-action="gather-intel">🔍 Gather Intel to Unlock</button>
+</div>`;
+  }
+
+  const surfaceLines = buildAgendaSurface(taglets, profession, String(employer), shift);
+  const deepLines = intelLevel >= 2 || relScore >= 51 ? buildAgendaDeep(taglets, profession, String(employer), actor) : null;
+  const leverageLines = intelLevel >= 3 ? buildAgendaLeverage(taglets, actorId, entry) : null;
+
+  return `
+<div class="axis-agenda-wrap">
+  <div class="axis-agenda-section">
+    <div class="axis-agenda-label">Known Motivations</div>
+    <div class="axis-agenda-body">${surfaceLines.map((l) => `<p>${escapeHtml(l)}</p>`).join('')}</div>
+  </div>
+  ${
+  deepLines
+    ? `
+  <div class="axis-agenda-section">
+    <div class="axis-agenda-label">Deeper Objectives <span class="axis-intel-badge">Intel ${intelLevel}</span></div>
+    <div class="axis-agenda-body">${deepLines.map((l) => `<p>${escapeHtml(l)}</p>`).join('')}</div>
+  </div>`
+    : `
+  <div class="axis-agenda-locked">
+    <div class="axis-agenda-label">Deeper Objectives</div>
+    <div class="axis-note">Requires Intel Level 2 or a Trusted (51+) relationship.</div>
+    <button type="button" class="axis-action-btn" data-axis-action="gather-intel">🔍 Gather Intel</button>
+  </div>`
+}
+  ${
+  leverageLines
+    ? `
+  <div class="axis-agenda-section axis-agenda-leverage">
+    <div class="axis-agenda-label">⚡ Leverage Points <span class="axis-intel-badge">Intel ${intelLevel}</span></div>
+    <div class="axis-agenda-body">${leverageLines.map((l) => `<p>${escapeHtml(l)}</p>`).join('')}</div>
+  </div>`
+    : ''
+}
+  <div class="axis-actions">
+    <button type="button" class="axis-action-btn" data-axis-action="gather-intel">🔍 Gather More Intel</button>
+  </div>
+</div>`;
+}
+
 function tabBody(contact) {
   if (state.activeTab === 'contracts') {
     return renderContractsModule();
   }
   if (state.activeTab === 'agenda') {
-    return renderAgendaModule();
+    if (!contact) {
+      return '<div class="axis-empty">Select a contact to view their agenda.</div>';
+    }
+    return renderActorAgendaPanel(contact);
   }
   if (!contact) return '<div class="axis-empty">No contact selected.</div>';
-  const { entry } = contact;
+  const { entry, actorId } = contact;
   if (state.activeTab === 'profile') {
     const last = entry.memory?.[0];
     return `<div class="axis-profile">
@@ -328,49 +524,103 @@ function tabBody(contact) {
       <div class="axis-kv"><span>Favor balance</span><span>${escapeHtml(favorLabel(entry))}</span></div>
       <div class="axis-kv"><span>Days since last contact</span><span>${escapeHtml(String(daysSince(entry.last_contact_date || entry.discovered_date)))}</span></div>
       <div class="axis-kv"><span>Last interaction</span><span>${escapeHtml(last?.description || 'Newly discovered contact')}</span></div>
-      <div class="axis-actions axis-actions--msg">
-        <div class="axis-msg-wrap">
-          <button type="button" class="wbtn" data-axis-action="toggle-msg-menu">💬 Send Message</button>
-          <div class="axis-msg-menu ${state.msgMenuOpen ? 'is-open' : ''}" id="axis-msg-menu" role="menu">
-            <div class="axis-msg-prompt">Where do you want to communicate?</div>
-            <button type="button" class="axis-msg-opt" data-axis-action="msg-email">📧 Email</button>
-            <button type="button" class="axis-msg-opt" data-axis-action="msg-phone">📱 Phone (SMS)</button>
-          </div>
-        </div>
-        <button type="button" class="wbtn" data-axis-action="view-worldnet">📋 View on WorldNet</button>
-        <button type="button" class="wbtn" data-axis-action="mark-hostile">⚠️ Mark Hostile</button>
-      </div>
+      ${buildProfileActions(actorId, entry)}
     </div>`;
   }
   if (state.activeTab === 'connections') {
-    const rels = window.ActorDB?.getRelationships?.(contact.actorId) || [];
-    if (!rels.length) return '<div class="axis-empty">No known connections on record.</div>';
-    return `<div class="axis-list">${rels
-      .slice(0, 12)
-      .map((rel) => {
-        const known = getEntry(rel.actor_id);
-        const name = known ? actorName(rel.actor_id) : 'Unknown contact';
-        const strength = Math.max(1, Math.min(100, Number(rel.strength || rel.connection_strength || 25)));
-        return `<div class="axis-list-row">
-          <div>${escapeHtml(name)}</div>
-          <div>${escapeHtml(rel.relationship_type || rel.type || 'Association')}</div>
-          <div class="axis-conn-bar"><div style="width:${strength}%;"></div></div>
-        </div>`;
-      })
-      .join('')}</div><div class="axis-note">More connections may be discoverable through intel operations.</div>`;
+    const rels = window.ActorDB?.getRelationships?.(actorId) || [];
+    if (!rels.length) {
+      return `
+<div class="axis-empty">No known connections on record.</div>
+<div class="axis-note">Intel operations may reveal additional connections.</div>
+<div class="axis-actions">
+  <button type="button" class="axis-action-btn" data-axis-action="gather-intel">🔍 Gather Intel to Find Connections</button>
+</div>`;
+    }
+    return `
+<div class="axis-connections-wrap">
+  ${rels
+    .slice(0, 12)
+    .map((rel) => {
+      const otherId = rel.actor_id || rel.actorId;
+      const relActor = window.ActorDB?.getRaw?.(otherId);
+      const relName = relActor?.public_profile?.display_name || relActor?.full_legal_name || otherId;
+      const known = getEntry(otherId);
+      const knownTier = known ? tierForScore(known.relationship_score) : null;
+      const strength = Math.max(1, Math.min(100, Number(rel.strength || rel.connection_strength || 25)));
+      const relType = rel.relationship_type || rel.type || 'Association';
+      return `
+<div class="axis-conn-row" data-axis-conn-actor="${escapeHtml(otherId)}">
+  <div class="axis-conn-avatar" style="background:${knownTier?.color || '#888'}">
+    ${(String(relName).charAt(0) || '?').toUpperCase()}
+  </div>
+  <div class="axis-conn-info">
+    <div class="axis-conn-name">${escapeHtml(relName)}</div>
+    <div class="axis-conn-type">${escapeHtml(relType)}${
+  known
+    ? ` · ${escapeHtml(knownTier?.label || 'Known')}`
+    : ' · Unknown'}</div>
+    <div class="axis-conn-bar-wrap">
+      <div class="axis-conn-bar"><div style="width:${strength}%;background:#4488cc"></div></div>
+    </div>
+  </div>
+  <div class="axis-conn-actions">
+    ${
+  known
+    ? `<button type="button" class="axis-action-btn-sm" data-axis-jump="${escapeHtml(otherId)}">View</button>`
+    : `<button type="button" class="axis-action-btn-sm axis-btn-discover" data-axis-discover="${escapeHtml(otherId)}">Discover</button>`
+}
+  </div>
+</div>`;
+    })
+    .join('')}
+</div>
+<div class="axis-note">${rels.length > 12 ? `Showing 12 of ${rels.length} connections. ` : ''}Intel operations may reveal more.</div>`;
   }
   if (state.activeTab === 'intel') {
-    const entries = entry.intel_entries || [];
-    if (!entries.length) {
-      return '<div class="axis-empty">No intel gathered on this contact.</div><div class="axis-actions"><button type="button" class="wbtn" disabled>🔍 Commission Intel</button></div>';
-    }
-    return `<div class="axis-list">${entries
-      .map(
-        (intel) => `<div class="axis-list-row"><div>${escapeHtml(intel.type || 'Intel')}</div><div>${escapeHtml(
-          formatGameDate(intel.at)
-        )}</div><div>${escapeHtml(intel.description || '')}</div></div>`
-      )
-      .join('')}</div>`;
+    const intelList = entry.intel_entries || [];
+    const canGather = (entry.relationship_score || 0) >= -20;
+    return `
+<div class="axis-intel-wrap">
+  ${
+  intelList.length
+    ? `<div class="axis-list">
+        ${intelList
+    .map(
+      (intel) => `
+        <div class="axis-intel-row">
+          <div class="axis-intel-type">${escapeHtml(intel.type || 'Intel')}</div>
+          <div class="axis-intel-desc">${escapeHtml(intel.description || '')}</div>
+          <div class="axis-intel-date">${escapeHtml(formatGameDate(intel.at))}</div>
+          <div class="axis-intel-source">via ${escapeHtml(intel.source || 'unknown')}</div>
+        </div>`
+    )
+    .join('')}
+       </div>`
+    : '<div class="axis-empty">No intel gathered on this contact yet.</div>'
+}
+  <div class="axis-actions">
+    ${
+  canGather
+    ? `<button type="button" class="axis-action-btn" data-axis-action="gather-intel">
+           🔍 Gather Intel (D20 check)
+         </button>`
+    : `<button type="button" class="axis-action-btn" disabled title="Relationship too damaged to gather intel">
+           🔍 Gather Intel (unavailable)
+         </button>`
+}
+    <div class="axis-intel-note">
+      Intel level: ${entry.intel_level || 0}/5 ·
+      ${
+  entry.intel_level >= 3
+    ? 'Leverage identified'
+    : entry.intel_level >= 1
+      ? 'Partial profile'
+      : 'No intel on file'
+}
+    </div>
+  </div>
+</div>`;
   }
   const history = Array.isArray(entry.memory) ? entry.memory : [];
   if (!history.length) return '<div class="axis-empty">No relationship history on file.</div>';
@@ -509,49 +759,6 @@ function renderContractBuilder() {
         <button class="wbtn ccr-btn-submit" data-ccr-action="submit-contract" ${!valid ? 'disabled' : ''}>Submit Contract</button>
       </td></tr>
     </table>
-  </div>`;
-}
-
-/* ── Agenda module rendering ────────────────────────── */
-
-function renderAgendaModule() {
-  const active = ccrListContracts((c) => c.status === 'active');
-  active.sort((a, b) => {
-    if (a.acknowledged !== b.acknowledged) return a.acknowledged ? 1 : -1;
-    if (a.deadlineSimMs && b.deadlineSimMs) return a.deadlineSimMs - b.deadlineSimMs;
-    return a.createdAtMs - b.createdAtMs;
-  });
-
-  return `<div class="ccr-module">
-    <div class="ccr-section-head">Active Contracts (${active.length})</div>
-    ${active.length ? `<table class="ccr-tbl" cellpadding="0" cellspacing="0">
-      <tr class="ccr-tbl-hdr"><td>ID</td><td>Issuer</td><td>Requirement</td><td>Price</td><td>Status</td><td></td></tr>
-      ${active.map((c) => {
-        const issuer = window.AXIS?.resolveContact?.(c.issuerActorId)?.name || c.issuerActorId;
-        const req = getRequirement(c.mainRequirement);
-        const total = ccrContractTotal(c);
-        const ack = !c.acknowledged ? ' <span class="ccr-unack">NEW</span>' : '';
-        return `<tr class="ccr-row-active">
-          <td>${escapeHtml(c.id)}${ack}</td>
-          <td>${escapeHtml(issuer)}</td>
-          <td>${escapeHtml(req?.label || c.mainRequirement)}</td>
-          <td>${escapeHtml(formatMoney(total))}</td>
-          <td>Active</td>
-          <td>
-            ${!c.acknowledged ? `<button class="wbtn ccr-btn-sm" data-ccr-ack="${escapeHtml(c.id)}">Acknowledge</button>` : ''}
-            <button class="wbtn ccr-btn-sm" data-ccr-complete="${escapeHtml(c.id)}">Complete</button>
-          </td>
-        </tr>`;
-      }).join('')}
-    </table>` : '<div class="axis-empty">No active contracts. Create one below.</div>'}
-
-    <div class="ccr-section-head" style="margin-top:12px;">Create Contract</div>
-    <div class="ccr-toolbar"><button class="wbtn" data-ccr-action="new-contract">+ New Contract</button></div>
-
-    <div class="ccr-section-head" style="margin-top:12px;">Assignment Rules</div>
-    <div class="ccr-rules-info">
-      Only one active contract per client is allowed. Complete or cancel an existing contract before creating a new one with the same client.
-    </div>
   </div>`;
 }
 
@@ -736,12 +943,37 @@ function bindAxisUi() {
       return;
     }
 
-    const action = event.target.closest('[data-axis-action]')?.getAttribute('data-axis-action');
-    if (action === 'toggle-msg-menu') {
-      state.msgMenuOpen = !state.msgMenuOpen;
+    const jumpBtn = event.target.closest('[data-axis-jump]');
+    if (jumpBtn) {
+      state.selectedActorId = jumpBtn.getAttribute('data-axis-jump') || '';
+      state.activeTab = 'profile';
+      state.msgMenuOpen = false;
       renderAxisUi();
       return;
     }
+    const discoverBtn = event.target.closest('[data-axis-discover]');
+    if (discoverBtn) {
+      const targetId = discoverBtn.getAttribute('data-axis-discover') || '';
+      if (targetId && !getEntry(targetId)) {
+        discover(targetId, {
+          source: 'introduction',
+          note: `Introduced through ${actorName(state.selectedActorId)}`
+        });
+        state.selectedActorId = targetId;
+        state.activeTab = 'profile';
+        renderAxisUi();
+      } else {
+        state.selectedActorId = targetId;
+        state.activeTab = 'profile';
+        renderAxisUi();
+      }
+      return;
+    }
+
+    const action = event.target.closest('[data-axis-action]')?.getAttribute('data-axis-action');
+    const actionEl = event.target.closest('[data-axis-action]');
+    if (actionEl?.hasAttribute('data-axis-disabled')) return;
+
     if (action === 'msg-email') {
       if (!state.selectedActorId) return;
       state.msgMenuOpen = false;
@@ -761,26 +993,403 @@ function bindAxisUi() {
       updateScore(state.selectedActorId, 1, 'Opened JeeMail compose from CCR');
       return;
     }
-    if (action === 'msg-phone') {
+    if (action === 'send-message') {
       if (!state.selectedActorId) return;
-      state.msgMenuOpen = false;
-      openBlackCherrySmsTo(state.selectedActorId);
-      updateScore(state.selectedActorId, 1, 'Opened SMS from CCR');
-      toast({ title: 'Black Cherry', message: 'SMS thread opened for this contact.', icon: '📱', autoDismiss: 3500 });
-      renderAxisUi();
+      const aid = state.selectedActorId;
+      window.openW?.('cherry');
+      setTimeout(() => {
+        if (window.bcPushView) window.bcPushView('messaging');
+        setTimeout(() => {
+          if (window.bcOpenThread) window.bcOpenThread(aid);
+        }, 120);
+      }, 220);
+      updateScore(aid, 1, 'Player opened conversation via Black Cherry');
+      toast({
+        key: `axis_msg_${aid}`,
+        title: 'Messaging',
+        message: `Opening conversation with ${actorName(aid)}…`,
+        icon: '📱',
+        autoDismiss: 3000
+      });
       return;
     }
     if (!action || !state.selectedActorId) return;
+    const actorId = state.selectedActorId;
+    const name = actorName(actorId);
+
     if (action === 'view-worldnet') {
       window.openW?.('worldnet');
-      window.wnetGo?.('home');
-      toast(`WorldNet opened for ${actorName(state.selectedActorId)}.`);
+      setTimeout(() => {
+        window.wnetGo?.('yourspace', `profile/${actorId}`);
+      }, 220);
+      updateScore(actorId, 1, 'Player viewed profile on WorldNet');
+      toast({
+        key: `axis_view_${actorId}`,
+        title: 'WorldNet',
+        message: `Opening ${name}'s YourSpace profile…`,
+        icon: '🌐',
+        autoDismiss: 3000
+      });
       return;
     }
+
+    if (action === 'call-contact') {
+      const actor = window.ActorDB?.getRaw?.(actorId);
+      const phone = actor?.phone_numbers?.[0];
+      if (!phone) {
+        toast({ key: 'axis_no_phone', title: 'No Phone', message: 'No phone number on file for this contact.', icon: '📵', autoDismiss: 4000 });
+        return;
+      }
+      window.openW?.('cherry');
+      setTimeout(() => openBlackCherryDialPreset(phone), 200);
+      updateScore(actorId, 1, 'Player called via Black Cherry');
+      toast({ key: `axis_call_${actorId}`, title: 'Calling', message: `Dialing ${name}…`, icon: '📞', autoDismiss: 3000 });
+      return;
+    }
+
+    if (action === 'grant-favor') {
+      const result = grantFavor(actorId);
+      if (result == null) {
+        toast({ key: 'cant_grant', title: 'Cannot Offer', message: 'Relationship not strong enough to offer a favor.', icon: '🤝', autoDismiss: 4000 });
+        return;
+      }
+      updateScore(actorId, 3, `Player offered a favor to ${name}`);
+      setTimeout(() => {
+        const ackPool = [
+          `I appreciate that. I won't forget it.`,
+          `You didn't have to do that. Consider it noted.`,
+          `That's good to know. I owe you one.`,
+          `Noted. When the time comes, I'll remember.`
+        ];
+        SMS.receive(actorId, ackPool[Math.floor(Math.random() * ackPool.length)], (getState().sim?.elapsedMs || 0) + 2000);
+      }, 2000 + Math.random() * 3000);
+      try {
+        window.ActivityLog?.log?.('AXIS_FAVOR_GRANT', `Offered favor to ${name} (${actorId})`, { notable: true });
+      } catch {
+        /* ignore */
+      }
+      toast({
+        key: `axis_favor_${actorId}`,
+        title: 'Favor Offered',
+        message: `${name} now owes you ${result} favor${result === 1 ? '' : 's'}.`,
+        icon: '🤝',
+        autoDismiss: 5000
+      });
+      renderAxisUi();
+      return;
+    }
+
+    if (action === 'call-favor') {
+      const result = callFavor(actorId);
+      if (!result.ok) {
+        toast({ key: 'axis_no_favor', title: 'No Favors', message: result.message, icon: '📋', autoDismiss: 4000 });
+        return;
+      }
+      const entry = getEntry(actorId);
+      let intel = { type: 'Network', description: '' };
+      if (entry) {
+        entry.intel_entries = Array.isArray(entry.intel_entries) ? entry.intel_entries : [];
+        const intelTypes = [
+          { type: 'Network', description: `${name} revealed two previously unknown contacts in their immediate circle.` },
+          { type: 'Financial', description: `${name} disclosed irregular financial patterns at their employer.` },
+          { type: 'Schedule', description: `${name} shared their daily routine and regular locations.` },
+          { type: 'Compliance', description: `${name} hinted at unreported compliance issues in their workplace.` },
+          { type: 'Leverage', description: `${name} shared a personal vulnerability that could be useful.` },
+          {
+            type: 'Employer',
+            description: `${name} confirmed internal conflicts at ${
+              window.ActorDB?.getRaw?.(actorId)?.employer_name || 'their employer'
+            }.`
+          }
+        ];
+        intel = intelTypes[Math.floor(Math.random() * intelTypes.length)];
+        entry.intel_entries.push({
+          ...intel,
+          at: nowIso(),
+          source: 'favor_called'
+        });
+        entry.intel_level = Math.min(5, (entry.intel_level || 0) + 1);
+        queuePersist();
+      }
+      updateScore(actorId, -5, `Favor called in — ${name} may feel the relationship is strained`);
+      setTimeout(() => {
+        const deliverPool = [
+          `Consider us even. Here's what I have.`,
+          `Fine. I'm sending you what I know. We're square after this.`,
+          `Alright. Here's the information. Don't ask how I got it.`,
+          `I'm sending you something. Use it carefully.`
+        ];
+        const pre = deliverPool[Math.floor(Math.random() * deliverPool.length)];
+        SMS.receive(
+          actorId,
+          `${pre} [${intel.type}: ${intel.description}]`,
+          getState().sim?.elapsedMs || 0
+        );
+      }, 1500 + Math.random() * 4000);
+      try {
+        window.ActivityLog?.log?.(
+          'AXIS_FAVOR_CALLED',
+          `Favor called from ${name} — intel received: ${intel.type}`,
+          { notable: true }
+        );
+      } catch {
+        /* ignore */
+      }
+      toast({
+        key: `axis_called_${actorId}`,
+        title: 'Favor Delivered',
+        message: `${name} came through. New intel in their file.`,
+        icon: '📋',
+        autoDismiss: 5000
+      });
+      renderAxisUi();
+      return;
+    }
+
+    if (action === 'gather-intel') {
+      const entry = ensureEntry(actorId);
+      if (!entry) return;
+      const confirmed = window.confirm(
+        `Gather intel on ${name}?\n\n` +
+          `• DC 12 check (Acumen modifier applies)\n` +
+          `• +2 Notoriety regardless\n` +
+          `• Failure: contact discovers — −5 relationship\n` +
+          `• Success: new intel entry + level increase\n\n` +
+          `Proceed?`
+      );
+      if (!confirmed) return;
+      const acumen = Number(getState().player?.acumen || 10);
+      const modifier = Math.floor((acumen - 10) / 2);
+      const roll = Math.floor(Math.random() * 20) + 1 + modifier;
+      const success = roll >= 12;
+      patchState((st) => {
+        st.corporateProfile = st.corporateProfile || {};
+        st.corporateProfile.notoriety = Math.min(200, (st.corporateProfile.notoriety || 0) + 2);
+        return st;
+      });
+      const rawActor = window.ActorDB?.getRaw?.(actorId);
+      try {
+        window.ActivityLog?.log?.('AXIS_INTEL_OP', `Intel operation on ${name} (${actorId}) — roll ${roll} — ${success ? 'SUCCESS' : 'DISCOVERED'}`, {
+          suspicious: !success,
+          notable: success
+        });
+      } catch {
+        /* ignore */
+      }
+      if (success) {
+        entry.intel_entries = Array.isArray(entry.intel_entries) ? entry.intel_entries : [];
+        const peakHrs = rawActor?.work_schedule?.peak_hours;
+        const peakStr = Array.isArray(peakHrs) ? peakHrs.slice(0, 3).map((h) => `${h}:00`).join(', ') : '—';
+        const relLen = (rawActor?.relationships || []).length;
+        const intelPool = [
+          {
+            type: 'Employment',
+            description: `Confirmed: ${name} works ${rawActor?.work_schedule?.shift || 'day'} shift. Profession: ${rawActor?.profession || 'Unknown'}.`
+          },
+          { type: 'Taglets', description: `Behavioral profile: ${(rawActor?.taglets || []).join(', ') || 'No tags identified'}.` },
+          { type: 'Schedule', description: `${name} is most active: ${peakStr}.` },
+          { type: 'Connections', description: `${name} has ${relLen} known connections in the area.` },
+          { type: 'District', description: `${name} is based in District ${rawActor?.districtId ?? 'Unknown'}.` },
+          {
+            type: 'Employer',
+            description: `${name} is employed at: ${rawActor?.employer_name || 'Self-employed or unknown'}.`
+          }
+        ];
+        const intel = intelPool[Math.floor(Math.random() * intelPool.length)];
+        entry.intel_entries.push({ ...intel, at: nowIso(), source: 'investigation' });
+        entry.intel_level = Math.min(5, (entry.intel_level || 0) + 1);
+        updateScore(actorId, 0, 'Intel gathered');
+        const desc = intel.description || '';
+        toast({
+          key: `axis_intel_${actorId}`,
+          title: 'Intel Gathered',
+          message: `${intel.type}: ${desc.slice(0, 70)}${desc.length > 70 ? '…' : ''}`,
+          icon: '🔍',
+          autoDismiss: 7000
+        });
+      } else {
+        updateScore(actorId, -5, 'Contact discovered intel operation — trust damaged');
+        const angryPool = [
+          `I know what you're doing. Back off.`,
+          `You're asking questions you shouldn't be asking. We're done.`,
+          `Someone's been looking into my business. I know it's you.`
+        ];
+        setTimeout(() => {
+          SMS.receive(actorId, angryPool[Math.floor(Math.random() * angryPool.length)], getState().sim?.elapsedMs || 0);
+        }, 2000 + Math.random() * 3000);
+        toast({
+          key: `axis_intel_fail_${actorId}`,
+          title: 'Discovered',
+          message: `${name} found out. Relationship damaged. Check SMS.`,
+          icon: '⚠',
+          autoDismiss: 6000
+        });
+      }
+      queuePersist();
+      renderAxisUi();
+      return;
+    }
+
+    if (action === 'reconcile') {
+      const confirmed = window.confirm(
+        `Attempt to reconcile with ${name}?\n\n` +
+          `• Costs $500\n` +
+          `• DC 15 roll — may fail\n` +
+          `• Success: Hostile → Cold (−25 score)\n` +
+          `• Failure: $500 lost, no change\n\n` +
+          `Proceed?`
+      );
+      if (!confirmed) return;
+      const st0 = getState();
+      const bal = (st0.player?.hardCash || 0) + (st0.accounts || []).reduce((s, a) => s + Math.max(0, a.balance || 0), 0);
+      if (bal < 500) {
+        toast({ key: 'axis_no_funds', title: 'Insufficient Funds', message: 'Reconciliation costs $500.', icon: '💰', autoDismiss: 4000 });
+        return;
+      }
+      patchState((st) => {
+        const COST = 500;
+        st.player = st.player || {};
+        const hard = st.player.hardCash || 0;
+        if (hard >= COST) {
+          st.player.hardCash = hard - COST;
+        } else {
+          const remainder = COST - hard;
+          st.player.hardCash = 0;
+          const primary = (st.accounts || []).find((a) => a.isPrimary) || (st.accounts || []).find((a) => a.id === 'fncb');
+          if (primary) primary.balance = (primary.balance || 0) - remainder;
+        }
+        return st;
+      });
+      const roll = Math.floor(Math.random() * 20) + 1;
+      const success = roll >= 15;
+      try {
+        window.ActivityLog?.log?.('AXIS_RECONCILE', `Reconciliation attempt with ${name} — roll ${roll} — ${success ? 'ACCEPTED' : 'REJECTED'} — $500 spent`, { notable: true });
+      } catch {
+        /* ignore */
+      }
+      if (success) {
+        const entry2 = ensureEntry(actorId);
+        entry2.relationship_score = clampScore(-25);
+        pushHistory(entry2, 'Reconciliation accepted — relationship partially restored', 0);
+        try {
+          const act = window.ActorDB?.getRaw?.(actorId);
+          const playerId = getState().player?.actor_id || 'PLAYER_PRIMARY';
+          if (act?.opinion_profile) act.opinion_profile[playerId] = -20;
+        } catch {
+          /* ignore */
+        }
+        const truePool = [
+          `Fine. We can talk. Don't expect me to forget though.`,
+          `Okay. Truce. For now.`,
+          `Alright. I'm willing to move on. Slowly.`,
+          `I appreciate that. It doesn't fix everything but it helps.`
+        ];
+        setTimeout(() => {
+          SMS.receive(actorId, truePool[Math.floor(Math.random() * truePool.length)], getState().sim?.elapsedMs || 0);
+        }, 2000 + Math.random() * 5000);
+        toast({
+          key: `axis_reconcile_${actorId}`,
+          title: 'Reconciliation Accepted',
+          message: `${name} has agreed to a truce. Relationship moved to Cold.`,
+          icon: '🕊',
+          autoDismiss: 6000
+        });
+      } else {
+        toast({
+          key: `axis_reconcile_fail_${actorId}`,
+          title: 'Rejected',
+          message: `${name} turned down your offer. $500 lost.`,
+          icon: '❌',
+          autoDismiss: 5000
+        });
+      }
+      queuePersist();
+      renderAxisUi();
+      return;
+    }
+
     if (action === 'mark-hostile') {
-      const entry = ensureEntry(state.selectedActorId);
-      const delta = Math.min(-1, -55 - Number(entry.relationship_score || 0));
-      updateScore(state.selectedActorId, delta, 'Manual hostile override applied');
+      const confirmed = window.confirm(
+        `Mark ${name} as Hostile?\n\n` +
+          `• Relationship drops to Hostile tier\n` +
+          `• They may retaliate publicly\n` +
+          `• Information brokers may report you\n` +
+          `• +5 Notoriety\n\n` +
+          `This cannot be easily undone.`
+      );
+      if (!confirmed) return;
+      const entry = ensureEntry(actorId);
+      const prevScore = entry.relationship_score;
+      const delta = Math.min(-1, -55 - Number(prevScore || 0));
+      updateScore(actorId, delta, 'Operator marked contact as hostile');
+
+      try {
+        const actor = window.ActorDB?.getRaw?.(actorId);
+        const playerId = getState().player?.actor_id || 'PLAYER_PRIMARY';
+        if (actor) {
+          if (!actor.opinion_profile) actor.opinion_profile = {};
+          const prevOp = actor.opinion_profile[playerId];
+          actor.opinion_profile[playerId] = Math.min(prevOp != null ? prevOp : -50, -50);
+        }
+      } catch {
+        /* ignore */
+      }
+
+      patchState((st) => {
+        st.corporateProfile = st.corporateProfile || {};
+        st.corporateProfile.notoriety = Math.min(200, (st.corporateProfile.notoriety || 0) + 5);
+        return st;
+      });
+
+      try {
+        window.ActivityLog?.log?.('AXIS_HOSTILE', `Contact ${name} (${actorId}) marked hostile — relationship terminated`, { notable: true });
+      } catch {
+        /* ignore */
+      }
+
+      const reactionPool = [
+        `I heard what you did. Don't expect any help from me.`,
+        `You think you can just cut people off? Fine. Remember this.`,
+        `I know people. Now they'll know about you.`,
+        `We're done. And I won't be quiet about it.`,
+        `Interesting choice. Let's see how that works out for you.`,
+        `I don't forget things like this.`
+      ];
+      setTimeout(() => {
+        SMS.receive(
+          actorId,
+          reactionPool[Math.floor(Math.random() * reactionPool.length)],
+          getState().sim?.elapsedMs || 0
+        );
+      }, 3000 + Math.random() * 5000);
+
+      const tags = window.ActorDB?.getRaw?.(actorId)?.taglets || [];
+      if (tags.includes('information_broker')) {
+        ToastManager.fire({
+          key: `broker_hostile_${actorId}`,
+          title: 'Intel Risk',
+          message: `${name} has information broker connections. They may share what they know with investigators.`,
+          icon: '🕵',
+          autoDismiss: 8000
+        });
+      }
+
+      PeekManager.show({
+        sender: name,
+        preview: 'Relationship terminated — marked hostile',
+        type: 'system',
+        targetId: actorId,
+        icon: '⚠'
+      });
+
+      try {
+        window.dispatchEvent(new CustomEvent('axis:operator-hostile-mark', { detail: { actorId } }));
+      } catch {
+        /* ignore */
+      }
+      queuePersist();
+      renderAxisUi();
+      return;
     }
   });
   root.addEventListener('input', (event) => {
@@ -896,6 +1505,24 @@ function addToBlackCherryContacts(actorId, discoveryContext = {}) {
   });
 }
 
+function recordIntel(actorId, row) {
+  const entry = ensureEntry(actorId);
+  if (!entry) return null;
+  entry.intel_entries = Array.isArray(entry.intel_entries) ? entry.intel_entries : [];
+  entry.intel_entries.push({
+    type: row?.type || 'Intel',
+    description: String(row?.description || ''),
+    at: nowIso(),
+    source: row?.source || 'dataminer'
+  });
+  entry.intel_level = Math.min(5, (entry.intel_level || 0) + 2);
+  entry.agenda_known = true;
+  pushHistory(entry, row?.description || 'Intelligence compiled', 0);
+  queuePersist();
+  renderAxisUi();
+  return entry;
+}
+
 function updateScore(actorId, delta, reason) {
   const entry = ensureEntry(actorId);
   if (!entry) return 0;
@@ -928,11 +1555,9 @@ function getTier(actorId) {
 
 function grantFavor(actorId) {
   const entry = ensureEntry(actorId);
-  if (!entry) return null;
+  if (!entry || (entry.relationship_score || 0) < 21) return null;
   entry.favor_balance += 1;
-  pushHistory(entry, 'Favor granted', 10);
   queuePersist();
-  renderAxisUi();
   return entry.favor_balance;
 }
 
@@ -942,9 +1567,7 @@ function callFavor(actorId) {
     return { ok: false, message: 'No favor is currently owed by this contact.' };
   }
   entry.favor_balance -= 1;
-  pushHistory(entry, 'Favor called in by player', -5);
   queuePersist();
-  renderAxisUi();
   return {
     ok: true,
     favor: 'One-time intel disclosure'
@@ -1026,6 +1649,7 @@ export function hydrateAxisFromSave(rows) {
       last_contact_date: row.last_contact_date || null,
       agenda_known: !!row.agenda_known,
       intel_level: Number(row.intel_level || 0),
+      intel_entries: Array.isArray(row.intel_entries) ? row.intel_entries : [],
       memory: Array.isArray(row.memory) ? row.memory : []
     };
   }
@@ -1042,6 +1666,7 @@ function exportRelationships() {
     last_contact_date: entry.last_contact_date,
     agenda_known: !!entry.agenda_known,
     intel_level: Number(entry.intel_level || 0),
+    intel_entries: Array.isArray(entry.intel_entries) ? entry.intel_entries : [],
     memory: Array.isArray(entry.memory) ? entry.memory : []
   }));
 }
@@ -1089,10 +1714,96 @@ function syncPhoneBookToCcr() {
   }
 }
 
+function _rivalCompanyName(st) {
+  const rivals = st.rivalCompanies || [];
+  if (!rivals.length) return 'a local company';
+  const r = rivals[Math.floor(Math.random() * rivals.length)];
+  return r?.tradingName || r?.name || 'a local company';
+}
+
+function _rivalNewsTip(st) {
+  const news = st.newsRegistry || [];
+  if (!news.length) return 'things are shifting in the market';
+  const recent = news[news.length - 1];
+  const h = recent?.headline || recent?.title || '';
+  return h ? `"${h.slice(0, 60)}${h.length > 60 ? '…' : ''}"` : 'things are shifting in the market';
+}
+
+/** Nightly-ish outreach from contacts (invoked on a 6-hour in-game cadence from app). */
+export function tickAxisNpcInitiatedContact(simMs) {
+  const st = getState();
+  const entries = Object.entries(state.entries || {});
+  if (!entries.length) return;
+  const sim = typeof simMs === 'number' ? simMs : st.sim?.elapsedMs || 0;
+
+  for (const [actorId, entry] of entries) {
+    const score = entry.relationship_score || 0;
+    if (score < -10) continue;
+    if (!knownContactActorIds().has(String(actorId))) continue;
+
+    const baseChance = 0.03;
+    const chance = baseChance + score / 200;
+    if (Math.random() > chance) continue;
+
+    const actor = window.ActorDB?.getRaw?.(actorId);
+    if (!actor) continue;
+
+    const taglets = actor.taglets || [];
+    const name = actor.public_profile?.display_name || actor.full_legal_name?.split(' ')[0] || 'Your contact';
+    let message = null;
+    let scoreEffect = 0;
+
+    if (taglets.includes('information_broker') && score >= 20) {
+      const intelTips = [
+        `Heard something you should know. ${_rivalNewsTip(st)}`,
+        `Word in the market: there's unusual activity near District ${1 + Math.floor(Math.random() * 12)}.`,
+        `Someone's asking questions about your business. Just so you know.`,
+        'I picked up some chatter. Might be useful. Let\'s talk.'
+      ];
+      message = intelTips[Math.floor(Math.random() * intelTips.length)];
+      scoreEffect = 1;
+    } else if (taglets.includes('community_hub') && score >= 10) {
+      const communityPool = [
+        'Hey — there\'s something happening in the district you should know about.',
+        'Checking in. Haven\'t heard from you in a while.',
+        'Saw something that reminded me of our last conversation. Stay sharp out there.'
+      ];
+      message = communityPool[Math.floor(Math.random() * communityPool.length)];
+      scoreEffect = 1;
+    } else if (taglets.includes('vocal')) {
+      const vocalPool = [
+        'Just wanted to say — some people are talking about you. Not all of it\'s bad.',
+        `Saw what happened with ${_rivalCompanyName(st)}. What do you think about that?`,
+        'People in the district are curious about what you\'re building.'
+      ];
+      message = vocalPool[Math.floor(Math.random() * vocalPool.length)];
+      scoreEffect = 0;
+    } else if (score >= 50) {
+      const trustedPool = [
+        'Just checking in. How are things going on your end?',
+        'Haven\'t heard from you. Everything alright?',
+        'Had a thought about our last conversation. When you have a moment.'
+      ];
+      message = trustedPool[Math.floor(Math.random() * trustedPool.length)];
+      scoreEffect = 2;
+    }
+
+    if (!message) continue;
+    SMS.receive(actorId, message, sim);
+    if (scoreEffect) {
+      updateScore(actorId, scoreEffect, `${name} reached out proactively`);
+    } else {
+      entry.last_contact_date = nowIso();
+      queuePersist();
+    }
+  }
+}
+
 function exposeAxis() {
   const api = {
     discover,
     updateScore,
+    recordIntel,
     getScore,
     getTier,
     grantFavor,
@@ -1107,7 +1818,8 @@ function exposeAxis() {
     setSelectedActorId,
     resolveContact,
     render: renderAxisUi,
-    syncFromPhoneBook: syncPhoneBookToCcr
+    syncFromPhoneBook: syncPhoneBookToCcr,
+    tickAxisNpcInitiatedContact
   };
   window.WorldNet = {
     ...(window.WorldNet || {}),
@@ -1142,6 +1854,7 @@ export async function initAxis(loadJson) {
       last_contact_date: row.last_contact_date || null,
       agenda_known: !!row.agenda_known,
       intel_level: Number(row.intel_level || 0),
+      intel_entries: Array.isArray(row.intel_entries) ? row.intel_entries : [],
       memory: Array.isArray(row.memory) ? row.memory : []
     };
   });

@@ -7,7 +7,7 @@
  * automatically when the carry cap is exceeded.
  */
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
-import { storeItem, rentUnit, UNIT_TIERS } from './warehouse-tick.js';
+import { storeItem } from './warehouse-tick.js';
 import { toast } from './toast.js';
 
 export const CARRY_CAP = 10;
@@ -88,7 +88,9 @@ export function deliverAsset(assetDef) {
       productRef: asset.id,
       listPrice: asset.valueUsd,
       price: asset.valueUsd,
+      unitValue: asset.valueUsd,
       kind: asset.kind,
+      category: 'consumer',
       flags: asset.flags
     });
     if (result.ok) {
@@ -162,7 +164,7 @@ export function unlistAsset(assetId) {
 
 /**
  * Calculate total player net worth in USD:
- * bank balances + hardCash + asset valueUsd + warehouse liquidation fair value.
+ * bank balances + hardCash + assets + player inventory (carried + stored) + warehouse liquidation list.
  * @returns {number}
  */
 export function getPlayerNetWorthUsd() {
@@ -175,6 +177,7 @@ export function getPlayerNetWorthUsd() {
   for (const asset of st.player?.assets || []) {
     total += Math.max(0, Number(asset.valueUsd) || 0);
   }
+  total += Math.max(0, Number(st.playerInventory?.totalValue) || 0);
   for (const item of st.warehouse?.liquidation || []) {
     total += Math.max(0, Number(item.listPrice) || 0);
   }

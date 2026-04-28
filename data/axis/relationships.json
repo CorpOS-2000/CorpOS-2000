@@ -7,6 +7,7 @@
     "last_contact_date": "2000-01-01T07:10:58.002Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T07:10:58.002Z",
@@ -25,6 +26,7 @@
     "last_contact_date": "2000-01-01T07:26:03.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T07:26:03.000Z",
@@ -43,6 +45,7 @@
     "last_contact_date": "2000-01-01T08:09:27.996Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T08:09:27.996Z",
@@ -75,6 +78,7 @@
     "last_contact_date": "2000-01-01T14:57:51.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T14:57:51.000Z",
@@ -107,6 +111,7 @@
     "last_contact_date": "2000-01-01T09:23:34.998Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T09:23:34.998Z",
@@ -132,6 +137,7 @@
     "last_contact_date": "2000-01-01T14:02:51.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T14:02:51.000Z",
@@ -157,6 +163,7 @@
     "last_contact_date": "2000-01-01T13:36:54.996Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T13:36:54.996Z",
@@ -182,6 +189,7 @@
     "last_contact_date": "2000-01-01T09:18:52.032Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T09:18:52.032Z",
@@ -218,9 +226,10 @@
     "relationship_score": 72,
     "favor_balance": 0,
     "discovered_date": "2000-01-01T07:03:14.988Z",
-    "last_contact_date": "2000-01-01T07:16:06.096Z",
+    "last_contact_date": "2000-01-03T18:00:00.228Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T07:16:06.096Z",
@@ -302,6 +311,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -327,6 +337,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -352,6 +363,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -377,6 +389,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -402,6 +415,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -427,6 +441,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -445,6 +460,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -470,6 +486,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T10:29:20.970Z",
@@ -488,6 +505,7 @@
     "last_contact_date": "2000-01-01T10:29:20.970Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T10:29:20.970Z",
@@ -513,6 +531,7 @@
     "last_contact_date": "2000-01-01T12:00:00.036Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T12:00:00.036Z",
@@ -538,6 +557,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T12:23:48.030Z",
@@ -556,6 +576,7 @@
     "last_contact_date": "2000-01-01T06:59:19.002Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:59:19.002Z",
@@ -595,6 +616,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -620,6 +642,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -645,6 +668,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -670,6 +694,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T20:58:06.312Z",
@@ -688,6 +713,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T20:58:06.312Z",
@@ -706,6 +732,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T20:58:06.312Z",
@@ -724,6 +751,7 @@
     "last_contact_date": "2000-01-04T11:59:28.926Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-04T11:59:28.926Z",
@@ -756,6 +784,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -774,6 +803,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -792,6 +822,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -810,6 +841,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -828,6 +860,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -846,6 +879,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -864,6 +898,7 @@
     "last_contact_date": null,
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -882,6 +917,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",
@@ -907,6 +943,7 @@
     "last_contact_date": "2000-01-01T06:00:00.000Z",
     "agenda_known": false,
     "intel_level": 0,
+    "intel_entries": [],
     "memory": [
       {
         "at": "2000-01-01T06:00:00.000Z",

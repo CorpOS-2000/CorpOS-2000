@@ -928,8 +928,6 @@ function bootDesktop() {
       d.style.opacity = '1';
     }, 80);
   }
-  const demo = document.getElementById('demo-btn');
-  if (demo) demo.style.display = 'block';
   setTimeout(() => {
     toast({
       key: TOAST_KEYS.SYSTEM_LOAD,
@@ -971,6 +969,11 @@ function bootDesktop() {
   } catch {
     /* ignore */
   }
+
+  setTimeout(() => {
+    window.startDesktopNewsTicker?.();
+    setTimeout(() => window.fireNews?.(), 5000);
+  }, 4000);
 }
 
 export function doShutdown() {

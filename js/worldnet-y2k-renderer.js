@@ -50,7 +50,12 @@ function actorHandle(a) {
 
 function actorComment(seed, actorId, context) {
   try {
-    return generateSocialComment({ seed, actor_id: actorId, context: context || 'generic' });
+    return generateSocialComment({
+      seed,
+      actor_id: actorId,
+      context: context || 'generic',
+      aboutPlayer: !!actorId
+    });
   } catch {
     return { author: 'User', text: 'Great site!', flavor: 'generic' };
   }

@@ -229,6 +229,28 @@ export function generateSocialComment(opts) {
     sentence = applyToneStyle(sentence, tone, rng);
   }
 
+  if (
+    opts?.aboutPlayer &&
+    opts?.actor_id &&
+    typeof window !== 'undefined' &&
+    window.AXIS?.getTier
+  ) {
+    const tier = window.AXIS.getTier(opts.actor_id);
+    const label = tier?.label || '';
+    if (label === 'Hostile' || label === 'Enemy') {
+      tone = 'aggressive_poster';
+      sentence = applyToneStyle(sentence, tone, rng);
+    } else if (label === 'Trusted Ally' || label === 'Favorable' || label === 'Acquainted') {
+      tone = 'optimistic_voice';
+      sentence = applyToneStyle(sentence, tone, rng);
+    } else if (label === 'Cool') {
+      if (rng() < 0.7) {
+        tone = 'contrarian';
+        sentence = applyToneStyle(sentence, tone, rng);
+      }
+    }
+  }
+
   let author = '';
   if (opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
     author = displayNameFromActor(window.ActorDB.getRaw(opts.actor_id));

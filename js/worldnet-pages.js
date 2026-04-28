@@ -20,12 +20,15 @@ export const worldnetPages = {
 <div class="ad">📢 <b>FEATURED:</b> CorpOS 2000 Certified Business Tools — <a data-wnet-nav="http://www.corptools.net">Click Here</a></div>
 <div style="max-width:100%;">
 <div class="cgrid">
-  <div class="cat"><div class="cat-t">💼 Business & Finance</div><a data-nav="bizreg">Register a Business</a><a data-nav="bank">First National Bank</a><a data-nav="bank_meridian">Meridian Savings</a><a data-nav="bank_harbor">Harbor Credit Union</a><a data-nav="bank_pacific">Pacific Rim Financial</a><a data-nav="stocks">Stock Market</a><a data-wnet-nav="http://www.realestatenow.net">Real Estate</a></div>
+  <div class="cat"><div class="cat-t">💼 Business & Finance</div><a data-nav="bizreg">Register a Business</a><a data-nav="bank">First National Bank</a><a data-nav="bank_meridian">Meridian Savings</a><a data-nav="bank_harbor">Harbor Credit Union</a><a data-nav="bank_pacific">Pacific Rim Financial</a><a data-nav="etrade_bay">ETradeBay 2000</a><a data-nav="kittenorg">Financial Felines (kitten.org)</a><a data-nav="hargrove_careers">Hargrove Careers</a><a data-wnet-nav="http://www.realestatenow.net">Real Estate</a></div>
   <div class="cat"><div class="cat-t">📰 News & Media</div><a data-nav="herald">Daily Herald Online</a><a data-wnet-nav="http://www.corpnews.net">CorpNews Wire</a><a data-wnet-nav="http://www.megamergers.com">MegaMergers</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather</a></div>
-  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-wnet-nav="http://www.amazone.com">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-wnet-nav="http://www.bidbattle.net">BidBattle Auctions</a><a data-wnet-nav="http://www.discountelectronicsdirect.com">Electronics Direct</a></div>
+  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-wnet-nav="http://www.amazone.com">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-nav="onlyflans">Only Flans</a><a data-nav="rocksalive">Rocks Alive — Pet Rocks</a><a data-wnet-nav="http://www.bidbattle.net">BidBattle Auctions</a><a data-wnet-nav="http://www.discountelectronicsdirect.com">Electronics Direct</a></div>
+  <div class="cat"><div class="cat-t">🏘️ Community</div><a data-nav="patricias_garden">Patricia's Garden Corner</a><a data-nav="cubscouts">Hargrove Cub Scouts</a><a data-nav="bearscouts">Hargrove Bear Scouts</a><a data-nav="savethecookies">Save the Cookies Coalition</a><a data-nav="quarryhearts">Quarry Hearts International</a></div>
   <div class="cat"><div class="cat-t">👥 People & Jobs</div><a data-nav="hiring">Job Listings</a><a data-nav="staffing">Staffing Agency</a><a data-nav="yourspace">yourspace.net</a><a data-wnet-nav="http://www.careerlaunchpad.com">CareerLaunchPad</a><a data-wnet-nav="http://www.classmatesfinder.net">ClassmatesFinder</a></div>
   <div class="cat"><div class="cat-t">⚖️ Government</div><a data-nav="ssa">SSA — ID Services</a><a data-nav="bizreg">Business Registry</a><a data-nav="web_registry">World Wide Web Registry</a><a data-nav="net99669">99669.net — Site Directory</a><a data-nav="fra">Federal Revenue Auth.</a><a data-wnet-nav="http://www.citypermits.gov.net">Permits & Licenses</a></div>
   <div class="cat"><div class="cat-t">💻 Technology</div><a data-nav="moogle_home">Moogle — Search</a><a data-wnet-nav="http://www.intek-corp.com">Intek Corporation</a><a data-nav="devtools">devtools.net</a><a data-nav="reviewbomber">reviewbomber.net</a><a data-nav="mytube">mytube.net</a><a data-wnet-nav="http://www.driverdump.com">DriverDump</a><a data-wnet-nav="http://www.pixelperfect.net">Web Tutorials</a></div>
+  <div class="cat"><div class="cat-t">✈️ Travel & Tourism</div><a data-nav="hargrove_hotels">Hargrove Hospitality Guide</a></div>
+  <div class="cat"><div class="cat-t">📚 Education</div><a data-nav="hargrove_elementary">Hargrove Elementary</a><a data-nav="hargrove_library">Hargrove Public Library</a></div>
   <div class="cat"><div class="cat-t">🗺️ Maps & Directions</div><a data-nav="moogle_maps">Moogle Maps — Hargrove</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather Forecast</a><a data-nav="net99669">Yellow Pages</a></div>
 </div>
 </div>
@@ -249,6 +252,7 @@ export const worldnetPages = {
   <div data-devtools-app="admin-gov"></div>
   <div data-devtools-app="admin-axis"></div>
 </div>
+<div data-devtools-combat-families></div>
 <div style="margin-top:14px;padding-top:6px;border-top:1px solid #ddd;font-size:9px;color:#ccc;">
   <span style="color:#bbb;">devtools.net &copy; 2000 — </span>
   <a data-nav="home" style="color:#aaa;">Home</a> &nbsp;|&nbsp;
@@ -381,6 +385,33 @@ export const worldnetPages = {
 <div style="color:#006600;font-size:9px;border-bottom:1px solid #001a00;padding-bottom:4px;margin-bottom:8px;letter-spacing:2px;">▓▓ AVAILABLE TOOLS ▓▓</div>
 <div style="display:grid;grid-template-columns:1fr;gap:8px;max-width:640px;">
   <div data-backrooms-app="webexploiter"></div>
+  <div data-backrooms-app="ghost-corp"></div>
+  <div data-backrooms-app="compliance-cannon"></div>
+</div>
+<div style="margin-top:14px;border:1px solid #003300;background:#050505;padding:10px;">
+  <div style="color:#00aa44;font-size:10px;font-weight:bold;letter-spacing:2px;margin-bottom:6px;">▓ REFERRAL ACCESS ▓</div>
+  <p style="font-size:10px;color:#889988;line-height:1.4;margin:0 0 8px;">Have a referral token? Unlock restricted v3.0 listings across dark storefronts.</p>
+  <input type="text" id="dw-referral-input" maxlength="40" placeholder="ENTER CODE..."
+    style="width:100%;max-width:340px;background:#000;color:#00ff41;border:1px solid #004400;font-family:'Courier New',monospace;font-size:11px;padding:6px 8px;box-sizing:border-box;">
+  <div style="margin-top:8px;display:flex;gap:10px;align-items:center;">
+    <button type="button" data-action="dw-referral-submit"
+      style="padding:6px 16px;background:#003300;color:#00ff41;border:1px solid #00aa44;font-family:'Courier New',monospace;font-size:11px;font-weight:bold;cursor:pointer;">
+      SUBMIT</button>
+    <span style="font-size:9px;color:#335533;">Never share operational codes on clearnet forums.</span>
+  </div>
+  <div id="dw-referral-result"></div>
+</div>
+<div style="margin-top:14px;color:#003300;font-size:9px;letter-spacing:2px;margin-bottom:8px;">▓▓ DARK UPGRADES ▓▓</div>
+<div style="display:grid;grid-template-columns:1fr;gap:8px;max-width:640px;">
+  <div data-backrooms-app="phantom-press-v2"></div>
+  <div data-backrooms-app="phantom-press-v3"></div>
+  <div data-backrooms-app="market-force-v2"></div>
+  <div data-backrooms-app="market-force-v3"></div>
+  <div data-backrooms-app="ghost-corp-v2"></div>
+  <div data-backrooms-app="ghost-corp-v3"></div>
+  <div data-backrooms-app="compliance-cannon-v2"></div>
+  <div data-backrooms-app="compliance-cannon-v3"></div>
+  <div data-backrooms-app="dataminer-pro-v3"></div>
 </div>
 <div style="margin-top:16px;border-top:1px solid #001a00;padding-top:8px;">
   <div style="color:#003300;font-size:9px;letter-spacing:1px;margin-bottom:6px;">▓▓ COMMUNITY BOARD ▓▓</div>

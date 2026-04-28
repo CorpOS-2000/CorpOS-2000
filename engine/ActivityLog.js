@@ -217,6 +217,26 @@ export const ActivityLog = {
   getEntries() {
     return [...this._entries];
   },
+
+  /**
+   * SignalScrub / counter-surveillance: rewrite up to `max` FLAGGED rows as benign noise.
+   * @param {number} [max]
+   * @returns {number} count degraded
+   */
+  degradeFlaggedEntries(max = 5) {
+    let n = 0;
+    const cap = Math.max(1, Number(max) || 5);
+    for (let i = this._entries.length - 1; i >= 0 && n < cap; i--) {
+      if (this._entries[i].flag === 'FLAGGED') {
+        this._entries[i].flag = '';
+        this._entries[i].detail = 'Routine system activity.';
+        this._entries[i].type = 'SYSTEM_ROUTINE';
+        n++;
+      }
+    }
+    if (n) this._persist();
+    return n;
+  },
   isTampered() {
     return this._tampered;
   },

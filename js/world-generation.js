@@ -11,6 +11,95 @@ import { SMS } from './bc-sms.js';
 import { toast, TOAST_KEYS } from './toast.js';
 import { PeekManager } from './peek-manager.js';
 
+function districtBucket(actor) {
+  if (actor?.districtId != null && actor.districtId !== '') return Number(actor.districtId);
+  let h = 0;
+  const id = String(actor?.actor_id || '');
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return (Math.abs(h) % 12) + 1;
+}
+
+/** One to four outbound connections per NPC for AXIS Connections tab (in-memory + actors.json export). */
+function generateActorRelationships(allActors) {
+  const actors = allActors.filter((a) => a?.actor_id && a.role !== 'player');
+  for (const actor of actors) {
+    const d = districtBucket(actor);
+    const sameDistrict = actors.filter(
+      (a) => a.actor_id !== actor.actor_id && districtBucket(a) === d
+    );
+    const pool = sameDistrict.length > 3 ? sameDistrict : actors.filter((a) => a.actor_id !== actor.actor_id);
+    const numRels = Math.min(pool.length, 1 + Math.floor(Math.random() * 4));
+    const relationships = [];
+    for (let i = 0; i < numRels; i++) {
+      const target = pool[Math.floor(Math.random() * pool.length)];
+      if (!target || relationships.some((r) => r.actor_id === target.actor_id)) continue;
+      const types = ['Colleague', 'Neighbor', 'Associate', 'Acquaintance', 'Former classmate', 'Friend'];
+      relationships.push({
+        actor_id: target.actor_id,
+        relationship_type: types[Math.floor(Math.random() * types.length)],
+        connection_strength: 10 + Math.floor(Math.random() * 60)
+      });
+    }
+    actor.relationships = relationships;
+  }
+}
+
+const DISTRICT_POPULATIONS = {
+  1: 8400,
+  2: 12200,
+  3: 6800,
+  4: 9100,
+  5: 7400,
+  6: 5200,
+  7: 11300,
+  8: 4800,
+  9: 6600,
+  10: 8900,
+  11: 5100,
+  12: 4200
+};
+
+/**
+ * Cold-tier seed manifest (~90k seeds). Runs during BIOS after hot NPC generation.
+ */
+export function generateColdManifest() {
+  patchState((st) => {
+    if (st.player.worldSeed == null) {
+      st.player.worldSeed = (Date.now() ^ (Number(st.sim?.elapsedMs) || 0)) >>> 0;
+    }
+    return st;
+  });
+
+  const gameSeed = getState().player?.worldSeed ?? Date.now();
+  const manifest = { districts: {}, totalColdActors: 0 };
+
+  for (const [districtIdStr, population] of Object.entries(DISTRICT_POPULATIONS)) {
+    const districtId = Number(districtIdStr);
+    const distSeed = (gameSeed ^ (districtId * 2654435761)) >>> 0;
+    const seeds = [];
+    let s = distSeed;
+    for (let i = 0; i < population; i++) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      seeds.push(s);
+    }
+    manifest.districts[districtId] = {
+      population,
+      seeds,
+      warmLoaded: false
+    };
+    manifest.totalColdActors += population;
+  }
+
+  patchState((st) => {
+    st.districtManifest = manifest;
+    return st;
+  });
+
+  ActorDB.loadColdManifest(manifest);
+  console.log(`[WorldGen] Cold manifest generated: ${manifest.totalColdActors} cold actors across 12 districts.`);
+  return manifest;
+}
+
 let _npcGenComplete = false;
 let _playerGenComplete = false;
 
@@ -24,10 +113,12 @@ export function isPlayerGenerationComplete() { return _playerGenComplete; }
  */
 export async function generateWorldNpcsDuringBios() {
   let report;
+  let didBootstrap = false;
   if (ActorDB.count() > 0) {
     report = { generated: 0, valid: true };
   } else {
     report = await ActorDB.bootstrapPopulationAsync();
+    didBootstrap = true;
     console.log(`[WorldGen] NPC generation complete: ${report.generated} actors.`);
   }
   try {
@@ -35,6 +126,23 @@ export async function generateWorldNpcsDuringBios() {
   } catch (e) {
     console.warn('[WorldGen] applyPendingDiscoveredActors:', e);
   }
+
+  if (didBootstrap && report.generated > 0) {
+    generateActorRelationships(ActorDB._actors || ActorDB.getAllRaw?.() || []);
+    try {
+      await ActorDB.export();
+    } catch (e) {
+      console.warn('[WorldGen] ActorDB.export after relationships:', e);
+    }
+  }
+
+  const st = getState();
+  if (!st.districtManifest) {
+    generateColdManifest();
+  } else {
+    ActorDB.loadColdManifest(st.districtManifest);
+  }
+
   _npcGenComplete = true;
   return report;
 }
@@ -142,6 +250,29 @@ export function generatePlayerAndMomAfterEnrollment() {
 
   _playerGenComplete = true;
   console.log(`[WorldGen] Player + Mom generated. Mom: ${momActor.actor_id}`);
+}
+
+/**
+ * Call when the player discovers a district (business reg, maps, narrative, etc.).
+ * Warm-loads that district's cold NPC seeds off the main thread slice.
+ */
+export function onPlayerExploresDistrict(districtId) {
+  const id = Number(districtId);
+  if (!Number.isFinite(id)) return;
+  patchState((st) => {
+    if (!st.player.exploredDistricts) st.player.exploredDistricts = [1];
+    if (!st.player.exploredDistricts.includes(id)) {
+      st.player.exploredDistricts.push(id);
+    }
+    return st;
+  });
+  setTimeout(() => {
+    try {
+      ActorDB.warmLoadDistrict(id);
+    } catch (e) {
+      console.warn('[WorldGen] warmLoadDistrict:', e);
+    }
+  }, 0);
 }
 
 const FRIEND_RELATIONS = ['Friend', 'Former Coworker', 'Old Classmate', 'Neighbor'];

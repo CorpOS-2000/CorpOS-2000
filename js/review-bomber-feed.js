@@ -369,6 +369,7 @@ export function tickReviewBomberNpc(simElapsedMs) {
         flavor: post.commentFlavor === 'snack' || post.commentFlavor === 'generic' ? post.commentFlavor : 'auto',
         context: post.commentContext || 'generic',
         actor_id: actors[i] || undefined,
+        aboutPlayer: !!actors[i],
         forcedPersonality:
           rng() < 0.38
             ? SOCIAL_COMMENT_VOICE_KEYS[Math.floor(rng() * SOCIAL_COMMENT_VOICE_KEYS.length)]

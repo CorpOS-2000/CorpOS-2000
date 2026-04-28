@@ -78,8 +78,11 @@ function ensureWebexRtcCounts(page, postId) {
  */
 export function tickWebexSiteRtcPages(simElapsedMs) {
   const t = Number(simElapsedMs) || 0;
-  const raw = window.ActorDB?.getAllRaw?.();
-  const actors = Array.isArray(raw) ? raw.filter((a) => a?.active !== false && a?.actor_id) : [];
+  const gd = getCurrentGameDate();
+  const raw = window.ActorDB?.getActiveNow?.(gd.getUTCHours(), gd.getUTCDay(), null);
+  const actors = Array.isArray(raw)
+    ? raw.filter((a) => a?.active !== false && a?.actor_id && a.role !== 'player')
+    : [];
   const MAX_BATCHES = 8;
 
   patchState((st) => {

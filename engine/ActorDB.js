@@ -1,7 +1,97 @@
 import { SiteLens } from './SiteLens.js';
 import { Validator } from './Validator.js';
 import { TagletEngine } from './TagletEngine.js';
-import { ActorGenerator } from './ActorGenerator.js';
+import { ActorGenerator, deriveWorkSchedule } from './ActorGenerator.js';
+
+/** @type {Map<number, object[]>} */
+const _warmTierByDistrict = new Map();
+/** @type {object | null} */
+let _coldManifest = null;
+/** @type {Set<number>} */
+const _warmLoadedDistricts = new Set();
+
+function deriveWorkScheduleFromProfession(prof) {
+  return deriveWorkSchedule(prof || 'Office Administrator', 'civilian');
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateWarmActor(seed, districtId) {
+  const rng = mulberry32(seed >>> 0);
+  const PROFESSIONS = [
+    'Retail Worker',
+    'Teacher',
+    'Attorney',
+    'Accountant',
+    'Server',
+    'Nurse',
+    'Engineer',
+    'Freelancer',
+    'Cook',
+    'Security Guard',
+    'Financial Advisor',
+    'Artist',
+    'Journalist',
+    'Government Worker',
+    'Truck Driver',
+    'Unemployed',
+    'Factory Worker',
+    'Pharmacist'
+  ];
+  const ALL_TAGLETS = [
+    'vocal',
+    'cautious',
+    'transactional',
+    'information_broker',
+    'community_hub',
+    'generous',
+    'ambitious',
+    'reclusive',
+    'loyal'
+  ];
+
+  const profIdx = Math.floor(rng() * PROFESSIONS.length);
+  const prof = PROFESSIONS[profIdx];
+  const numTags = Math.floor(rng() * 3) + 1;
+  const taglets = [];
+  for (let i = 0; i < numTags; i++) {
+    const t = ALL_TAGLETS[Math.floor(rng() * ALL_TAGLETS.length)];
+    if (!taglets.includes(t)) taglets.push(t);
+  }
+
+  const schedule = deriveWorkScheduleFromProfession(prof);
+
+  return {
+    actor_id: `WARM-${districtId}-${seed.toString(36)}`,
+    districtId,
+    profession: prof,
+    taglets,
+    work_schedule: schedule,
+    opinion_profile: {},
+    active: true,
+    role: 'civilian',
+    _tier: 'warm'
+  };
+}
+
+function isActiveAtTime(actor, hour, dayOfWeek) {
+  const s = actor.work_schedule;
+  if (!s) return Math.random() < 0.2;
+  const days = s.days || [];
+  const off = s.off_hours || [];
+  const peak = s.peak_hours || [];
+  if (!days.includes(dayOfWeek)) return Math.random() < 0.08;
+  if (off.includes(hour)) return Math.random() < 0.05;
+  if (peak.includes(hour)) return Math.random() < 0.75;
+  return Math.random() < 0.3;
+}
 
 function clone(v) {
   return JSON.parse(JSON.stringify(v));
@@ -70,6 +160,11 @@ export const ActorDB = {
 
     this._rebuildIndexes();
     this._backfillDCProfiles();
+    for (const a of this._actors) {
+      if (!a.work_schedule) {
+        a.work_schedule = deriveWorkSchedule(a.profession, a.role);
+      }
+    }
     if (typeof window !== 'undefined') window.ActorDB = this;
     return this;
   },
@@ -235,6 +330,91 @@ export const ActorDB = {
 
   getAllRaw() {
     return clone(this._actors);
+  },
+
+  loadColdManifest(manifest) {
+    _coldManifest = manifest;
+    this.warmLoadDistrict(1);
+  },
+
+  warmLoadDistrict(districtId) {
+    const id = Number(districtId);
+    if (_warmLoadedDistricts.has(id)) return;
+
+    const block = _coldManifest?.districts?.[id] ?? _coldManifest?.districts?.[String(id)];
+    if (!block?.seeds?.length) return;
+
+    const warmActors = block.seeds.map((seed) => generateWarmActor(seed, id));
+    _warmTierByDistrict.set(id, warmActors);
+    _warmLoadedDistricts.add(id);
+    console.log(`[ActorDB] Warm-loaded district ${id}: ${warmActors.length} actors.`);
+  },
+
+  /**
+   * Actors statistically active at this game hour / day (hot + warm tiers), capped at 500.
+   * @param {number} gameHour UTC hour 0–23
+   * @param {number} gameDayOfWeek UTC day 0–6
+   * @param {number[] | null} districtIds null = all warm-loaded districts
+   */
+  getActiveNow(gameHour, gameDayOfWeek, districtIds = null) {
+    const hour = Number(gameHour);
+    const dow = Number(gameDayOfWeek);
+    const result = [];
+
+    for (const actor of this._actors) {
+      if (actor.active === false) continue;
+      if (isActiveAtTime(actor, hour, dow)) {
+        result.push(actor);
+      }
+      if (result.length >= 500) return result;
+    }
+
+    const districtsToCheck =
+      districtIds != null && districtIds.length
+        ? districtIds.map(Number)
+        : [..._warmLoadedDistricts];
+
+    for (const did of districtsToCheck) {
+      const warmActors = _warmTierByDistrict.get(did) || [];
+      for (const actor of warmActors) {
+        if (isActiveAtTime(actor, hour, dow)) {
+          result.push(actor);
+          if (result.length >= 500) return result;
+        }
+      }
+    }
+
+    return result;
+  },
+
+  hydrateToHot(actorId) {
+    const idStr = String(actorId || '');
+    const parts = idStr.split('-');
+    if (parts[0] !== 'WARM' || parts.length < 3) return null;
+
+    const districtId = Number(parts[1]);
+    const seed = parseInt(parts[2], 36);
+    if (!Number.isFinite(seed)) return null;
+
+    const list = _warmTierByDistrict.get(districtId);
+    if (!Array.isArray(list)) return null;
+    const idx = list.findIndex((a) => a.actor_id === idStr);
+    if (idx < 0) return null;
+
+    const warmActor = list[idx];
+    const fullActor = ActorGenerator.generateFromSeed(seed, districtId, warmActor);
+    let nid = `ACT-HYD-${districtId}-${seed.toString(36)}`;
+    let guard = 0;
+    while (this.getRaw(nid) && guard < 500) {
+      guard += 1;
+      nid = `ACT-HYD-${districtId}-${seed.toString(36)}-${guard}`;
+    }
+    fullActor.actor_id = nid;
+
+    list.splice(idx, 1);
+    this._actors.push(fullActor);
+    this._rebuildIndexes();
+    return fullActor;
   },
 
   getByAddress(addressId) {

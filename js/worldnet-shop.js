@@ -4,7 +4,7 @@
  */
 
 import { escapeHtml } from './identity.js';
-import { toast } from './toast.js';
+import { toast, ToastManager } from './toast.js';
 import {
   getState,
   patchState,
@@ -14,7 +14,7 @@ import {
 import { registerWorldNetShopHost } from './worldnet-routes.js';
 import { smsToPlayer } from './black-cherry.js';
 import { getSiteByPageKey } from './worldnet-site-registry.js';
-import { deliverAsset, getCarryHeadroom, CARRY_CAP } from './player-assets.js';
+import { addToPlayerInventory, inferCategoryFromProduct } from './warehouse-tick.js';
 import { resolveScamPurchase } from './scam-purchases.js';
 import { recordConversion } from './ad-analytics.js';
 
@@ -769,20 +769,24 @@ function completeCheckout(storeId, { shipTier, payRaw, shipName, shipAddr }) {
     // Scam sites do not send a legit confirmation SMS — they send a vague one
     smsToPlayer(`Order ${orderId} placed. Delivery details will be communicated separately.`);
   } else {
-    // Legitimate delivery: create player asset for each line (delivered on arrival)
-    for (const { p, qty } of resolved) {
-      for (let i = 0; i < qty; i++) {
-        deliverAsset({
-          name: p.title,
-          sourceSiteId: storeId,
-          kind: 'physical',
-          valueUsd: Number(p.basePrice || p.price || 0),
-          quality: 100,
-          flags: {},
-          orderId
-        });
-      }
+    for (const { p, qty, unit } of resolved) {
+      addToPlayerInventory({
+        name: p.title,
+        productRef: p.id,
+        category: inferCategoryFromProduct(p),
+        quantity: qty,
+        unitValue: unit,
+        source: 'purchase',
+        tags: p.tags || []
+      });
     }
+    ToastManager?.fire({
+      key: `delivery_${orderId}`,
+      title: 'Order placed',
+      message: `${resolved.length} line(s) added to your inventory. Open a warehouse site to store overflow.`,
+      icon: '📦',
+      notifAction: { type: 'open_window', payload: 'worldnet' }
+    });
 
     // Record ad conversion if one was recently clicked
     const lastAdId = st1.worldNetShopping?._lastClickedAdId;

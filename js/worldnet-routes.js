@@ -6,6 +6,12 @@
 import { BANK_META } from './bank-pages.js';
 import { getState } from './gameState.js';
 import { escapeHtml } from './identity.js';
+import {
+  EXTENDED_ROOT_URLS,
+  EXTENDED_HOST_ALIASES,
+  EXTENDED_PAGE_TITLES,
+  HIDDEN_FROM_99669_DIRECTORY
+} from './worldnet-pages-extended.js';
 
 /** Root URLs keyed by worldnet page id (shown on Wahoo / typed in address bar). */
 export const ROOT_URL_BY_PAGE = {
@@ -28,7 +34,7 @@ export const ROOT_URL_BY_PAGE = {
   bank_darkweb: 'http://firsttrust.onion.net/',
   web_registry: 'http://www.worldwidewebregistry.net/',
   bizreg: 'http://www.fedbizreg.gov/register',
-  stocks: 'http://market.worldnet.com/',
+  stocks: 'http://www.etradebay.com/',
   hiring: 'http://www.staffingplus.net/',
   ssa: 'http://www.ssa.gov.net/',
   fra: 'http://www.fra.gov.net/',
@@ -52,7 +58,8 @@ export const ROOT_URL_BY_PAGE = {
   focs_mandate: 'http://www.focs.gov.net/mandate/2000-cr7',
   corpos_portal: 'http://www.corpos.gov.net/operators',
   /** Fallback when no shop host is resolved; real bar URL comes from store JSON. */
-  wn_shop: 'http://www.rapidmart1999.net/'
+  wn_shop: 'http://www.rapidmart1999.net/',
+  ...EXTENDED_ROOT_URLS
 };
 
 /** Normalized hostname+path → pipeline pageId */
@@ -150,7 +157,8 @@ const HOST_ALIASES = [
   ['worldwidewebregistry.net', 'web_registry'],
   ['www.fedbizreg.gov', 'bizreg'],
   ['fedbizreg.gov', 'bizreg'],
-  ['market.worldnet.com', 'stocks'],
+  ['market.worldnet.com', 'etrade_bay'],
+  ['www.market.worldnet.com', 'etrade_bay'],
   ['www.staffingplus.net', 'hiring'],
   ['staffingplus.net', 'hiring'],
   ['www.ssa.gov.net', 'ssa'],
@@ -190,7 +198,8 @@ const HOST_ALIASES = [
   ['focs.gov.net', 'focs_mandate'],
   ['www.focs.gov.net', 'focs_mandate'],
   ['corpos.gov.net', 'corpos_portal'],
-  ['www.corpos.gov.net', 'corpos_portal']
+  ['www.corpos.gov.net', 'corpos_portal'],
+  ...EXTENDED_HOST_ALIASES
 ];
 
 const HOST_TO_PAGE = Object.fromEntries(HOST_ALIASES);
@@ -200,7 +209,7 @@ const EXTRA_PAGE_TITLES = {
   home: 'Wahoo! — WorldNet Portal',
   web_registry: 'World Wide Web Registry',
   bizreg: 'Federal Business Registry',
-  stocks: 'WorldNet Market Center',
+  stocks: 'ETradeBay 2000 — Hargrove Exchange',
   hiring: 'Staffing Plus — Job Listings',
   ssa: 'Social Security Administration (SSA.NET)',
   fra: 'Federal Revenue Authority (FRA.NET)',
@@ -216,7 +225,8 @@ const EXTRA_PAGE_TITLES = {
   warehouse: 'WhereAllThingsGo.net — Self-Storage & Liquidation',
   market_pulse: 'Market Pulse — Hargrove Analytics',
   focs_mandate: 'FOCS.GOV.NET — Federal Mandate 2000-CR7',
-  corpos_portal: 'CorpOS.GOV.NET — Operator Portal'
+  corpos_portal: 'CorpOS.GOV.NET — Operator Portal',
+  ...EXTENDED_PAGE_TITLES
 };
 
 /** Display title for any registered WorldNet page key (directory, registry, etc.). */
@@ -251,7 +261,7 @@ export function titleForWorldNetPage(key) {
  */
 export function getWorldNetSiteDirectoryLinks() {
   const base = Object.keys(ROOT_URL_BY_PAGE)
-    .filter((k) => k !== 'net99669')
+    .filter((k) => k !== 'net99669' && !HIDDEN_FROM_99669_DIRECTORY.has(k))
     .map((pageKey) => ({
       pageKey,
       title: titleForWorldNetPage(pageKey),
@@ -297,6 +307,27 @@ export function urlForPage(pageKey, subPath = '') {
  * @param {string} pathname URL pathname e.g. /register /about
  */
 export function subPathFromUrl(pageKey, pathname) {
+  if (pageKey === 'etrade_bay' || pageKey === 'stocks') {
+    const p = (pathname || '/').replace(/\\/g, '/');
+    let clean = p.replace(/^\/+/, '');
+    if (clean.length > 1) clean = clean.replace(/\/$/, '');
+    return clean;
+  }
+  if (pageKey === 'room2847' || pageKey === 'patricias_garden') {
+    const p = (pathname || '/').replace(/\\/g, '/');
+    let clean = p.replace(/^\/+/, '');
+    if (clean.length > 1) clean = clean.replace(/\/$/, '');
+    const seg = (clean.split('/').filter(Boolean)[0] || '').trim();
+    if (/^[0-9]+$/.test(seg)) return seg;
+    return '';
+  }
+  if (pageKey === 'hargrove_library') {
+    const p = (pathname || '/').replace(/\\/g, '/');
+    let clean = p.replace(/^\/+/, '');
+    if (clean.length > 1) clean = clean.replace(/\/$/, '');
+    const parts = clean.split('/').filter(Boolean);
+    return parts.join('/') || '';
+  }
   if (pageKey === 'dmb') {
     const p = (pathname || '/').replace(/\\/g, '/');
     const seg = (p.split('/').filter(Boolean)[0] || '').toLowerCase();
@@ -377,7 +408,9 @@ export function resolveLocationFromAddress(raw) {
     return { pageKey: 'bank_darkweb', subPath: '' };
   if (low.includes('bizreg') || (low.includes('fedbizreg') && !low.includes('worldwideweb')))
     return { pageKey: 'bizreg', subPath: '' };
-  if (low.includes('stock') || low.includes('market')) return { pageKey: 'stocks', subPath: '' };
+  if (low.includes('etradebay') || (low.includes('stock') && low.includes('market'))) {
+    return { pageKey: 'etrade_bay', subPath: '' };
+  }
   if (low.includes('hiring') || low.includes('staffing')) return { pageKey: 'hiring', subPath: '' };
   if (low.includes('ssa') || low.includes('social')) return { pageKey: 'ssa', subPath: '' };
   if (low.includes('fra') || (low.includes('federal') && low.includes('revenue'))) return { pageKey: 'fra', subPath: '' };
@@ -408,7 +441,7 @@ export const WAHOO_LISTED_PAGE_KEYS = new Set([
   'bank_harbor',
   'bank_pacific',
   'bizreg',
-  'stocks',
+  'etrade_bay',
   'hiring',
   'ssa',
   'web_registry',

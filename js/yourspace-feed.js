@@ -8,10 +8,12 @@ import { formatGameDateTime, getCurrentGameDate } from './clock.js';
 import { generateYourspaceRtcPost, initYourspaceRtc } from './yourspace-rtc.js';
 import { on } from './events.js';
 import { applyAffinityDelta, affinityLabel, getAffinityScore } from './social-affinity.js';
-import { rollD4, rollD20 } from './d20.js';
+import { getById as getRivalById } from './rival-companies.js';
 
 let ysGen = 0;
 let rootEl = null;
+/** Coalesces `sessionChanged` DOM work to one paint per frame (session patches are very frequent). */
+let ysSessionDomRaf = 0;
 /** @type {(() => void) | null} */
 let sessionOff = null;
 /** @type {((e: Event) => void) | null} */
@@ -154,32 +156,190 @@ function renderActorRows(actors, viewer) {
     .join('');
 }
 
+function generateActorBio(actor) {
+  const taglets = actor.taglets || [];
+  const employer = actor.employer_name || (actor.employer_id && getRivalById(actor.employer_id)?.tradingName) || '';
+  const shift = actor.work_schedule?.shift || 'day';
+  const parts = [];
+  if (taglets.includes('community_hub')) parts.push('Active community member and connector in Hargrove.');
+  if (taglets.includes('vocal')) parts.push('Not afraid to share opinions. Frequently.');
+  if (taglets.includes('transactional')) parts.push('Focused on value, deals, and practical outcomes.');
+  if (taglets.includes('information_broker')) parts.push('Well-connected. Knows things.');
+  if (taglets.includes('cautious')) parts.push('Thoughtful. Prefers to listen before speaking.');
+  if (taglets.includes('ambitious')) parts.push('Always working on something.');
+  if (taglets.includes('generous')) parts.push('First to help when asked.');
+  if (taglets.includes('reclusive')) parts.push('Keeps mostly to themselves.');
+  if (taglets.includes('loyal')) parts.push('Once a friend, always a friend.');
+  if (!parts.length) parts.push('Hargrove resident.');
+  if (employer) parts.push(`Works at ${employer}.`);
+  if (shift === 'night') parts.push('Night shift life.');
+  if (shift === 'evening') parts.push('Evening shift — mornings are not real.');
+  return parts.join(' ');
+}
+
+function profileAvatarColor(actorId) {
+  const COLORS = ['#0a246a', '#006666', '#446600', '#660044', '#224488', '#664400', '#006644', '#440066'];
+  let hash = 0;
+  for (let i = 0; i < String(actorId || '').length; i++) {
+    hash = String(actorId).charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
+function collectActorRtcPosts(sess, actorId) {
+  const feed = sess?.yourspace?.rtcFeed || [];
+  if (!Array.isArray(feed) || !actorId) return [];
+  return feed.filter((p) => p.actorId === actorId).slice(-5).reverse();
+}
+
+function collectActorReviewBomberBlips(sess, displayHint) {
+  const rb = sess?.reviewBomber;
+  const live = rb?.liveComments;
+  if (!live || typeof live !== 'object' || !displayHint) return [];
+  const h = String(displayHint).toLowerCase().replace(/\s+/g, ' ').trim();
+  const out = [];
+  for (const postId of Object.keys(live)) {
+    const arr = live[postId];
+    if (!Array.isArray(arr)) continue;
+    for (const c of arr) {
+      const a = String(c?.author || '').toLowerCase();
+      const g = h.slice(0, Math.min(6, h.length));
+      if (g.length >= 2 && a.includes(g)) {
+        out.push({ postId, title: postId, text: c?.text || '' });
+      }
+    }
+  }
+  return out.slice(-3);
+}
+
 function renderProfile(actor, viewer) {
   if (!actor?.actor_id) {
     return `<div class="ys-profile-miss"><p>Profile not found.</p><button type="button" class="ys-btn" data-ys-back>← Back</button></div>`;
   }
-  const name = escapeHtml(displayNameFromActor(actor));
+  const sess = getSessionState();
+  const theirPosts = collectActorRtcPosts(sess, actor.actor_id);
+  const disp = String(displayNameFromActor(actor) || '');
+  const theirReviews = collectActorReviewBomberBlips(sess, disp);
+  const rels = typeof window.ActorDB?.getRelationships === 'function' ? window.ActorDB.getRelationships(actor.actor_id) : actor.relationships || [];
+  const conns = Array.isArray(rels) ? rels : [];
+
+  const axisEntry = typeof window.AXIS?.getEntry === 'function' ? window.AXIS.getEntry(actor.actor_id) : null;
+  const tier = typeof window.AXIS?.getTier === 'function' ? window.AXIS.getTier(actor.actor_id) : null;
+  const employer = actor.employer_name || (actor.employer_id ? getRivalById(actor.employer_id)?.tradingName : null) || null;
+  const profession = escapeHtml(actor.profession || '—');
+  const name = escapeHtml(disp);
   const id = escapeHtml(actor.actor_id);
-  const prof = escapeHtml(actor.profession || '—');
   const legal = escapeHtml(actor.full_legal_name || '—');
-  const score = getAffinityScore(getSessionState(), viewer, `actor:${actor.actor_id}`);
+  const handle = actor.public_profile?.username ? escapeHtml(String(actor.public_profile.username)) : '';
+  const dist = actor.districtId != null ? `· District ${actor.districtId}` : '';
+  const headCh = (disp || '?').trim().charAt(0) || '?';
+  const relHtml = axisEntry
+    ? `<div class="ys-profile-rel">
+  <span class="ys-rel-tier" style="color:${tier?.color || '#888'}">${escapeHtml(tier?.label || 'Contact')}</span>
+  <span class="ys-rel-score">${(axisEntry.relationship_score || 0) > 0 ? '+' : ''}${Number(axisEntry.relationship_score) || 0}</span>
+  ${(axisEntry.favor_balance || 0) > 0 ? `<span class="ys-rel-favor">Owes you ${axisEntry.favor_balance} favor${axisEntry.favor_balance > 1 ? 's' : ''}</span>` : ''}
+</div>`
+    : '';
+  const tagOut = (actor.taglets || [])
+    .map(
+      (t) =>
+        `<span class="ys-tag-badge">${escapeHtml(String(t).replace(/_/g, ' '))}</span>`
+    )
+    .join('');
+
+  const sched =
+    actor.work_schedule &&
+    `🕐 ${String(actor.work_schedule.shift || 'day')
+      .charAt(0)
+      .toUpperCase()}${String(actor.work_schedule.shift || '').slice(1)} shift${
+      Array.isArray(actor.work_schedule.peak_hours) && actor.work_schedule.peak_hours.length
+        ? ` · Active ${actor.work_schedule.peak_hours.slice(0, 3).map((h) => `${h}:00`).join(', ')}`
+        : ''
+    }`;
+  const postsHtml = theirPosts.length
+    ? `<div class="ys-profile-section-title">Recent Posts</div>
+${theirPosts
+  .map(
+    (post) => `<div class="ys-profile-post">
+    <div class="ys-post-text">${escapeHtml(post.text || '')}</div>
+    <div class="ys-post-meta">${escapeHtml(post.timeLabel || '')}</div>
+  </div>`
+  )
+  .join('')}`
+    : '';
+  const revHtml = theirReviews.length
+    ? `<div class="ys-profile-section-title">Product reviews</div>
+${theirReviews
+  .map(
+    (r) => `<div class="ys-profile-review">
+    <div class="ys-review-title">${escapeHtml(r.title || r.postId || 'Thread')}</div>
+    <div class="ys-review-text">${escapeHtml((r.text || '').slice(0, 200))}</div>
+  </div>`
+  )
+  .join('')}`
+    : '';
+  const connBlock =
+    conns.length > 0
+      ? `<div class="ys-profile-section-title">Connections</div>
+  <div class="ys-connections-list">
+  ${conns
+    .slice(0, 5)
+    .map((rel) => {
+      const o = window.ActorDB?.getRaw?.(rel.actor_id);
+      const nm = o?.public_profile?.display_name || o?.full_legal_name || rel.actor_id;
+      return `<div class="ys-connection-item">
+        <div class="ys-conn-avatar" style="background:${profileAvatarColor(rel.actor_id)}">${String(nm).charAt(0).toUpperCase()}</div>
+        <div class="ys-conn-info">
+          <div class="ys-conn-name">${escapeHtml(nm)}</div>
+          <div class="ys-conn-type">${escapeHtml(rel.relationship_type || 'Connection')}</div>
+        </div>
+      </div>`;
+    })
+    .join('')}
+  </div>`
+      : '';
+
+  const score = getAffinityScore(sess, viewer, `actor:${actor.actor_id}`);
   const { label, tone } = affinityLabel(score);
-  return `<div class="ys-profile" data-ys-profile-page="${id}">
+  return `<div class="ys-profile ys-profile-page" data-ys-profile-page="${id}">
 <button type="button" class="ys-btn ys-profile-back" data-ys-back>← Neighbor table</button>
-<div class="ys-profile-head">
-  <div class="ys-silhouette ys-silhouette--lg" aria-hidden="true"></div>
-  <div>
-    <h2 class="ys-profile-name">${name}</h2>
+<div class="ys-profile-header">
+  <div class="ys-profile-avatar" style="background:${profileAvatarColor(actor.actor_id)}">${escapeHtml(headCh.toUpperCase())}</div>
+  <div class="ys-profile-meta">
+    <div class="ys-profile-name">${name}</div>
+    ${handle ? `<div class="ys-profile-handle">@${handle}</div>` : ''}
     <div class="ys-profile-id">${id}</div>
+    <div class="ys-profile-location">📍 ${employer ? `${escapeHtml(employer)} · ` : ''}Hargrove, CA ${dist}</div>
+    <div class="ys-profile-profession">💼 ${profession}</div>
     <div class="ys-profile-vibe ys-vibe--${tone}" data-ys-profile-vibe>How you see them: <b>${escapeHtml(label)}</b></div>
   </div>
+  ${relHtml}
 </div>
-<table class="ys-profile-table">
+<div class="ys-profile-tags">${tagOut}</div>
+<div class="ys-profile-bio">${escapeHtml(generateActorBio(actor))}</div>
+<div class="ys-profile-stats">
+  <div class="ys-stat">
+    <div class="ys-stat-num">${theirPosts.length}</div>
+    <div class="ys-stat-label">Recent posts</div>
+  </div>
+  <div class="ys-stat">
+    <div class="ys-stat-num">${conns.length}</div>
+    <div class="ys-stat-label">Connections</div>
+  </div>
+  <div class="ys-stat">
+    <div class="ys-stat-num">${theirReviews.length}</div>
+    <div class="ys-stat-label">Review buzz</div>
+  </div>
+</div>
+${sched ? `<div class="ys-profile-schedule">${sched}</div>` : ''}
+<table class="ys-profile-table ys-profile-table-legal">
 <tr><th>Legal name</th><td>${legal}</td></tr>
-<tr><th>Profession</th><td>${prof}</td></tr>
 <tr><th>Headline</th><td>${escapeHtml(actor.public_profile?.headline || '—')}</td></tr>
 </table>
-<p class="ys-muted">Affinity shifts when you like/dislike RTC lines or interact on MyTube.</p>
+${postsHtml}
+${revHtml}
+${connBlock}
+<p class="ys-muted">Affinity shifts when you like or dislike RTC lines or interact on MyTube.</p>
 </div>`;
 }
 
@@ -227,8 +387,11 @@ export function tickYourspaceRtc(simElapsedMs) {
 
     if (t < due) return;
 
-    const raw = window.ActorDB?.getAllRaw?.();
-    const actors = Array.isArray(raw) ? raw.filter((a) => a?.active !== false && a?.actor_id) : [];
+    const _gsDate = getCurrentGameDate();
+    const raw = window.ActorDB?.getActiveNow?.(_gsDate.getUTCHours(), _gsDate.getUTCDay(), null);
+    const actors = Array.isArray(raw)
+      ? raw.filter((a) => a?.active !== false && a?.actor_id && a.role !== 'player')
+      : [];
     const MAX_BATCHES = 8;
     let safety = 0;
     while (t >= due && safety < MAX_BATCHES) {
@@ -436,6 +599,10 @@ export async function mountYourspace(container, subPath = '') {
 
 export function teardownYourspace() {
   ysGen++;
+  if (ysSessionDomRaf !== 0) {
+    cancelAnimationFrame(ysSessionDomRaf);
+    ysSessionDomRaf = 0;
+  }
   if (rootEl && clickHandler) {
     rootEl.removeEventListener('click', clickHandler);
   }

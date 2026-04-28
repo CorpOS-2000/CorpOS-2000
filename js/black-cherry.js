@@ -1238,8 +1238,17 @@ export function openBlackCherrySmsTo(actorId) {
   if (!actorId || actorId === 'PLAYER_PRIMARY') return;
   openBlackCherryDock();
   viewHistory = [];
-  showView('contacts');
-  openThread(actorId);
+  pushView('messaging');
+  setTimeout(() => openThread(actorId), 100);
+}
+
+/** Open dial pad with digits prefilled (formatted like live typing). */
+export function openBlackCherryDialPreset(rawPhone) {
+  openBlackCherryDock();
+  viewHistory = [];
+  const digits = String(rawPhone || '').replace(/\D/g, '').slice(0, 10);
+  _dialBuffer = formatPhoneInput(digits);
+  pushView('dialpad', { preserveDialBuffer: true });
 }
 
 export function peekBlackCherryFromCorner() {
@@ -1744,6 +1753,8 @@ export function initBlackCherry() {
   });
 
   window.bcbNavigateTo = bcbNavigateTo;
+  window.bcPushView = pushView;
+  window.bcOpenThread = openThread;
 
   window.BlackCherry = {
     openToThread(senderId) {

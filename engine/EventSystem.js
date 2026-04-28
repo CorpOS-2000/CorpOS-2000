@@ -5,7 +5,7 @@
  * Player never sees dice — only business outcomes.
  */
 
-import { on } from '../js/events.js';
+import { emit, on } from '../js/events.js';
 import { resolveAgainstDC } from '../js/d20.js';
 import {
   getState,
@@ -22,6 +22,9 @@ import { PeekManager } from '../js/peek-manager.js';
 import { ToastManager } from '../js/toast.js';
 import { FederalAuditSequence } from '../js/federal-audit-sequence.js';
 import { recordHashtagEvent } from '../js/market-dynamics.js';
+import { getCurrentGameDate } from '../js/clock.js';
+import { getTotalInventoryValue, getLiquidationPool } from '../js/warehouse-tick.js';
+import { getGdpIndex, getConsumerConf, getDotComPhase, getInflationRate } from '../js/economy.js';
 
 const SIM_DAY_MS = 86400000;
 const SIM_HOUR_MS = 3600000;
@@ -126,6 +129,7 @@ export const EventSystem = {
     this._queue = this._queue.filter(q => q.firesAtSimMs > simMs);
 
     for (const item of due) {
+      if (!item.contextData) item.contextData = {};
       this._fireEvent(item.eventDef, item.contextData, simMs);
     }
 
@@ -156,8 +160,59 @@ export const EventSystem = {
     this._tickWebsiteWorld(simMs);
   },
 
+  _poolActiveActors() {
+    const gameDate = getCurrentGameDate();
+    const districts = getState().player?.exploredDistricts || [1];
+    return ActorDB.getActiveNow(gameDate.getUTCHours(), gameDate.getUTCDay(), districts);
+  },
+
+  _resolveActorQuery(query, _simMs) {
+    const gameDate = getCurrentGameDate();
+    const hour = gameDate.getUTCHours();
+    const dow = gameDate.getUTCDay();
+
+    let districts;
+    if (query.district === 'player_district') {
+      districts = getState().player?.exploredDistricts || [1];
+    } else if (query.district === 'any') {
+      districts = null;
+    } else if (query.district != null) {
+      districts = [query.district];
+    } else {
+      districts = getState().player?.exploredDistricts || [1];
+    }
+
+    let pool = ActorDB.getActiveNow(hour, dow, districts);
+
+    if (query.taglets?.length) {
+      pool = pool.filter((a) => query.taglets.some((t) => (a.taglets || []).includes(t)));
+    }
+    if (query.role && query.role !== 'any') {
+      pool = pool.filter((a) => a.role === query.role);
+    }
+    if (query.shift) {
+      pool = pool.filter((a) => a.work_schedule?.shift === query.shift);
+    }
+
+    const limit = query.limit || 5;
+    const result = [];
+    const arr = pool.slice();
+    for (let i = 0; i < Math.min(limit, arr.length); i++) {
+      const j = i + Math.floor(Math.random() * (arr.length - i));
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+      result.push(arr[i]);
+    }
+    return result;
+  },
+
   // ── FIRE AN EVENT ─────────────────────────────────────────────────
-  _fireEvent(def, _contextData, simMs) {
+  _fireEvent(def, contextData, simMs) {
+    if (def.actorQuery && contextData) {
+      contextData.matchedActors = this._resolveActorQuery(def.actorQuery, simMs);
+    }
+
     let resolution = { success: true, passMargin: 10 };
     if (typeof def.dc === 'number' && def.dc > 0) {
       const modifier = this._computeModifier(def);
@@ -220,9 +275,55 @@ export const EventSystem = {
       });
     }
 
+    if (outcome.heraldHeadline) {
+      const headline = this._interpolate(String(outcome.heraldHeadline), def, resolution);
+      const severity = Number(outcome.heraldSeverity ?? 1);
+      const newsId = `news_${def.id}_${Date.now()}`;
+      patchState((st) => {
+        st.newsRegistry = st.newsRegistry || [];
+        st.newsRegistry.push({
+          id: newsId,
+          simMs: simMs ?? (getState().sim?.elapsedMs || 0),
+          headline,
+          summary: headline,
+          category: def.newsCategory || 'general',
+          severity,
+          districtId: null,
+          namedActors: [],
+          tags: [],
+          channels: ['herald'],
+          reachRadius: 'city',
+          decaySimMs: 86400000 * 2,
+          reactions: { sympathy: 0, outrage: 0, indifferent: 0 },
+          comments: [],
+          processed: false,
+        });
+        if (st.newsRegistry.length > 100) st.newsRegistry.shift();
+        return st;
+      });
+      if (severity >= 2 && typeof headline === 'string' && headline.trim()) {
+        emit('news:breaking', {
+          headline: headline.trim(),
+          id: newsId,
+          severity,
+        });
+      }
+    }
+
     if (outcome.notorietyDelta != null) {
       patchState(st => {
-        if (!st.corporateProfile) st.corporateProfile = { notoriety: 0, reputation: 0 };
+        if (!st.corporateProfile || typeof st.corporateProfile !== 'object') {
+          st.corporateProfile = {
+            notoriety: 0,
+            reputation: 0,
+            exposure: 0,
+            judicialRecord: [],
+            investigatorTier: 0,
+            assignedInvestigatorId: null,
+            lastAuditSimMs: 0,
+            auditCount: 0
+          };
+        }
         st.corporateProfile.notoriety = Math.min(200, Math.max(0,
           (st.corporateProfile.notoriety || 0) + Number(outcome.notorietyDelta)
         ));
@@ -337,6 +438,157 @@ export const EventSystem = {
         return Object.keys(getSessionState().jeemail?.accounts || {}).length > 0;
       case 'website_published':
         return (st.contentRegistry?.pages || []).some(p => p.webExProjectId);
+
+      case 'log_flag_count_above': {
+        const entries = (typeof window !== 'undefined' && window.ActivityLog?.getEntries?.()) || [];
+        const flagged = entries.filter((e) => e.flag === 'FLAGGED').length;
+        return flagged >= Number(condition.value);
+      }
+      case 'log_has_entry_type': {
+        const entries = (typeof window !== 'undefined' && window.ActivityLog?.getEntries?.()) || [];
+        return entries.some((e) => e.type === String(condition.entryType));
+      }
+      case 'log_tampered':
+        return typeof window !== 'undefined' && window.ActivityLog?.isTampered?.() === true;
+
+      case 'account_overdrawn': {
+        const accounts = getState().accounts || [];
+        const primary = accounts.find((a) => a.isPrimary) || accounts.find((a) => a.id === 'fncb');
+        return (primary?.balance || 0) < 0;
+      }
+      case 'large_transfer_to_darkweb': {
+        const threshold = Number(condition.value || 5000);
+        const simMs = getState().sim?.elapsedMs || 0;
+        const log = getState().bankingTransactionLog || [];
+        return log.some((tx) => {
+          const typeStr = String(tx.type || '').toUpperCase();
+          const isTransfer = typeStr.includes('TRANSFER');
+          const dest = String(tx.destinationBank || tx.toAccountBank || tx.bankName || '').toLowerCase();
+          const desc = String(tx.description || '').toLowerCase();
+          const toDark = dest.includes('dark') || desc.includes('dark web') || desc.includes('darkweb');
+          return (
+            isTransfer &&
+            toDark &&
+            (tx.amount || 0) >= threshold &&
+            simMs - (tx.simTimestampMs || 0) < SIM_DAY_MS
+          );
+        });
+      }
+
+      case 'market_shortage_active': {
+        const buzz = getState().marketBuzz || {};
+        return Object.values(buzz).some((b) => b && b.shortage === true);
+      }
+      case 'market_shortage_tag': {
+        const buzz = getState().marketBuzz || {};
+        return buzz[condition.tag]?.shortage === true;
+      }
+
+      case 'any_site_offline': {
+        const pages = (getState().contentRegistry?.pages || []).filter(
+          (p) => p.webExProjectId && !p.ownedByCompany
+        );
+        return pages.some((p) => (p.stats?.health ?? 100) <= 0);
+      }
+      case 'site_traffic_above': {
+        const pages = (getState().contentRegistry?.pages || []).filter(
+          (p) => p.webExProjectId && !p.ownedByCompany
+        );
+        return pages.some((p) => (p.stats?.traffic || 0) >= Number(condition.value));
+      }
+
+      case 'actor_opinion_below': {
+        try {
+          const threshold = Number(condition.value ?? -50);
+          const actors = this._poolActiveActors();
+          const playerId = getState().player?.actor_id || 'PLAYER_PRIMARY';
+          return actors.some((a) => {
+            const opinion = a.opinion_profile?.[playerId] ?? 0;
+            return opinion <= threshold;
+          });
+        } catch {
+          return false;
+        }
+      }
+      case 'actor_opinion_above': {
+        try {
+          const threshold = Number(condition.value ?? 70);
+          const actors = this._poolActiveActors().filter((a) => a.role === 'contact');
+          const playerId = getState().player?.actor_id || 'PLAYER_PRIMARY';
+          return actors.some((a) => {
+            const opinion = a.opinion_profile?.[playerId] ?? 0;
+            return opinion >= threshold;
+          });
+        } catch {
+          return false;
+        }
+      }
+      case 'information_broker_hostile': {
+        try {
+          const actors = this._poolActiveActors().filter((a) => (a.taglets || []).includes('information_broker'));
+          const playerId = getState().player?.actor_id || 'PLAYER_PRIMARY';
+          return actors.some((a) => (a.opinion_profile?.[playerId] ?? 0) < -40);
+        } catch {
+          return false;
+        }
+      }
+
+      case 'investigator_tier_above':
+        return (getState().corporateProfile?.investigatorTier || 0) >= Number(condition.value);
+      case 'investigator_assigned':
+        return !!getState().corporateProfile?.assignedInvestigatorId;
+
+      case 'company_count_above':
+        return (getState().companies || []).length > Number(condition.value || 0);
+      case 'has_active_contract':
+        return (getState().activeTasks || []).some(
+          (t) => t.type === 'website_contract' || t.type === 'business_contract'
+        );
+
+      case 'axis_contact_count_above': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.length >= Number(condition.value ?? 0);
+      }
+      case 'axis_has_hostile': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.some((c) => (c.entry?.relationship_score || 0) <= -55);
+      }
+      case 'axis_has_trusted': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.some((c) => (c.entry?.relationship_score || 0) >= 51);
+      }
+      case 'axis_has_allied': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.some((c) => (c.entry?.relationship_score || 0) >= 76);
+      }
+      case 'axis_favor_owed': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.some((c) => (c.entry?.favor_balance || 0) > 0);
+      }
+      case 'axis_intel_on_contact': {
+        const contacts = (typeof window !== 'undefined' && window.AXIS?.getContacts?.('All')) || [];
+        return contacts.some((c) => (c.entry?.intel_level || 0) >= Number(condition.value));
+      }
+
+      case 'inventory_value_above':
+        return getTotalInventoryValue() >= Number(condition.value);
+      case 'has_overdue_unit': {
+        const s = getState();
+        const simMs = s.sim?.elapsedMs || 0;
+        return (s.warehouse?.units || []).some((u) => simMs > (u.paidThroughSimMs || 0));
+      }
+      case 'liquidation_items_above':
+        return getLiquidationPool().length >= Number(condition.value);
+
+      case 'gdp_below':
+        return getGdpIndex() < Number(condition.value);
+      case 'consumer_confidence_below':
+        return getConsumerConf() < Number(condition.value);
+      case 'dot_com_phase':
+        return getDotComPhase() === condition.value;
+      case 'inflation_above':
+        return getInflationRate() > Number(condition.value);
+
       default:
         return true;
     }
@@ -357,6 +609,8 @@ export const EventSystem = {
     if (def.modifiers?.reputation) {
       mod += Math.floor((st.corporateProfile?.reputation || 0) / 20);
     }
+    const acumen = Number(st.player?.acumen ?? 10);
+    mod += Math.floor((acumen - 10) / 2);
     return mod;
   },
 
@@ -368,7 +622,18 @@ export const EventSystem = {
       if (primary && primary.balance >= DAILY_EXPENSE) {
         primary.balance = Math.round((primary.balance - DAILY_EXPENSE) * 100) / 100;
       } else if (primary) {
-        if (!st.corporateProfile) st.corporateProfile = { notoriety: 0, reputation: 0 };
+        if (!st.corporateProfile || typeof st.corporateProfile !== 'object') {
+          st.corporateProfile = {
+            notoriety: 0,
+            reputation: 0,
+            exposure: 0,
+            judicialRecord: [],
+            investigatorTier: 0,
+            assignedInvestigatorId: null,
+            lastAuditSimMs: 0,
+            auditCount: 0
+          };
+        }
         st.corporateProfile.notoriety = Math.min(200, (st.corporateProfile.notoriety || 0) + 2);
         SMS.send({
           from: 'FRA',
@@ -383,10 +648,16 @@ export const EventSystem = {
   // ── ACTOR WORLD TICK (daily) ───────────────────────────────────────
   _tickActorWorld(simMs, gameDate) {
     let actors;
-    try {
-      actors = ActorDB.getAllRaw().filter(a => a.active !== false && a.role !== 'player');
-    } catch { return; }
     const hour = gameDate?.getUTCHours?.() ?? 9;
+    try {
+      const dow = gameDate?.getUTCDay?.() ?? 0;
+      const districts = getState().player?.exploredDistricts || [1];
+      actors = ActorDB.getActiveNow(hour, dow, districts).filter(
+        (a) => a.active !== false && a.role !== 'player'
+      );
+    } catch {
+      return;
+    }
 
     for (const actor of actors) {
       const peaks = actor.activity_schedule?.peak_hours || [];
@@ -445,22 +716,91 @@ export const EventSystem = {
     const st = getState();
     const notoriety = st.corporateProfile?.notoriety || 0;
     const tier = actor.investigator_tier || 1;
+    const threshold = tier === 3 ? 100 : tier === 2 ? 50 : 25;
 
-    const threshold = tier === 3 ? 100 : tier === 2 ? 75 : 50;
     if (notoriety < threshold) return;
 
-    const result = resolveAgainstDC({ dc: 14, modifier: Math.floor(notoriety / 25) });
+    const tierGate = st.corporateProfile?.investigatorTierAdvanceEarliestSimMs || 0;
+    const currentTier = st.corporateProfile?.investigatorTier || 0;
+    if (simMs >= tierGate && currentTier < tier) {
+      patchState((s) => {
+        if (!s.corporateProfile || typeof s.corporateProfile !== 'object') {
+          s.corporateProfile = {
+            notoriety: 0,
+            reputation: 0,
+            exposure: 0,
+            judicialRecord: [],
+            investigatorTier: 0,
+            assignedInvestigatorId: null,
+            lastAuditSimMs: 0,
+            auditCount: 0
+          };
+        }
+        s.corporateProfile.investigatorTier = tier;
+        s.corporateProfile.assignedInvestigatorId = actor.actor_id;
+        return s;
+      });
+
+      const stAfter = getState();
+      SMS.send({
+        from: tier === 3 ? 'FBCE' : 'COMPLIANCE_MONITOR',
+        message:
+          tier === 1
+            ? `NOTICE: Your operator account has been flagged for routine compliance monitoring. Activity logging is in effect. Operator: ${stAfter.player?.operatorId || 'UNKNOWN'}`
+            : tier === 2
+              ? `ESCALATION NOTICE: Your file has been assigned to a Senior Auditor. Continued irregular activity may result in a formal federal audit. Cooperate fully with any requests.`
+              : `FEDERAL NOTICE: The Federal Bureau of Commerce Enforcement has opened a case file on your operator account. A federal agent has been assigned. Do not destroy records.`,
+        gameTime: simMs
+      });
+    }
+
+    const dc = 14 + (3 - tier) * 2;
+    const result = resolveAgainstDC({ dc, modifier: Math.floor(notoriety / 25) });
     if (!result.success) return;
 
-    // Use existing government sender keys so avatars resolve
-    const senderKey = tier >= 3 ? 'FBCE' : 'COMPLIANCE_MONITOR';
-    const messages = [
-      'This is a formal notice. Your operator activity has been flagged for review. Cooperation is expected.',
-      'Compliance review is ongoing. Additional documentation may be requested. Do not destroy records.',
-      'Your account activity has triggered automatic review under Mandate 2000-CR7. Stand by for further communication.',
-    ];
-    const msg = messages[Math.floor(Math.random() * messages.length)];
-    SMS.send({ from: senderKey, message: msg, gameTime: simMs });
+    const playerId = st.player?.actor_id || 'PLAYER_PRIMARY';
+    let hostileBroker;
+    try {
+      hostileBroker = this._poolActiveActors().find(
+        (a) =>
+          (a.taglets || []).includes('information_broker') &&
+          (a.opinion_profile?.[playerId] ?? 0) < -40
+      );
+    } catch {
+      hostileBroker = undefined;
+    }
+    if (hostileBroker && typeof window !== 'undefined' && window.ActivityLog?.log) {
+      window.ActivityLog.log('SYSTEM', 'Information broker activity detected near operator account', {
+        notable: true
+      });
+    }
+
+    const pool = {
+      1: [
+        'Automated compliance scan detected irregular patterns. Review your activity log.',
+        'Compliance notice: Your account activity has triggered a monitoring flag.',
+        'This is an automated notice. Continued irregular activity will be escalated.'
+      ],
+      2: [
+        'This is Senior Auditor Rodriguez. I have reviewed your file. I will be in touch.',
+        'Your financial transaction patterns are inconsistent with your declared business activity.',
+        'We are requesting supplemental documentation. Expect formal correspondence via JeeMail.'
+      ],
+      3: [
+        'FBCE Special Agent Moss. Do not destroy or alter any records. You are under federal review.',
+        'This is a formal notice from the Federal Bureau of Commerce Enforcement. Respond within 48 hours.',
+        'Your operator license is under review. All account activity has been preserved.'
+      ]
+    };
+    const msgs = pool[tier] || pool[1];
+    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    const senderMap = { 1: 'COMPLIANCE_MONITOR', 2: 'T2_AUDITOR', 3: 'FBCE' };
+
+    SMS.send({
+      from: senderMap[tier] || 'COMPLIANCE_MONITOR',
+      message: msg,
+      gameTime: simMs
+    });
   },
 
   // ── WEBSITE WORLD TICK (hourly) ────────────────────────────────────
@@ -472,7 +812,11 @@ export const EventSystem = {
 
     let allActors;
     try {
-      allActors = ActorDB.getAllRaw().filter((a) => a.active !== false && a.actor_id);
+      const gd = new Date(getGameEpochMs() + simMs);
+      const districts = getState().player?.exploredDistricts || [1];
+      allActors = ActorDB.getActiveNow(gd.getUTCHours(), gd.getUTCDay(), districts).filter(
+        (a) => a.active !== false && a.actor_id
+      );
     } catch {
       return;
     }

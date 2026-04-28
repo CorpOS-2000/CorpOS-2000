@@ -6,9 +6,17 @@ import {
   SIM_WEEK_MS
 } from './bank-config.js';
 import { createEmptyContentRegistry, ensureContentRegistry } from './content-registry-defaults.js';
-import { getInstallableApp, getSoftwarePurchasePriceUsd, isInstallableApp } from './installable-apps.js';
+import {
+  getInstallableApp,
+  getSoftwarePurchasePriceUsd,
+  isInstallableApp
+} from './installable-apps.js';
+import { createDefaultWorldNetState } from './worldnet-sites-registry.js';
 
 const GAME_EPOCH_UTC_MS = Date.UTC(2000, 0, 1, 6, 0, 0, 0);
+
+/** One in-game day in simulated milliseconds (re-exported for modules that already import game state). */
+export const SIM_DAY_MS = 86400000;
 
 export function ensureWebsiteStats(pageEntry) {
   if (!pageEntry.stats) {
@@ -302,7 +310,7 @@ export const SIM_HOUR_MS = 3600000;
 
 function createInitialStateInternal() {
   return {
-    meta: { version: 14 },
+    meta: { version: 31 },
     sim: { elapsedMs: 0, speed: 1 },
     player: {
       actor_id: 'ACT-PLAYER01',
@@ -344,6 +352,8 @@ function createInitialStateInternal() {
       webExDomainSubscriptions: [],
       pendingSmsEvents: [],
       lastActiveWebExProjectId: null,
+      worldSeed: null,
+      exploredDistricts: [1]
     },
     websiteContract: {
       active: false,
@@ -444,6 +454,22 @@ function createInitialStateInternal() {
       }
     ],
     companies: [],
+    rivalCompanies: [],
+    rivalProducts: [],
+    districtManifest: null,
+    /** World-news items for Herald ticker + reaction systems */
+    newsRegistry: [],
+    corporateProfile: {
+      notoriety: 0,
+      reputation: 0,
+      exposure: 0,
+      judicialRecord: [],
+      investigatorTier: 0,
+      investigatorTierAdvanceEarliestSimMs: 0,
+      assignedInvestigatorId: null,
+      lastAuditSimMs: 0,
+      auditCount: 0
+    },
     flags: {},
     worldNetShopping: {
       carts: {},
@@ -482,16 +508,42 @@ function createInitialStateInternal() {
     },
     /** Threaded SMS messages keyed by senderId. */
     smsThreads: {},
-    /** WhereAllThingsGo.net warehouse storage units and liquidation pool. */
-    warehouse: { units: [], liquidation: [] },
+    /** Self-storage: units, liquidation, optional insurance map, inter-unit transfer queue. */
+    warehouse: { units: [], liquidation: [], insurance: {}, transfers: [], properties: [], lastVaultAuctionSimMs: 0 },
+    /** Player item inventory (carried) + manifest; includes shop purchases. */
+    playerInventory: { items: [], manifest: [], totalValue: 0 },
     /** Product hashtag tracking: tag -> { mentions, likes, dislikes, purchaseCountWindow, lastPurchaseSimMs, shortage? } */
     marketBuzz: {},
+    economy: {
+      inflationRate: 0.031,
+      unemploymentRate: 0.04,
+      gdpIndex: 100,
+      consumerConfidence: 72,
+      dotComBubble: 'peak',
+      hargroveGdp: 2_400_000_000,
+      totalTransactionVolume: 0,
+      transactionLog: [],
+      lastInflationAdjustMs: 0,
+      npcPurchaseLog: [],
+      priceIndex: {}
+    },
     /** CCR — Contacts, Contracts & Relations. */
     ccr: { contracts: [], newsFeed: [], nextSeq: 1 },
     /** Background jobs (site repair, etc.) — processed on tick. */
     activeTasks: [],
     /** Global ad performance analytics: impressions, clicks, conversions, irritation per ad. */
-    adAnalytics: { byAdId: {} }
+    adAnalytics: { byAdId: {} },
+    /** Saved-the-cookies.org petition submissions (satire phishing). */
+    cookiePetitionData: [],
+    quarryHeartsDonor: false,
+    /** Combat — DataMiner intel keys targetId → { dcBonus, lastUpdated, opType? } */
+    dataMinerDossiers: {},
+    /** Combat — delayed operations (e.g. Compliance Cannon) */
+    pendingCombatEffects: [],
+    /** Combat suites — cooldown keys → sim-ms when cooldown ends */
+    combatCooldowns: {},
+    /** WorldNet expansion — form logs, visit counters, directory seed */
+    worldnet: createDefaultWorldNetState()
   };
 }
 
@@ -635,6 +687,11 @@ export function migrateStateIfNeeded(st) {
   st.worldNetShopping.activeDeliveries = Array.isArray(st.worldNetShopping.activeDeliveries)
     ? st.worldNetShopping.activeDeliveries
     : [];
+  if (!Array.isArray(st.cookiePetitionData)) st.cookiePetitionData = [];
+  if (st.quarryHeartsDonor == null) st.quarryHeartsDonor = false;
+  if (!st.combatCooldowns || typeof st.combatCooldowns !== 'object') st.combatCooldowns = {};
+  if (!st.dataMinerDossiers || typeof st.dataMinerDossiers !== 'object') st.dataMinerDossiers = {};
+  if (!Array.isArray(st.pendingCombatEffects)) st.pendingCombatEffects = [];
   st.accounts = (st.accounts || []).filter((a) => a && a.id !== 'shootingmoon');
   if (!st.accounts.some((a) => a.id === 'davidmitchell')) {
     st.accounts.push({
@@ -730,6 +787,13 @@ export function migrateStateIfNeeded(st) {
       !st.software.installedAppIds.includes('media-player')
     ) {
       st.software.installedAppIds.push('media-player');
+    }
+    if (
+      preMigrateVersion >= 1 &&
+      preMigrateVersion <= 6 &&
+      !st.software.installedAppIds.includes('player-inventory')
+    ) {
+      st.software.installedAppIds.push('player-inventory');
     }
   }
   if ((st.meta.version || 0) < 8) {
@@ -925,6 +989,130 @@ export function migrateStateIfNeeded(st) {
     if (!st.warehouse) st.warehouse = { units: [], liquidation: [], properties: [] };
     if (!Array.isArray(st.warehouse.properties)) st.warehouse.properties = [];
   }
+  if ((st.meta.version || 0) < 24) {
+    st.meta.version = 24;
+    if (!st.corporateProfile || typeof st.corporateProfile !== 'object') {
+      st.corporateProfile = {
+        notoriety: 0,
+        reputation: 0,
+        exposure: 0,
+        judicialRecord: [],
+        investigatorTier: 0,
+        assignedInvestigatorId: null,
+        lastAuditSimMs: 0,
+        auditCount: 0
+      };
+    }
+    const cp = st.corporateProfile;
+    if (cp.notoriety == null) cp.notoriety = 0;
+    if (cp.reputation == null) cp.reputation = 0;
+    if (cp.exposure == null) cp.exposure = 0;
+    if (!Array.isArray(cp.judicialRecord)) cp.judicialRecord = [];
+    if (cp.investigatorTier == null) cp.investigatorTier = 0;
+    if (cp.assignedInvestigatorId === undefined) cp.assignedInvestigatorId = null;
+    if (cp.lastAuditSimMs == null) cp.lastAuditSimMs = 0;
+    if (cp.auditCount == null) cp.auditCount = 0;
+    if (st.player && st.player.acumen == null) st.player.acumen = 10;
+    if (!Array.isArray(st.companies)) st.companies = [];
+  }
+  if ((st.meta.version || 0) < 25) {
+    st.meta.version = 25;
+    if (st.player) {
+      if (st.player.worldSeed === undefined) st.player.worldSeed = null;
+      if (!Array.isArray(st.player.exploredDistricts)) st.player.exploredDistricts = [1];
+    }
+    if (st.districtManifest === undefined) st.districtManifest = null;
+  }
+  if ((st.meta.version || 0) < 26) {
+    st.meta.version = 26;
+    if (!Array.isArray(st.newsRegistry)) st.newsRegistry = [];
+  }
+  if ((st.meta.version || 0) < 27) {
+    st.meta.version = 27;
+    st.flags = st.flags || {};
+    if (st.flags.darkWebReferralUnlocked === undefined) st.flags.darkWebReferralUnlocked = false;
+  }
+  if ((st.meta.version || 0) < 28) {
+    st.meta.version = 28;
+    if (!Array.isArray(st.rivalCompanies)) st.rivalCompanies = [];
+    if (!Array.isArray(st.rivalProducts)) st.rivalProducts = [];
+  }
+  if ((st.meta.version || 0) < 29) {
+    st.meta.version = 29;
+    if (!st.warehouse) st.warehouse = { units: [], liquidation: [] };
+    if (!Array.isArray(st.warehouse.properties)) st.warehouse.properties = [];
+    if (!st.warehouse.insurance || typeof st.warehouse.insurance !== 'object') st.warehouse.insurance = {};
+    if (!Array.isArray(st.warehouse.transfers)) st.warehouse.transfers = [];
+    if (st.warehouse.lastVaultAuctionSimMs == null) st.warehouse.lastVaultAuctionSimMs = 0;
+    if (!st.playerInventory) st.playerInventory = { items: [], manifest: [], totalValue: 0 };
+    if (!Array.isArray(st.playerInventory.items)) st.playerInventory.items = [];
+    if (!Array.isArray(st.playerInventory.manifest)) st.playerInventory.manifest = [];
+    const WATG_TIERS = {
+      small: { id: 'watg-small', maxValueUsd: 5000, maxItems: 10, rent: 6, label: '5×5 Locker' },
+      medium: { id: 'watg-medium', maxValueUsd: 20000, maxItems: 30, rent: 14, label: '10×10 Standard' },
+      large: { id: 'watg-large', maxValueUsd: 75000, maxItems: 75, rent: 28, label: '10×20 Large Bay' },
+      xlarge: { id: 'watg-xlarge', maxValueUsd: 200000, maxItems: 150, rent: 50, label: '10×30 Full Unit' }
+    };
+    for (const u of st.warehouse.units || []) {
+      if (u.providerId) continue;
+      u.providerId = 'whereallthingsgo';
+      u.providerName = u.providerName || 'WhereAllThingsGo.net';
+      const t = u.sizeTier ? WATG_TIERS[u.sizeTier] : WATG_TIERS.small;
+      if (t) {
+        u.tierUnitId = t.id;
+        u.maxValueUsd = u.maxValueUsd != null ? u.maxValueUsd : t.maxValueUsd;
+        u.maxItems = u.maxItems != null ? u.maxItems : t.maxItems;
+        u.rentPerDay = u.rentPerDay != null ? u.rentPerDay : t.rent;
+        u.label = u.label || t.label;
+        u.climateControlled = u.climateControlled != null ? u.climateControlled : false;
+        u.insured = !!u.insured;
+      }
+    }
+    const carried = (st.playerInventory?.items || []).reduce(
+      (a, it) => a + (it.unitValue || 0) * (it.quantity || 1),
+      0
+    );
+    const wr = (st.warehouse?.units || [])
+      .flatMap((unit) => unit.items || [])
+      .reduce((a, it) => a + (it.unitValue || 0) * (it.quantity || 1), 0);
+    st.playerInventory.totalValue = Math.round(carried + wr);
+  }
+  if ((st.meta.version || 0) < 30) {
+    st.meta.version = 30;
+    if (!st.economy) {
+      st.economy = {
+        inflationRate: 0.031,
+        unemploymentRate: 0.04,
+        gdpIndex: 100,
+        consumerConfidence: 72,
+        dotComBubble: 'peak',
+        hargroveGdp: 2_400_000_000,
+        totalTransactionVolume: 0,
+        transactionLog: [],
+        lastInflationAdjustMs: 0,
+        npcPurchaseLog: [],
+        priceIndex: {}
+      };
+    }
+    st.software = st.software || { installedAppIds: [], activeInstalls: [] };
+    st.software.installedAppIds = Array.isArray(st.software.installedAppIds) ? st.software.installedAppIds : [];
+    if (!st.software.installedAppIds.includes('player-inventory')) st.software.installedAppIds.push('player-inventory');
+  }
+  if ((st.meta.version || 0) < 31) {
+    st.meta.version = 31;
+    const defaults = createDefaultWorldNetState();
+    const w = st.worldnet && typeof st.worldnet === 'object' ? st.worldnet : {};
+    st.worldnet = {
+      ...defaults,
+      ...w,
+      knownSites: { ...defaults.knownSites, ...(w.knownSites || {}) },
+      formSubmissions: { ...defaults.formSubmissions, ...(w.formSubmissions || {}) },
+      pollVotes: { ...defaults.pollVotes, ...(w.pollVotes || {}) },
+      petitions: { ...defaults.petitions, ...(w.petitions || {}) },
+      complaintLog: Array.isArray(w.complaintLog) ? w.complaintLog : defaults.complaintLog,
+      counters: { ...defaults.counters, ...(w.counters || {}) }
+    };
+  }
   return st;
 }
 
@@ -1001,7 +1189,6 @@ export function applyDueRegulatoryFinesPatch() {
 }
 
 export function scheduleEnrollmentViolation(st, bankId, violation, delayDays = 2) {
-  const SIM_DAY_MS = 86400000;
   st.regulatory.pendingFines.push({
     bankId,
     violation,
@@ -1127,7 +1314,46 @@ export function processWorldNetDeliveriesIfNeeded() {
 }
 
 export function isAppInstalled(appId, stateObj = state) {
-  return !!stateObj.software?.installedAppIds?.includes(String(appId || ''));
+  const id = String(appId || '');
+  const ids = stateObj.software?.installedAppIds || [];
+  if (ids.includes(id)) return true;
+  const v2 = `${id}-v2`;
+  const v3 = `${id}-v3`;
+  if (!id.includes('-v') && (ids.includes(v2) || ids.includes(v3))) return true;
+  return false;
+}
+
+/** Gate purchases / downloads for tiered combat apps (requires chain + referral flag). */
+export function canInstallApp(appId) {
+  const app = getInstallableApp(appId);
+  if (!app) return { ok: false, reason: 'App not found.' };
+  const st = state;
+  const installed = st.software?.installedAppIds || [];
+  if (app.requires && !installed.includes(app.requires)) {
+    const req = getInstallableApp(app.requires);
+    return {
+      ok: false,
+      reason: `Requires ${req?.label || app.requires} to be installed first.`
+    };
+  }
+  if (app.requiresFlag && !st.flags?.[app.requiresFlag]) {
+    return {
+      ok: false,
+      reason: 'Requires a dark web referral code. Find it in the network.'
+    };
+  }
+  return { ok: true };
+}
+
+function pruneCombatUpgradeChain(st, newlyInstalledId) {
+  const app = getInstallableApp(newlyInstalledId);
+  if (!app?.baseId || !app.version || app.version === '1.0') return;
+  const base = app.baseId;
+  const rm = [];
+  if (app.version === '2.0') rm.push(base);
+  if (app.version === '3.0') rm.push(base, `${base}-v2`);
+  if (!rm.length) return;
+  st.software.installedAppIds = st.software.installedAppIds.filter((x) => !rm.includes(x));
 }
 
 function randomDurationMs(minSeconds, maxSeconds) {
@@ -1185,6 +1411,10 @@ export function getInstallStatus(appId, stateObj = state) {
 export function queueSoftwareInstall(appId) {
   const app = getInstallableApp(appId);
   if (!app) return { ok: false, reason: 'unknown_app', message: 'Unknown software package.' };
+  const gate = canInstallApp(appId);
+  if (!gate.ok) {
+    return { ok: false, reason: 'requirements', message: gate.reason };
+  }
   const status = getInstallStatus(appId);
   if (status.state === 'installed') {
     return { ok: false, reason: 'installed', message: `${app.label} is already installed.` };
@@ -1221,7 +1451,7 @@ export function queueSoftwareInstall(appId) {
           accountNumber: a.accountNumber,
           type: 'purchase',
           amount: -price,
-          description: `devtools.net — ${app.label}`
+          description: `${app.sourceHost || 'devtools.net'} — ${app.label}`
         });
       }
     }
@@ -1241,8 +1471,8 @@ export function queueSoftwareInstall(appId) {
     const host = app.sourceHost || 'WorldNet';
     const priceStr = price > 0 ? `$${price.toFixed(2)}` : '$0.00';
     window.ActivityLog?.log?.('APP_INSTALL_START', `Download initiated: ${app.label} from ${host} — ${priceStr}`, {
-      suspicious: app.trustLevel === 'unverified'
-    });
+          suspicious: app.trustLevel === 'unverified' || app.trustLevel === 'dark'
+        });
   } catch {
     /* ignore */
   }
@@ -1415,7 +1645,30 @@ export function listBackgroundTasks(stateObj = state) {
         canKill: true
       };
     });
-  return [...installs, ...deliveries, ...repairs, ...websiteContracts];
+  const marketplaceSettlements = (stateObj.activeTasks || [])
+    .filter((t) => t.type === 'marketplace_settlement' && t.status === 'in_progress')
+    .map((t) => {
+      const totalMs = 24 * 3600000;
+      const due = t.dueSimMs || 0;
+      const start = due - totalMs;
+      const p =
+        due <= now ? 100 : Math.min(100, Math.max(0, Math.round(((now - start) / totalMs) * 100)));
+      return {
+        id: `mps:${t.id}`,
+        taskId: `mps:${t.id}`,
+        taskType: 'settlement',
+        targetId: t.id,
+        icon: t.icon || '💰',
+        label: t.label || 'Marketplace sale',
+        category: 'ETradeBay',
+        status: due <= now ? 'Releasing' : 'Settlement pending',
+        progress: p,
+        detail: t.amount != null ? `$${Number(t.amount).toFixed(2)}` : '',
+        canEnd: false,
+        canKill: false
+      };
+    });
+  return [...installs, ...deliveries, ...repairs, ...websiteContracts, ...marketplaceSettlements];
 }
 
 /**
@@ -1452,6 +1705,39 @@ export function processSiteRepairsIfNeeded() {
     return st;
   });
   return completed;
+}
+
+/**
+ * Deposits ETradeBay (inventory) marketplace sale proceeds to FNCB when due.
+ * @returns {object[]}
+ */
+export function processMarketplaceSettlementsIfNeeded() {
+  const now = state.sim?.elapsedMs ?? 0;
+  /** @type {object[]} */
+  const done = [];
+  patchState((st) => {
+    if (!Array.isArray(st.activeTasks)) st.activeTasks = [];
+    const keep = [];
+    for (const t of st.activeTasks) {
+      if (t.type !== 'marketplace_settlement' || t.status !== 'in_progress') {
+        keep.push(t);
+        continue;
+      }
+      if ((t.dueSimMs || 0) > now) {
+        keep.push(t);
+        continue;
+      }
+      const amt = Number(t.amount || 0) || 0;
+      if (amt > 0) {
+        const fncb = (st.accounts || []).find((a) => a.id === 'fncb');
+        if (fncb) fncb.balance = (fncb.balance || 0) + amt;
+      }
+      done.push(t);
+    }
+    st.activeTasks = keep;
+    return st;
+  });
+  return done;
 }
 
 export function cancelSiteRepairTask(taskId) {
@@ -1496,6 +1782,7 @@ export function processSoftwareInstallsIfNeeded() {
       }
       const app = getInstallableApp(job.appId);
       if (app && !software.installedAppIds.includes(app.id)) {
+        pruneCombatUpgradeChain(st, app.id);
         software.installedAppIds.push(app.id);
         completed.push(app);
       }

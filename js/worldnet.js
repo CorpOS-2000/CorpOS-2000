@@ -1,20 +1,24 @@
 import { resolveNarrative } from './d20.js';
 import { escapeHtml } from './identity.js';
-import { TOAST_KEYS, toast } from './toast.js';
+import { TOAST_KEYS, toast, ToastManager } from './toast.js';
 import { worldnetPages } from './worldnet-pages.js';
 import { BANK_META } from './bank-pages.js';
 import { bankHtmlForPageKey, bindBankRoot, installBankWindowGlobals } from './bank-ui.js';
+import { recordTransaction } from './economy.js';
+import { computeETradeStockPrice } from './worldnet-etradebay.js';
 import {
   getGameEpochMs,
   getState,
   patchState,
   cancelSoftwareInstall,
   getInstallStatus,
+  canInstallApp,
   queueSoftwareInstall,
   siteGuestbookAppend,
   siteIntegrationLog
 } from './gameState.js';
 import { smsToPlayer } from './black-cherry.js';
+import { unlockV3Referral } from './combat-version.js';
 import { getSessionState, patchSession } from './sessionState.js';
 import {
   ROOT_URL_BY_PAGE,
@@ -26,6 +30,15 @@ import {
   titleForWorldNetPage,
   worldNetRegistryNavAttrs
 } from './worldnet-routes.js';
+import {
+  buildExtendedPage,
+  dispatchExtendedWorldNetAction,
+  EXTENDED_PAGE_KEYS,
+  hookAfterWorldNetNavigate,
+  seedWorldnetExtendedActors
+} from './worldnet-pages-extended.js';
+import { dispatchWorldNetFormAction } from './worldnet-form-handlers.js';
+import { searchWorldNetRegistry } from './worldnet-sites-registry.js';
 import { renderPageDefinitionHtml, hydrateWebExGuestbook } from './worldnet-page-renderer.js';
 import { applyWebexRtcVote, hydrateWebExRtc, pageHasWebexLiveChat } from './webex-site-rtc.js';
 import { on } from './events.js';
@@ -64,7 +77,6 @@ import {
 import { submitBusinessRegistration } from './business-registry-tick.js';
 import { ActorDB } from '../engine/ActorDB.js';
 import { renderMoogleMapsPage, mountMoogleMaps, teardownMoogleMaps } from './moogle-maps.js';
-import { mountWarehousePage } from './warehouse-tick.js';
 import { mountMarketPulsePage } from './market-pulse-page.js';
 import { initDailyHerald } from './daily-herald.js';
 import { CORPOS_GATED_PAGE_KEYS, renderGateInterstitial } from './corpos-enrollment.js';
@@ -72,6 +84,12 @@ import { simpleHash, deliverCorpOSWelcomePacket } from './jeemail-corpos.js';
 import { SMS } from './bc-sms.js';
 import { renderFocsMandateHtml, renderCorposPortalHtml } from './worldnet-gov-pages.js';
 import { initSiteRegistry, getSiteByPageKey, trustBadgeHtml, scamClassModifiers } from './worldnet-site-registry.js';
+import {
+  rentUnit,
+  payRent,
+  retrieveItem,
+  addToPlayerInventory
+} from './warehouse-tick.js';
 
 let pages = { ...worldnetPages };
 let historyEntries = [];
@@ -80,6 +98,64 @@ let notFoundAddress = '';
 let activeTransferDialogAppId = '';
 let transferDialogDelegated = false;
 let _wnetWebexRtcRefreshAt = 0;
+/** Previous WorldNet page key (for career redirect loop counting). */
+let _wnetLastNavKey = '';
+let _wnetNavigateTimer = null;
+let _wnetNavigateIv = null;
+
+/** Simulated modem-era load times per page key (ms base, +0–30% jitter in getPageLoadDelay). */
+const PAGE_LOAD_TIMES = {
+  fra: 400,
+  ssa: 380,
+  focs_mandate: 300,
+  corpos_portal: 300,
+  home: 700,
+  jeemail_inbox: 600,
+  jeemail_compose: 620,
+  moogle_home: 500,
+  wahoo_results: 800,
+  herald: 900,
+  wn_shop: 1800,
+  mytube: 2200,
+  reviewbomber: 1600,
+  yourspace: 1500,
+  hiring: 900,
+  etrade_bay: 720,
+  stocks: 720,
+  bank_darkweb: 4200,
+  net99669: 650,
+  room2847: 2800,
+  truthseekers: 1900,
+  patricias_garden: 520,
+  onlyflans: 920,
+  hargrove_library: 640,
+  hargrove_elementary: 580,
+  kittenorg: 780,
+  hargrove_hotels: 680,
+  quarryhearts: 850,
+  savethecookies: 740,
+  rocksalive: 1350,
+  cubscouts: 620,
+  bearscouts: 620,
+  hargrove_careers: 760,
+  hargrovebiz_corp: 720,
+  warehouse: 1600,
+  hargrove_vault: 1600,
+  stor_it: 1500,
+  market_pulse: 880,
+  moogle_maps: 900,
+  bizreg: 520,
+  web_registry: 580
+};
+
+function getPageLoadDelay(pageKey) {
+  const k = pageKey || '';
+  if (PAGE_LOAD_TIMES[k] != null) {
+    const base = PAGE_LOAD_TIMES[k];
+    return base + Math.floor(Math.random() * base * 0.3);
+  }
+  return 500 + Math.floor(Math.random() * 500);
+}
 
 export let currentPageKey = 'moogle_home';
 export let currentSubPath = '';
@@ -209,6 +285,7 @@ function renderWahooHome() {
     <b>Popular services:</b>
     <a data-nav="jeemail_login" style="margin-left:8px;">JeeMail</a>
     <a data-nav="jeemail_register" style="margin-left:8px;">Get a JeeMail address</a>
+    <a data-nav="net99669" style="margin-left:8px;">99669.net — site directory (100+ local pages)</a>
     ${
       account?.contact
         ? `<span style="margin-left:12px;color:#666;">Contact: ${account.contact}</span>`
@@ -263,12 +340,75 @@ All tax records verified per Federal Mandate 2000-CR7<br>
 </div>`;
 }
 
+const COMBAT_PROGRAM_FAMILIES = [
+  {
+    name: 'Phantom Press',
+    icon: '📰',
+    description: 'Reputation warfare suite',
+    versions: ['phantom-press', 'phantom-press-v2', 'phantom-press-v3']
+  },
+  {
+    name: 'MarketForce 2000',
+    icon: '📉',
+    description: 'Financial warfare console',
+    versions: ['market-force', 'market-force-v2', 'market-force-v3']
+  },
+  {
+    name: 'GhostCorp Suite',
+    icon: '👻',
+    description: 'Anonymous corporate shell operations',
+    versions: ['ghost-corp', 'ghost-corp-v2', 'ghost-corp-v3']
+  },
+  {
+    name: 'DataMiner Pro',
+    icon: '🔬',
+    description: 'OSINT and intelligence aggregation',
+    versions: ['dataminer-pro', 'dataminer-pro-v2', 'dataminer-pro-v3']
+  },
+  {
+    name: 'Compliance Cannon',
+    icon: '⚖',
+    description: 'Legal / regulatory warfare',
+    versions: ['compliance-cannon', 'compliance-cannon-v2', 'compliance-cannon-v3']
+  },
+  {
+    name: 'SignalScrub',
+    icon: '🔇',
+    description: 'Counter-surveillance',
+    versions: ['signal-scrub', 'signal-scrub-v2', 'signal-scrub-v3']
+  }
+];
+
+function renderCombatProgramFamiliesHtml() {
+  let html = `<div style="margin-top:14px;padding-top:10px;border-top:2px solid #0a246a;">
+<div style="font-size:13px;font-weight:bold;color:#0a246a;margin-bottom:6px;">Combat &amp; espionage — version ladder</div>
+<p style="font-size:10px;color:#555;margin-bottom:12px;line-height:1.45;">v1.0 grey-market builds upgrade to v2.0 (dark web / select grey mirrors) and v3.0 (referral-gated). Prices and requirements apply per package.</p>`;
+  for (const fam of COMBAT_PROGRAM_FAMILIES) {
+    html += `<div style="margin-bottom:14px;border:1px solid #aab4cc;background:#fafcff;padding:10px;">
+<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+<div style="font-size:26px;line-height:1;">${fam.icon}</div>
+<div style="flex:1;">
+<div style="font-weight:bold;color:#0a246a;font-size:12px;">${escapeHtml(fam.name)}</div>
+<div style="font-size:10px;color:#666;line-height:1.35;">${escapeHtml(fam.description)}</div>
+</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">`;
+    for (const vid of fam.versions) {
+      html += renderDevtoolsAppCard(vid);
+    }
+    html += `</div></div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
 function renderDevtoolsPage() {
   const base = pages.devtools || worldnetPages.devtools || defaultNotFoundHtml();
-  return base.replace(
+  let html = base.replace(
     /<div data-devtools-app="([^"]+)"><\/div>/g,
     (_match, appId) => renderDevtoolsAppCard(appId)
   );
+  html = html.replace(/<div data-devtools-combat-families>\s*<\/div>/i, renderCombatProgramFamiliesHtml());
+  return html;
 }
 
 function renderBackroomsPage() {
@@ -283,6 +423,7 @@ function renderBackroomsAppCard(appId) {
   const app = getInstallableApp(appId);
   if (!app) return '';
   const status = getInstallStatus(appId);
+  const gate = canInstallApp(appId);
   let buttonLabel = '[ DOWNLOAD ]';
   let disabled = '';
   let btnBg = '#1a0000';
@@ -303,6 +444,13 @@ function renderBackroomsAppCard(appId) {
     btnBg = '#001a00';
     btnBorder = '#004400';
   }
+  const blockedByReq = gate.ok === false && status.state === 'available';
+  if (blockedByReq) {
+    disabled = 'disabled';
+    buttonLabel = '[ LOCKED ]';
+    btnBg = '#0a0a0a';
+    btnBorder = '#443300';
+  }
   const activeTransfer = status.state === 'downloading' || status.state === 'installing' || status.state === 'aborting';
   return `<div style="border:1px solid #003300;background:#0a0a0a;padding:10px;">
 <div style="display:flex;align-items:flex-start;gap:10px;">
@@ -316,6 +464,7 @@ function renderBackroomsAppCard(appId) {
       Delivery: encrypted tunnel
     </div>
     <div style="margin-top:5px;font-size:12px;font-weight:bold;color:#ff0000;">${escapeHtml(formatSoftwarePurchasePrice(app))}</div>
+    ${gate.ok ? '' : `<div style="font-size:9px;color:#cc9900;margin-top:4px;line-height:1.3;">${escapeHtml(gate.reason)}</div>`}
     <div style="margin-top:4px;display:inline-block;padding:2px 6px;border:1px solid #660000;background:#1a0000;color:#ff4444;font-size:9px;font-weight:bold;letter-spacing:1px;">⚠ NOT CORPOS CERTIFIED — FLAGGED AS HOSTILE SOFTWARE</div>
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
       <button type="button" data-action="install-app" data-install-app-id="${escapeHtml(app.id)}"
@@ -390,12 +539,24 @@ function showCorpOsConfirm({ message, detail, confirmLabel, onConfirm }) {
 }
 
 function installTrustMeta(app) {
-  return {
+  const map = {
     verified:   { text: 'CorpOS verified',                  color: '#006600', bg: '#e8ffe8', border: '#3a8f3a' },
     unknown:    { text: 'Unknown to CorpOS',                color: '#8a6d00', bg: '#fff8d8', border: '#c9a227' },
     unverified: { text: 'Unverified — not CorpOS certified', color: '#8b0000', bg: '#fff0f0', border: '#cc6666' },
-    untrusted:  { text: 'CorpOS does not trust this file',  color: '#8b0000', bg: '#ffe9e9', border: '#cc6666' }
-  }[app?.trustLevel || 'unknown'];
+    untrusted:  { text: 'CorpOS does not trust this file',  color: '#8b0000', bg: '#ffe9e9', border: '#cc6666' },
+    dark:       { text: 'Dark web — jurisdiction unknown',   color: '#5c0030', bg: '#ffe8f4', border: '#990066' }
+  };
+  return map[app?.trustLevel || 'unknown'] || map.unknown;
+}
+
+function pageKeyForSoftwareSource(app) {
+  if (!app) return 'devtools';
+  const tl = app.trustLevel || '';
+  const host = String(app.sourceHost || '').toLowerCase();
+  if (tl === 'dark' || host === 'darkweb') return 'backrooms';
+  if (host.includes('99669.net/tools')) return 'net99669';
+  if (host.includes('backrooms')) return 'backrooms';
+  return 'devtools';
 }
 
 function ensureCorpOsTransferDialog() {
@@ -454,7 +615,8 @@ function ensureCorpOsTransferDialog() {
           const res = cancelSoftwareInstall(appId);
           toast(res.message);
           refreshTransferDialog();
-          if (currentPageKey === 'devtools' || currentPageKey === 'backrooms') navigate(currentPageKey, '', { pushHistory: false });
+          if (currentPageKey === 'devtools' || currentPageKey === 'backrooms' || currentPageKey === 'net99669')
+            navigate(currentPageKey, '', { pushHistory: false });
         }
       },
       false
@@ -573,6 +735,7 @@ function renderDevtoolsAppCard(appId) {
   const app = getInstallableApp(appId);
   if (!app) return '';
   const status = getInstallStatus(appId);
+  const gate = canInstallApp(appId);
   let buttonLabel = 'Download & Install';
   let disabled = '';
   if (status.state === 'downloading') {
@@ -584,6 +747,11 @@ function renderDevtoolsAppCard(appId) {
   } else if (status.state === 'installed') {
     buttonLabel = 'Installed';
     disabled = 'disabled';
+  }
+  const blockedByReq = gate.ok === false && status.state === 'available';
+  if (blockedByReq) {
+    disabled = 'disabled';
+    buttonLabel = 'Requirements not met';
   }
   const trustMeta = installTrustMeta(app);
   const activeTransfer = status.state === 'downloading' || status.state === 'installing' || status.state === 'aborting';
@@ -602,6 +770,7 @@ function renderDevtoolsAppCard(appId) {
     <div style="margin-top:6px;display:inline-block;padding:2px 6px;border:1px solid ${trustMeta.border};background:${trustMeta.bg};color:${trustMeta.color};font-size:10px;font-weight:bold;">${escapeHtml(
       trustMeta.text
     )}</div>
+    ${gate.ok ? '' : `<div style="font-size:9px;color:#996600;margin-top:6px;line-height:1.35;">${escapeHtml(gate.reason)}</div>`}
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
       <button type="button" data-action="install-app" data-install-app-id="${escapeHtml(
         app.id
@@ -867,20 +1036,37 @@ ${bodyContent}
 
 function renderWahooSearchResults(query) {
   const q = query || '';
+  const wnHits = searchWorldNetRegistry(q, 22)
+    .map(
+      (s) =>
+        `<div style="margin-bottom:10px;"><a href="#" data-nav="${escapeHtml(s.pageKey)}" style="font-size:14px;cursor:pointer;text-decoration:underline;">${escapeHtml(
+          s.title
+        )}</a><br><span style="color:#006600;font-size:10px;">${escapeHtml(s.url)}</span><br><span style="font-size:11px;color:#444;">${escapeHtml(
+          s.description
+        )}</span></div>`
+    )
+    .join('');
   const resultDefs = [
     { label: 'Business registration services', nav: 'bizreg', url: 'www.fedbizreg.gov' },
     { label: 'Online banking portal', nav: 'bank', url: 'www.firstnationalcorp.com' },
-    { label: 'Stock market tracker', nav: 'stocks', url: 'market.worldnet.com' },
+    { label: 'ETradeBay — Hargrove Exchange', nav: 'etrade_bay', url: 'www.etradebay.com' },
     { label: 'JeeMail webmail service', nav: 'jeemail_login', url: 'mail.jeemail.net' },
     { label: 'Government compliance portal', nav: 'ssa', url: 'www.ssa.gov.net' }
   ];
   const results = resultDefs
     .map(
       (r) =>
-        `<div style="margin-bottom:10px;"><a href="#" data-nav="${escapeHtml(r.nav)}" style="font-size:14px;cursor:pointer;text-decoration:underline;">${escapeHtml(r.label)}</a><br><a href="#" data-nav="${escapeHtml(r.nav)}" style="color:#006600;font-size:10px;text-decoration:underline;">http://${escapeHtml(r.url)}/</a><br><span style="font-size:11px;">Find information about ${escapeHtml(r.label.toLowerCase())} on WorldNet.</span></div>`
+        `<div style="margin-bottom:10px;"><a href="#" data-nav="${escapeHtml(r.nav)}" style="font-size:14px;cursor:pointer;text-decoration:underline;">${escapeHtml(
+          r.label
+        )}</a><br><a href="#" data-nav="${escapeHtml(r.nav)}" style="color:#006600;font-size:10px;text-decoration:underline;">http://${escapeHtml(
+          r.url
+        )}/</a><br><span style="font-size:11px;">Find information about ${escapeHtml(r.label.toLowerCase())} on WorldNet.</span></div>`
     )
     .join('');
-  return `<div class="iebody"><h2>Wahoo! Search: "${q}"</h2><p style="color:#666;font-size:11px;margin-bottom:8px;">About 4,820,000 results (0.31 seconds)</p>${results}</div>`;
+  const qEsc = escapeHtml(q);
+  return `<div class="iebody"><h2>Wahoo! Search: "${qEsc}"</h2><p style="color:#666;font-size:11px;margin-bottom:8px;">About 4,820,000 results (0.31 seconds)</p>
+<div style="border:1px dashed #99c;margin-bottom:12px;padding:8px;background:#f8fff8;"><font size="2" color="#006600"><b>Local & directory matches</b></font>${wnHits || '<p style="font-size:11px;color:#666;">No keyword matches in the 99669 expansion catalog.</p>'}</div>
+${results}</div>`;
 }
 
 function renderBizDirectoryPanel() {
@@ -968,6 +1154,15 @@ ${pager}
 }
 
 function renderPortal99669() {
+  const greyIds = [
+    'phantom-press',
+    'market-force',
+    'dataminer-pro',
+    'dataminer-pro-v2',
+    'signal-scrub',
+    'signal-scrub-v2'
+  ];
+  const greySlots = greyIds.map((id) => `<div data-net99669-app="${id}"></div>`).join('');
   const rows = getWorldNetSiteDirectoryLinks();
   const siteRows = rows
     .map((r, i) => {
@@ -992,6 +1187,11 @@ function renderPortal99669() {
 </div>
 <div class="ad" style="background:#ffffcc;border:1px solid #cc9900;padding:6px;font-size:10px;margin-bottom:10px;">
   <b>SPONSORED:</b> Tired of typing URLs? Bookmark 99669.net — your federal-compliant shortcut to the simulated web.
+</div>
+<div style="margin-bottom:14px;padding:10px;border:2px dashed #990099;background:#faf5ff;">
+  <h3 style="font-size:13px;color:#660066;margin-bottom:4px;">Grey-market tools — 99669.net/tools</h3>
+  <p style="font-size:10px;color:#555;margin-bottom:8px;line-height:1.35;">Unverified utilities. CorpOS logs all transfers to FNCB and your activity record.</p>
+  <div style="display:flex;flex-direction:column;gap:8px;">${greySlots}</div>
 </div>
 <h2 style="font-size:15px;color:#000080;border-bottom:2px solid #990099;padding-bottom:4px;margin-bottom:8px;">🌐 All WorldNet sites</h2>
 <p style="font-size:10px;color:#666;margin-bottom:8px;line-height:1.4;">Click a title to open the site in WorldNet Explorer. List updates when new hosts are registered with CorpOS.</p>
@@ -1021,10 +1221,13 @@ ${siteRows}
 </div>
 <aside style="width:120px;flex-shrink:0;"><div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div></aside>
 </div>
-</div>`;
+</div>`
+    .replace(/<div data-net99669-app="([^"]+)"><\/div>/g, (_m, appId) => renderDevtoolsAppCard(appId));
 }
 
 function renderPage(key, sub = '') {
+  if (key === 'stocks') return buildExtendedPage('etrade_bay', sub, navigate);
+  if (EXTENDED_PAGE_KEYS.has(key)) return buildExtendedPage(key, sub, navigate);
   if (key === 'home') return renderWahooHome();
   if (key === 'moogle_home') return renderMoogleHome();
   if (key === 'moogle_results') return renderMoogleSearchResults(sub || '');
@@ -1050,7 +1253,6 @@ function renderPage(key, sub = '') {
   if (key === 'fra') return renderFraPage();
   if (key === 'focs_mandate') return renderFocsMandateHtml();
   if (key === 'corpos_portal') return renderCorposPortalHtml();
-  if (key === 'warehouse') return pages.warehouse || defaultNotFoundHtml();
   if (key === 'market_pulse') return pages.market_pulse || defaultNotFoundHtml();
   if (key === 'herald') return '<div id="dh-wnet-root" style="min-height:100%;"></div>';
   if (key === 'devtools') return renderDevtoolsPage();
@@ -1097,7 +1299,8 @@ function syncAddressBar(key, sub) {
     addr.value = notFoundAddress || 'http://www.wahoo.net/not-found';
     return;
   }
-  const u = urlForPage(key, sub) || `http://www.wahoo.net/${key}`;
+  const keyForUrl = key === 'stocks' ? 'etrade_bay' : key;
+  const u = urlForPage(keyForUrl, sub) || `http://www.wahoo.net/${key}`;
   addr.value = u;
 }
 
@@ -1133,8 +1336,10 @@ function entryTitleForKey(key) {
   if (key === 'moogle_results') return 'Moogle Search';
   if (key === 'moogle_images') return 'Moogle Images';
   if (key === 'moogle_groups') return 'Moogle Groups';
-  if (key === 'moogle_directory') return 'Moogle Directory';
-  if (key === 'moogle_about') return 'About Moogle';
+  if (key === 'stocks' || key === 'etrade_bay') return 'ETradeBay 2000';
+  if (key === 'warehouse') return 'WhereAllThingsGo.net';
+  if (key === 'hargrove_vault') return 'HargroveVault';
+  if (key === 'stor_it') return 'StorIt Hargrove';
   return key.replace(/_/g, ' ');
 }
 
@@ -1222,17 +1427,51 @@ function updateWindowDataAttrs() {
 function navigate(key, sub = '', opts = {}) {
   const { content, status } = ui();
   if (!content || !status) return;
-  status.textContent = 'Loading...';
+  clearTimeout(_wnetNavigateTimer);
+  clearInterval(_wnetNavigateIv);
+
   currentPageKey = key || 'moogle_home';
   currentSubPath = sub || '';
   const p = getState().player;
   if (CORPOS_GATED_PAGE_KEYS.has(currentPageKey) && (!p.corposEnrollmentComplete || p.licenseTerminated)) {
+    status.textContent = 'Loading...';
     content.innerHTML = renderGateInterstitial();
     bindWorldNetContent(content);
     syncAddressBar(currentPageKey, currentSubPath);
     updateWindowDataAttrs();
+    _wnetLastNavKey = currentPageKey;
     return;
   }
+
+  const loadMs = getPageLoadDelay(currentPageKey);
+  const addrLine = urlForPage(currentPageKey, currentSubPath) || '';
+  status.textContent = `Loading ${addrLine}... 0%`;
+
+  const start = Date.now();
+  _wnetNavigateIv = setInterval(() => {
+    const pct = Math.min(95, Math.floor(((Date.now() - start) / Math.max(loadMs, 1)) * 100));
+    status.textContent = `Loading ${addrLine}... ${pct}%`;
+  }, 80);
+
+  _wnetNavigateTimer = setTimeout(() => {
+    clearInterval(_wnetNavigateIv);
+    finalizeNavigate(opts);
+  }, loadMs);
+}
+
+function finalizeNavigate(opts = {}) {
+  const { content, status } = ui();
+  if (!content || !status) return;
+
+  if (
+    (_wnetLastNavKey === 'hargrove_careers' && currentPageKey === 'hargrovebiz_corp') ||
+    (_wnetLastNavKey === 'hargrovebiz_corp' && currentPageKey === 'hargrove_careers')
+  ) {
+    patchSession((s) => {
+      s.wnetCareerLoopCount = (s.wnetCareerLoopCount || 0) + 1;
+    });
+  }
+
   const html = renderPage(currentPageKey, currentSubPath);
   content.innerHTML = html;
   // Apply scam visual modifier class to content wrapper
@@ -1268,7 +1507,6 @@ function navigate(key, sub = '', opts = {}) {
   if (currentPageKey === 'bizreg') mountBizRegForm(content);
   if (currentPageKey === 'ssa') mountSsaPage(content);
   if (currentPageKey === 'moogle_maps') mountMoogleMaps(content);
-  if (currentPageKey === 'warehouse') mountWarehousePage(content);
   if (currentPageKey === 'market_pulse') mountMarketPulsePage(content);
   if (currentPageKey === 'herald') {
     const wm = content.querySelector('#dh-wnet-root');
@@ -1277,13 +1515,16 @@ function navigate(key, sub = '', opts = {}) {
   if (currentPageKey === 'jeemail_compose') {
     applyJeeMailComposePrefillFromSession();
   }
+  hookAfterWorldNetNavigate(currentPageKey, currentSubPath);
   syncAddressBar(currentPageKey, currentSubPath);
   updateWindowDataAttrs();
   status.textContent = 'Done';
 
   try {
-    const u = urlForPage(currentPageKey, currentSubPath) || `http://www.wahoo.net/${currentPageKey}`;
-    window.ActivityLog?.log?.('WORLDNET_VISIT', `${u} — outbound`);
+    if (currentPageKey !== 'room2847') {
+      const u = urlForPage(currentPageKey, currentSubPath) || `http://www.wahoo.net/${currentPageKey}`;
+      window.ActivityLog?.log?.('WORLDNET_VISIT', `${u} — outbound`);
+    }
   } catch {
     /* ignore */
   }
@@ -1294,6 +1535,7 @@ function navigate(key, sub = '', opts = {}) {
     historyIndex = historyEntries.length - 1;
   }
   setHistoryButtons();
+  _wnetLastNavKey = currentPageKey;
 }
 
 /**
@@ -1413,8 +1655,99 @@ function mountBizRegForm(container) {
 
 function dispatchAction(action, rootEl, sourceEl = null) {
   if (!action) return false;
+  if (action === 'etradebay-register') {
+    const errEl = document.getElementById('et-reg-error');
+    const name = (document.getElementById('et-reg-name')?.value || '').trim();
+    const email = (document.getElementById('et-reg-email')?.value || '').trim();
+    const user = (document.getElementById('et-reg-user')?.value || '').trim();
+    const pass = document.getElementById('et-reg-pass')?.value || '';
+    const deposit = Number(document.getElementById('et-reg-deposit')?.value || 0);
+    const risk = document.getElementById('et-reg-risk')?.value || 'moderate';
+    const terms = document.getElementById('et-reg-terms')?.checked;
+    if (errEl) {
+      errEl.style.display = 'none';
+      errEl.textContent = '';
+    }
+    if (!name || !email || !user || !pass || !terms) {
+      if (errEl) {
+        errEl.textContent = 'Please fill in all fields and accept terms.';
+        errEl.style.display = 'block';
+      }
+      return true;
+    }
+    if (String(pass).length < 1) {
+      if (errEl) {
+        errEl.textContent = 'Please set a password.';
+        errEl.style.display = 'block';
+      }
+      return true;
+    }
+    if (deposit < 500) {
+      if (errEl) {
+        errEl.textContent = 'Minimum initial deposit is $500.';
+        errEl.style.display = 'block';
+      }
+      return true;
+    }
+    const fncb = getState().accounts?.find((a) => a.id === 'fncb');
+    if (!fncb || (fncb.balance || 0) < deposit) {
+      alert(`Insufficient bank funds in FNCB. You have $${(fncb?.balance || 0).toFixed(2)}.`);
+      return true;
+    }
+    patchState((s) => {
+      s.etradeAccount = {
+        username: user,
+        name,
+        email,
+        riskTolerance: risk,
+        cashBalance: deposit,
+        holdings: [],
+        orderHistory: [],
+        registeredSimMs: s.sim?.elapsedMs || 0
+      };
+      const fn = s.accounts?.find((a) => a.id === 'fncb');
+      if (fn) fn.balance = (fn.balance || 0) - deposit;
+      return s;
+    });
+    try {
+      window.ActivityLog?.log?.('ETRADE_REGISTER', `ETradeBay account registered. Deposit: $${deposit}`, { notable: true });
+    } catch {
+      /* ignore */
+    }
+    toast({
+      key: 'etrade_reg',
+      title: 'ETradeBay',
+      message: 'Account opened. Welcome to the Hargrove Exchange.',
+      icon: '📈',
+      autoDismiss: 5000
+    });
+    wnetGo('etrade_bay', 'home');
+    return true;
+  }
+  if (dispatchExtendedWorldNetAction(action, sourceEl, navigate)) return true;
   if (action === 'webex_site_nav_stub') return true;
   if (dispatchDmbAction(action, { navigate, toast })) return true;
+  if (action === 'dw-referral-submit') {
+    const wrap = sourceEl?.closest?.('.iebody') || rootEl;
+    const inp = wrap?.querySelector?.('#dw-referral-input');
+    const out = wrap?.querySelector?.('#dw-referral-result');
+    const code = inp?.value || '';
+    const r = unlockV3Referral(code);
+    if (out) {
+      out.textContent = r.message;
+      out.style.fontSize = '10px';
+      out.style.marginTop = '8px';
+      out.style.color = r.ok ? '#00ff41' : '#ff4444';
+    }
+    toast({
+      key: TOAST_KEYS.GENERIC,
+      title: 'Referral access',
+      message: r.message,
+      icon: r.ok ? '🔓' : '✗',
+      autoDismiss: 7000
+    });
+    return true;
+  }
   if (action === 'install-app') {
     const appId =
       sourceEl?.getAttribute?.('data-install-app-id') ||
@@ -1460,8 +1793,7 @@ function dispatchAction(action, rootEl, sourceEl = null) {
             smsToPlayer(msg);
           }
         }
-        const srcPage = app?.sourceHost === 'backrooms.hck' ? 'backrooms' : 'devtools';
-        navigate(srcPage, '', { pushHistory: false });
+        navigate(pageKeyForSoftwareSource(app), '', { pushHistory: false });
       }
     });
     return true;
@@ -1831,6 +2163,303 @@ function dispatchAction(action, rootEl, sourceEl = null) {
   return false;
 }
 
+function renderUnitManifestModal(unitId) {
+  const st = getState();
+  const unit = (st.warehouse?.units || []).find((u) => u.id === unitId);
+  if (!unit) return;
+  const rows = (unit.items || [])
+    .map(
+      (item) => `
+<tr>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;">${escapeHtml(item.name || 'Unknown')}</td>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;text-align:center;">${escapeHtml(
+    item.category || '—'
+  )}</td>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;text-align:center;">${item.quantity || 1}</td>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;text-align:right;">$${(item.unitValue || 0).toFixed(2)}</td>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;text-align:center;">${item.condition ?? 100}%</td>
+  <td style="padding:4px 6px;border-bottom:1px solid #eee;">
+    <button class="wh-btn" data-wh-retrieve="${escapeHtml(unitId)}" data-wh-item="${escapeHtml(
+    String(item.id)
+  )}">Retrieve</button>
+  </td>
+</tr>`
+    )
+    .join('');
+  const modal = document.createElement('div');
+  modal.className = 'wh-modal-overlay';
+  modal.innerHTML = `
+<div class="wh-modal-box">
+  <div class="wh-modal-title">
+    ${escapeHtml(unit.label)} — Item Manifest
+    <button type="button" class="wh-modal-close" aria-label="Close">X</button>
+  </div>
+  <div class="wh-modal-body">
+    ${
+      rows
+        ? `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <tr style="background:#d4d0c8;">
+        <th style="padding:4px 6px;text-align:left;">Item</th>
+        <th style="padding:4px 6px;">Category</th>
+        <th style="padding:4px 6px;">Qty</th>
+        <th style="padding:4px 6px;">Value</th>
+        <th style="padding:4px 6px;">Cond.</th>
+        <th style="padding:4px 6px;">Action</th>
+      </tr>
+      ${rows}
+    </table>`
+        : '<p style="color:#888;font-size:11px;">This unit is empty.</p>'
+    }
+    <div style="margin-top:10px;font-size:11px;color:#666;">
+      ${(unit.items || []).length}/${unit.maxItems} items
+      Insured: ${unit.insured ? 'Yes' : 'No'}
+      Climate: ${unit.climateControlled ? 'Yes' : 'No'}
+    </div>
+  </div>
+</div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('.wh-modal-close')?.addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  modal.addEventListener('click', (e) => {
+    const btn = e.target.closest?.('[data-wh-retrieve]');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      retrieveItem(btn.getAttribute('data-wh-retrieve') || '', btn.getAttribute('data-wh-item') || '');
+      modal.remove();
+      wnetReload();
+    }
+  });
+}
+
+function onETradeBayDocumentEvent(e) {
+  if (!(e.target instanceof Element)) return;
+  if (e.type === 'input' && e.target.id === 'et-trade-qty') {
+    const root = e.target.closest('[data-et-stock-root]');
+    if (!root) return;
+    const price = Number(root.getAttribute('data-et-stock-price') || 0);
+    const total = document.getElementById('et-trade-total');
+    const q = Math.max(1, Math.floor(Number(e.target.value || 1)));
+    if (total) total.textContent = `$${(q * price).toFixed(2)}`;
+    return;
+  }
+  if (e.type !== 'click') return;
+  const t = e.target;
+  if (!t.closest('#wnet-content')) return;
+  const buyBtn = t.closest('[data-et-buy]');
+  if (buyBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const companyId = buyBtn.getAttribute('data-et-buy');
+    const acct = getState().etradeAccount;
+    if (!acct) return;
+    const company = (getState().rivalCompanies || []).find((c) => c.id === companyId);
+    const price = company ? computeETradeStockPrice(company) : Number(buyBtn.getAttribute('data-et-price') || 0);
+    const useQty = buyBtn.getAttribute('data-et-use-qty') === 'true';
+    const qty = useQty ? Math.max(1, Math.floor(Number(document.getElementById('et-trade-qty')?.value || 1))) : 1;
+    const total = price * qty;
+    if ((acct.cashBalance || 0) < total) {
+      alert(`Insufficient ETradeBay cash. Available: $${(acct.cashBalance || 0).toFixed(2)}`);
+      return;
+    }
+    patchState((s) => {
+      const a = s.etradeAccount;
+      if (!a) return s;
+      a.cashBalance = (a.cashBalance || 0) - total;
+      a.holdings = a.holdings || [];
+      const existing = a.holdings.find((h) => h.companyId === companyId);
+      if (existing) {
+        const newTotal = existing.shares + qty;
+        existing.avgCostBasis = (existing.avgCostBasis * existing.shares + total) / newTotal;
+        existing.shares = newTotal;
+      } else {
+        a.holdings.push({ companyId, shares: qty, avgCostBasis: price });
+      }
+      a.orderHistory = a.orderHistory || [];
+      a.orderHistory.push({
+        type: 'buy',
+        companyId,
+        companyName: company?.tradingName || companyId,
+        shares: qty,
+        price,
+        total,
+        simMs: s.sim?.elapsedMs || 0,
+        status: 'filled'
+      });
+      return s;
+    });
+    recordTransaction(total, 'stock', 'purchase');
+    try {
+      window.ActivityLog?.log?.(
+        'ETRADE_BUY',
+        `Bought ${qty} shares of ${companyId} at $${price} ($${total.toFixed(2)} total)`,
+        { notable: true }
+      );
+    } catch {
+      /* ignore */
+    }
+    toast({
+      key: `et_buy_${companyId}`,
+      title: 'Order Filled',
+      message: `Bought ${qty} share(s) of ${company?.tradingName || companyId} at $${price}/share.`,
+      icon: '📈',
+      autoDismiss: 4000
+    });
+    wnetGo('etrade_bay', `stock/${companyId}`);
+    return;
+  }
+  const sellBtn = t.closest('[data-et-sell]');
+  if (sellBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const companyId = sellBtn.getAttribute('data-et-sell');
+    const acct0 = getState().etradeAccount;
+    const holding = (acct0?.holdings || []).find((h) => h.companyId === companyId);
+    const company = (getState().rivalCompanies || []).find((c) => c.id === companyId);
+    const price = company ? computeETradeStockPrice(company) : Number(sellBtn.getAttribute('data-et-price') || 0);
+    const useQty = sellBtn.getAttribute('data-et-use-qty') === 'true';
+    const qty = useQty ? Math.max(1, Math.floor(Number(document.getElementById('et-trade-qty')?.value || 1))) : 1;
+    if (!holding || holding.shares < qty) {
+      alert(`You only own ${holding?.shares || 0} shares.`);
+      return;
+    }
+    const total = price * qty;
+    patchState((s) => {
+      const a = s.etradeAccount;
+      if (!a) return s;
+      const h = (a.holdings || []).find((h2) => h2.companyId === companyId);
+      if (!h) return s;
+      h.shares -= qty;
+      if (h.shares <= 0) a.holdings = a.holdings.filter((h2) => h2.companyId !== companyId);
+      a.cashBalance = (a.cashBalance || 0) + total;
+      a.orderHistory = a.orderHistory || [];
+      a.orderHistory.push({
+        type: 'sell',
+        companyId,
+        companyName: company?.tradingName || companyId,
+        shares: qty,
+        price,
+        total,
+        simMs: s.sim?.elapsedMs || 0,
+        status: 'filled'
+      });
+      return s;
+    });
+    recordTransaction(total, 'stock', 'sale');
+    try {
+      window.ActivityLog?.log?.('ETRADE_SELL', `Sold ${qty} shares of ${companyId} at $${price}`, { notable: true });
+    } catch {
+      /* ignore */
+    }
+    toast({
+      key: `et_sell_${companyId}`,
+      title: 'Order Filled',
+      message: `Sold ${qty} share(s) of ${company?.tradingName || companyId} at $${price}/share.`,
+      icon: '📉',
+      autoDismiss: 4000
+    });
+    wnetGo('etrade_bay', `stock/${companyId}`);
+  }
+}
+
+function onWarehousePageDocumentClick(e) {
+  if (!(e.target instanceof Element)) return;
+  const t = e.target;
+  if (
+    !t.closest('#wnet-content') &&
+    !t.closest('.wh-modal-overlay')
+  ) {
+    return;
+  }
+  if (!t.closest('.wh-rent-btn') && !t.closest('[data-wh-pay]') && !t.closest('[data-wh-manifest]') && !t.closest('.wh-buy-liq')) {
+    return;
+  }
+
+  const rentBtn = t.closest('.wh-rent-btn');
+  if (rentBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const providerId = rentBtn.getAttribute('data-wh-provider');
+    const tierId = rentBtn.getAttribute('data-wh-tier');
+    const insure = rentBtn.getAttribute('data-wh-insure') === 'true';
+    if (providerId && tierId) {
+      const r = rentUnit(providerId, tierId, insure);
+      if (!r.ok) {
+        toast({ key: TOAST_KEYS.GENERIC, title: 'Storage', message: r.error, icon: 'X', autoDismiss: 8000 });
+      } else {
+        ToastManager?.fire({
+          key: `rent_${r.unitId}`,
+          title: 'Unit Rented',
+          message: `Storage unit rented. Deposit: $${Number(r.cost).toFixed(2)}`
+        });
+        wnetReload();
+      }
+    }
+    return;
+  }
+  const payBtn = t.closest('[data-wh-pay]');
+  if (payBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const unitId = payBtn.getAttribute('data-wh-pay') || '';
+    const days = Number(payBtn.getAttribute('data-wh-days') || 7);
+    const r = payRent(unitId, days);
+    if (!r.ok) toast({ key: TOAST_KEYS.GENERIC, title: 'Storage', message: r.error, icon: 'X' });
+    else wnetReload();
+    return;
+  }
+  const manifestBtn = t.closest('[data-wh-manifest]');
+  if (manifestBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const unitId = manifestBtn.getAttribute('data-wh-manifest') || '';
+    if (unitId) renderUnitManifestModal(unitId);
+    return;
+  }
+  const liqBtn = t.closest('.wh-buy-liq');
+  if (liqBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const rawId = (liqBtn.getAttribute('data-liq-id') || '').trim();
+    const name = liqBtn.getAttribute('data-liq-name') || 'Item';
+    const price = Number(liqBtn.getAttribute('data-liq-price') || 0) || 0;
+    if (price <= 0) return;
+    const st0 = getState();
+    if ((st0.player?.hardCash || 0) < price) {
+      toast({ key: TOAST_KEYS.GENERIC, title: 'Cash only', message: `Need $${price.toFixed(2)} on hand.`, icon: 'X' });
+      return;
+    }
+    const liqBefore = getState().warehouse?.liquidation || [];
+    const idx0 = liqBefore.findIndex((i) => {
+      if (rawId && String(i.id) === rawId) return true;
+      if (!rawId && i.name === name && Math.abs((Number(i.listPrice) || 0) - price) < 0.01) return true;
+      return false;
+    });
+    if (idx0 < 0) {
+      wnetReload();
+      return;
+    }
+    patchState((s) => {
+      s.player = s.player || {};
+      s.player.hardCash = (s.player.hardCash || 0) - price;
+      const liq = s.warehouse?.liquidation || [];
+      if (liq[idx0]) liq.splice(idx0, 1);
+      return s;
+    });
+    addToPlayerInventory({
+      name,
+      productRef: rawId || 'liquidation',
+      unitValue: price,
+      category: 'consumer',
+      quantity: 1,
+      source: 'liquidation'
+    });
+    wnetReload();
+  }
+}
+
 function bindWorldNetContent(root) {
   root.querySelectorAll('a').forEach((el) => {
     el.addEventListener('click', (ev) => {
@@ -1927,7 +2556,14 @@ function bindWorldNetContent(root) {
   });
 
   root.querySelectorAll('form').forEach((f) => {
-    f.addEventListener('submit', (ev) => ev.preventDefault());
+    f.addEventListener('submit', (ev) => {
+      const wnAct = f.getAttribute('data-wn-action');
+      if (wnAct && dispatchWorldNetFormAction(wnAct, /** @type {HTMLFormElement} */ (f), root)) {
+        ev.preventDefault();
+        return;
+      }
+      ev.preventDefault();
+    });
   });
 
   for (const id of ['moogle-q-home', 'moogle-q-results']) {
@@ -1999,6 +2635,16 @@ export async function initWorldNet(loadJsonText) {
 
   installBankWindowGlobals();
   ensureDefaultBrowserFavorites();
+  seedWorldnetExtendedActors();
+  if (typeof document !== 'undefined' && !document.body.dataset.wnetWarehouseInit) {
+    document.body.dataset.wnetWarehouseInit = '1';
+    document.addEventListener('click', onWarehousePageDocumentClick, true);
+  }
+  if (typeof document !== 'undefined' && !document.body.dataset.wnetEtradeInit) {
+    document.body.dataset.wnetEtradeInit = '1';
+    document.addEventListener('click', onETradeBayDocumentEvent, true);
+    document.addEventListener('input', onETradeBayDocumentEvent, true);
+  }
   document.getElementById('wnet-fav-btn')?.addEventListener('click', () => toggleFavorites());
   document.getElementById('wnet-add-fav-btn')?.addEventListener('click', () => addCurrentFavorite());
   document.addEventListener('click', (e) => {

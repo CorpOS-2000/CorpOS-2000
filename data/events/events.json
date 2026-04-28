@@ -14,6 +14,8 @@
           "from": "FRA",
           "message": "QUARTERLY NOTICE — Your operator account has been active for 7 days. Mandatory base operating expenses of $480/week are now being applied. Ensure your account maintains sufficient funds. Federal Revenue Authority."
         },
+        "heraldHeadline": "FRA NOTICE — Mandatory operating expenses now active for all registered operators",
+        "heraldSeverity": 1,
         "setFlag": "firstWeekWarningSent"
       }
     }
@@ -33,6 +35,8 @@
           "from": "COMPLIANCE_MONITOR",
           "message": "Automated compliance scan complete. Your account has been active 3 days. No anomalies detected at this time. Activity logging is continuous per Mandate 2000-CR7."
         },
+        "heraldHeadline": "CORPOS COMPLIANCE — Day 3 automated scan complete for all Hargrove operators",
+        "heraldSeverity": 1,
         "setFlag": "initialComplianceSent"
       }
     }
@@ -50,14 +54,18 @@
           "title": "Market Update",
           "message": "Favorable conditions in your sector. Business sentiment is up.",
           "icon": "📈"
-        }
+        },
+        "heraldHeadline": "MARKETS — Favorable conditions reported across Hargrove business sectors",
+        "heraldSeverity": 1
       },
       "fail": {
         "toast": {
           "title": "Market Pressure",
           "message": "Sector headwinds this week. Conditions are tightening.",
           "icon": "📉"
-        }
+        },
+        "heraldHeadline": "MARKETS — Sector headwinds reported as conditions tighten in Hargrove",
+        "heraldSeverity": 2
       }
     }
   },
@@ -75,6 +83,8 @@
           "from": "COMPLIANCE_MONITOR",
           "message": "ALERT: Your operator compliance rating has entered the Non-Compliant tier. Continued irregularities may trigger formal review. Operator: {operatorId}"
         },
+        "heraldHeadline": "COMPLIANCE — Operator compliance rating enters non-compliant tier under Mandate 2000-CR7",
+        "heraldSeverity": 2,
         "peek": {
           "sender": "Compliance Monitor",
           "message": "Compliance rating elevated — review your activity",
@@ -148,6 +158,8 @@
           "from": "CORPOS_SYSTEM",
           "message": "SCHEDULED REVIEW — Day 14 compliance review has been initiated. Please stand by."
         },
+        "heraldHeadline": "FEDERAL AUDIT — Scheduled compliance review initiated for Hargrove operator",
+        "heraldSeverity": 3,
         "triggerAudit": 1
       },
       "fail": {
@@ -174,6 +186,8 @@
           "from": "ACT-KYLE-HARGROVE",
           "message": "Hey — one of our partner companies is looking for someone to build their WorldNet presence. Pays $4,500 on delivery. They need a published site with at least a Hero Banner and a Contact Form. Interested? Open WebEx Publisher when you're ready."
         },
+        "heraldHeadline": "BUSINESS — Local companies seeking WorldNet development partners in Hargrove",
+        "heraldSeverity": 1,
         "setFlag": "firstWebsiteContractOffered",
         "scheduleFollowUp": {
           "eventId": "evt_website_contract_create",
@@ -204,6 +218,277 @@
           "deadlineHours": 168
         },
         "setFlag": "firstWebsiteContractActive"
+      }
+    }
+  },
+  {
+    "id": "evt_darkweb_transfer_detected",
+    "title": "Dark Network Activity",
+    "type": "triggered",
+    "condition": { "type": "large_transfer_to_darkweb", "value": 5000 },
+    "oneShot": false,
+    "dc": 15,
+    "outcomes": {
+      "pass": {
+        "notorietyDelta": 15,
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "ALERT: Irregular financial transfer pattern detected on your account. Large transfers to unregistered network destinations have been flagged for review. Operator: {operatorId}"
+        },
+        "setFlag": "darkweb_transfer_flagged"
+      },
+      "fail": {
+        "notorietyDelta": 5
+      }
+    }
+  },
+  {
+    "id": "evt_market_shortage_spike",
+    "title": "Market Shortage Event",
+    "type": "triggered",
+    "condition": { "type": "market_shortage_active" },
+    "oneShot": false,
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "toast": {
+          "title": "Market Alert",
+          "message": "Shortage conditions detected in Hargrove. Prices adjusting.",
+          "icon": "📉"
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_site_taken_down",
+    "title": "Website Offline Alert",
+    "type": "triggered",
+    "condition": { "type": "any_site_offline" },
+    "oneShot": false,
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "peek": {
+          "sender": "WebEx Publisher",
+          "message": "One of your sites has gone offline. Open WebEx Publisher to repair.",
+          "type": "website",
+          "icon": "☠"
+        },
+        "sms": {
+          "from": "CORPOS_SYSTEM",
+          "message": "SITE ALERT: One or more of your registered WorldNet properties is currently unreachable. Visitors are receiving connection errors. Check WebEx Publisher for repair options."
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_actor_goes_hostile",
+    "title": "NPC Turns Hostile",
+    "type": "triggered",
+    "condition": { "type": "actor_opinion_below", "value": -50 },
+    "oneShot": false,
+    "dc": 12,
+    "outcomes": {
+      "pass": {
+        "notorietyDelta": 8,
+        "toast": {
+          "title": "Reputation Damage",
+          "message": "Someone in Hargrove is talking. Your reputation is taking hits.",
+          "icon": "📢"
+        }
+      },
+      "fail": {
+        "notorietyDelta": 3
+      }
+    }
+  },
+  {
+    "id": "evt_log_suspicious_density",
+    "title": "Suspicious Activity Density",
+    "type": "triggered",
+    "condition": { "type": "log_flag_count_above", "value": 5 },
+    "oneShot": true,
+    "dc": 13,
+    "outcomes": {
+      "pass": {
+        "notorietyDelta": 10,
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "Pattern analysis complete. Multiple flagged entries detected in your operator activity log. A formal review has been initiated. Mandate 2000-CR7 Section 4.2 applies."
+        },
+        "setFlag": "log_density_flagged"
+      },
+      "fail": {
+        "notorietyDelta": 4,
+        "setFlag": "log_density_flagged"
+      }
+    }
+  },
+  {
+    "id": "evt_information_broker_hostile",
+    "title": "Broker Feeding Investigators",
+    "type": "triggered",
+    "condition": { "type": "information_broker_hostile" },
+    "oneShot": false,
+    "dc": 14,
+    "outcomes": {
+      "pass": {
+        "notorietyDelta": 12,
+        "sms": {
+          "from": "COMPLIANCE_MONITOR",
+          "message": "Third-party intelligence has been submitted regarding your operator account. The source has been verified. This information will be included in your compliance file."
+        }
+      },
+      "fail": {
+        "notorietyDelta": 4
+      }
+    }
+  },
+  {
+    "id": "evt_overdraft_warning",
+    "title": "Account Overdrawn",
+    "type": "triggered",
+    "condition": { "type": "account_overdrawn" },
+    "oneShot": false,
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "notorietyDelta": 2,
+        "sms": {
+          "from": "FRA",
+          "message": "OVERDRAFT NOTICE: Your primary account has insufficient funds to cover mandatory operating expenses. Continued non-payment will result in compliance action. Federal Revenue Authority."
+        },
+        "peek": {
+          "sender": "FRA",
+          "message": "Account overdrawn — immediate action required",
+          "type": "compliance",
+          "icon": "⚠"
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_axis_hostile_consequence",
+    "title": "Hostile Contact Consequence",
+    "type": "triggered",
+    "condition": { "type": "axis_has_hostile" },
+    "oneShot": false,
+    "dc": 13,
+    "outcomes": {
+      "pass": {
+        "notorietyDelta": 5,
+        "toast": {
+          "title": "Reputation Impact",
+          "message": "A hostile contact is actively working against you. Notoriety increased.",
+          "icon": "⚠"
+        }
+      },
+      "fail": {}
+    }
+  },
+  {
+    "id": "evt_axis_network_milestone",
+    "title": "Growing Network",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "axis_contact_count_above", "value": 10 },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "toast": {
+          "title": "Network Expanding",
+          "message": "You have 10+ contacts in AXIS. Your network is growing.",
+          "icon": "📇"
+        },
+        "setFlag": "axis_10_contacts"
+      }
+    }
+  },
+  {
+    "id": "evt_inventory_growing",
+    "title": "Inventory Growing",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "inventory_value_above", "value": 5000 },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "toast": {
+          "title": "Inventory Alert",
+          "message": "Your inventory value exceeds $5,000. Consider renting warehouse space to secure your assets.",
+          "icon": "📦"
+        },
+        "setFlag": "inventory_5k_notified"
+      }
+    }
+  },
+  {
+    "id": "evt_overdue_warning",
+    "title": "Storage Unit Overdue",
+    "type": "triggered",
+    "oneShot": false,
+    "condition": { "type": "has_overdue_unit" },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "sms": {
+          "from": "CORPOS_SYSTEM",
+          "message": "STORAGE ALERT: One or more of your storage units has expired. Pay immediately to avoid repossession and loss of stored assets."
+        }
+      }
+    }
+  },
+  {
+    "id": "evt_dot_com_peak_warning",
+    "title": "Dot-Com Bubble Warning",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "dot_com_phase", "value": "bubble" },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "heraldHeadline": "ANALYSTS WARN: Dot-com valuations unsustainable — correction 'inevitable'",
+        "heraldSeverity": 3,
+        "sms": {
+          "from": "CORPOS_SYSTEM",
+          "message": "MARKET ALERT: Financial Felines quarterly report flagged an elevated risk of correction in the technology sector. Review your ETradeBay holdings."
+        },
+        "setFlag": "dotcom_bubble_warned"
+      }
+    }
+  },
+  {
+    "id": "evt_dot_com_burst",
+    "title": "Dot-Com Collapse",
+    "type": "triggered",
+    "oneShot": true,
+    "condition": { "type": "dot_com_phase", "value": "burst" },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "heraldHeadline": "CRASH: Hargrove tech sector collapses — billions wiped out in 48 hours",
+        "heraldSeverity": 5,
+        "notorietyDelta": 0,
+        "setFlag": "dotcom_burst_fired"
+      }
+    }
+  },
+  {
+    "id": "evt_low_confidence",
+    "title": "Consumer Confidence Drop",
+    "type": "triggered",
+    "oneShot": false,
+    "condition": { "type": "consumer_confidence_below", "value": 45 },
+    "dc": null,
+    "outcomes": {
+      "default": {
+        "heraldHeadline": "ECONOMY: Consumer confidence at multi-month low — Hargrove spending slows",
+        "heraldSeverity": 2,
+        "toast": {
+          "title": "Market Conditions",
+          "message": "Consumer confidence is falling. NPC spending will decrease. Prices may soften.",
+          "icon": "📉"
+        }
       }
     }
   }

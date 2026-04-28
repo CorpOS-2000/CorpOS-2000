@@ -191,6 +191,11 @@ function bind(root) {
   });
 }
 
+/** Lore + CCR headlines for desktop ticker / news hooks (matches merged archive window). */
+export function getDailyHeraldTickerArticles(nowSimMs) {
+  return mergedHeraldFeed(Number(nowSimMs) || 0);
+}
+
 export function initDailyHerald({ mount }) {
   if (!mount) return;
   bind(mount);

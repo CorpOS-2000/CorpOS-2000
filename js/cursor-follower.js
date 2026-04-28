@@ -102,6 +102,16 @@ function pickSprite(el) {
   return 'arrow';
 }
 
+/** Avoid elementFromPoint on large pages (e.g. YourSpace) — it forces full hit-test every frame. */
+function hitTargetFromEvent(e, clientX, clientY) {
+  if (e && e.target != null) {
+    let t = /** @type {Node} */ (e.target);
+    if (t.nodeType === Node.TEXT_NODE) t = t.parentElement;
+    if (t && t.nodeType === Node.ELEMENT_NODE) return /** @type {Element} */ (t);
+  }
+  return document.elementFromPoint(clientX, clientY);
+}
+
 /**
  * @param {string} key
  * @param {() => void} [onDone]
@@ -171,7 +181,7 @@ function paint() {
     return;
   }
 
-  const target = document.elementFromPoint(x, y);
+  const target = hitTargetFromEvent(e, x, y);
 
   if (document.body.classList.contains('corpos-busy')) {
     rootEl.style.visibility = 'visible';
