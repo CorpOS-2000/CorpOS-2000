@@ -487,7 +487,7 @@ function createInitialStateInternal() {
     mediaPlayer: {
       currentTrackId: null,
       positionSec: 0,
-      volume: 0.8,
+      volume: 0.2,
       shuffle: false,
       repeat: 'off',
       favorites: [],
@@ -543,7 +543,13 @@ function createInitialStateInternal() {
     /** Combat suites — cooldown keys → sim-ms when cooldown ends */
     combatCooldowns: {},
     /** WorldNet expansion — form logs, visit counters, directory seed */
-    worldnet: createDefaultWorldNetState()
+    worldnet: createDefaultWorldNetState(),
+    /** Public sentiment — product ratings, popularity, herald engagement, syndicated comments */
+    publicPulse: {
+      products: {},
+      herald: { articles: {}, playerVote: {} },
+      syndicatedComments: []
+    }
   };
 }
 
@@ -640,7 +646,7 @@ export function migrateStateIfNeeded(st) {
       st.mediaPlayer = {
         currentTrackId: null,
         positionSec: 0,
-        volume: 0.8,
+        volume: 0.2,
         shuffle: false,
         repeat: 'off',
         favorites: [],
@@ -653,7 +659,7 @@ export function migrateStateIfNeeded(st) {
       st.mediaPlayer.unlockedIds = Array.isArray(st.mediaPlayer.unlockedIds)
         ? st.mediaPlayer.unlockedIds.map(String)
         : [];
-      if (st.mediaPlayer.volume == null) st.mediaPlayer.volume = 0.8;
+      if (st.mediaPlayer.volume == null) st.mediaPlayer.volume = 0.2;
       if (st.mediaPlayer.shuffle == null) st.mediaPlayer.shuffle = false;
       if (!st.mediaPlayer.repeat) st.mediaPlayer.repeat = 'off';
       if (!st.mediaPlayer.eq || typeof st.mediaPlayer.eq !== 'object') {
@@ -747,7 +753,7 @@ export function migrateStateIfNeeded(st) {
     st.mediaPlayer = {
       currentTrackId: null,
       positionSec: 0,
-      volume: 0.8,
+      volume: 0.2,
       shuffle: false,
       repeat: 'off',
       favorites: [],
@@ -762,7 +768,7 @@ export function migrateStateIfNeeded(st) {
   st.mediaPlayer.unlockedIds = Array.isArray(st.mediaPlayer.unlockedIds)
     ? st.mediaPlayer.unlockedIds.map(String)
     : [];
-  if (st.mediaPlayer.volume == null) st.mediaPlayer.volume = 0.8;
+  if (st.mediaPlayer.volume == null) st.mediaPlayer.volume = 0.2;
   if (st.mediaPlayer.shuffle == null) st.mediaPlayer.shuffle = false;
   if (!st.mediaPlayer.repeat) st.mediaPlayer.repeat = 'off';
   if (!st.mediaPlayer.eq || typeof st.mediaPlayer.eq !== 'object') {
@@ -1113,6 +1119,23 @@ export function migrateStateIfNeeded(st) {
       counters: { ...defaults.counters, ...(w.counters || {}) }
     };
   }
+  if ((st.meta.version || 0) < 32) {
+    st.meta.version = 32;
+    if (!st.publicPulse || typeof st.publicPulse !== 'object') {
+      st.publicPulse = { products: {}, herald: { articles: {}, playerVote: {} }, syndicatedComments: [] };
+    }
+    if (!st.publicPulse.products || typeof st.publicPulse.products !== 'object') st.publicPulse.products = {};
+    if (!st.publicPulse.herald || typeof st.publicPulse.herald !== 'object') {
+      st.publicPulse.herald = { articles: {}, playerVote: {} };
+    }
+    if (!st.publicPulse.herald.articles) st.publicPulse.herald.articles = {};
+    if (!st.publicPulse.herald.playerVote) st.publicPulse.herald.playerVote = {};
+    if (!Array.isArray(st.publicPulse.syndicatedComments)) st.publicPulse.syndicatedComments = [];
+    // Backfill player taglets if missing so affinity code has something to work with
+    if (!Array.isArray(st.player?.taglets) || st.player.taglets.length === 0) {
+      if (st.player) st.player.taglets = ['casual_speaker', 'civic_minded'];
+    }
+  }
   return st;
 }
 
@@ -1363,6 +1386,18 @@ function randomDurationMs(minSeconds, maxSeconds) {
   return seconds * 1000;
 }
 
+/** Normalize install job timeline (handles NaN / missing ms fields after save round-trips). */
+function installJobEnds(queued) {
+  const queuedAt = Number(queued.queuedAtSimMs) || 0;
+  const downloadTotal = Math.max(1, Number(queued.downloadDurationMs) || 1);
+  const installTotal = Math.max(1, Number(queued.installDurationMs) || 1);
+  let downloadEnd = Number(queued.downloadCompleteAtSimMs);
+  let installEnd = Number(queued.installCompleteAtSimMs);
+  if (!Number.isFinite(downloadEnd)) downloadEnd = queuedAt + downloadTotal;
+  if (!Number.isFinite(installEnd)) installEnd = downloadEnd + installTotal;
+  return { queuedAt, downloadTotal, installTotal, downloadEnd, installEnd };
+}
+
 export function getInstallStatus(appId, stateObj = state) {
   const id = String(appId || '');
   if (!isInstallableApp(id)) return { state: 'unknown', appId: id };
@@ -1370,12 +1405,11 @@ export function getInstallStatus(appId, stateObj = state) {
   const queued = stateObj.software?.activeInstalls?.find((x) => x.appId === id);
   if (queued) {
     const now = stateObj.sim?.elapsedMs ?? 0;
-    const downloadTotal = Math.max(1, Number(queued.downloadDurationMs) || 1);
-    const installTotal = Math.max(1, Number(queued.installDurationMs) || 1);
-    const queuedAt = Number(queued.queuedAtSimMs) || 0;
-    const downloadEnd = Number(queued.downloadCompleteAtSimMs) || queuedAt + downloadTotal;
-    const installEnd = Number(queued.installCompleteAtSimMs) || downloadEnd + installTotal;
-    const phase = queued.phase || (now < downloadEnd ? 'downloading' : 'installing');
+    const { queuedAt, downloadTotal, installTotal, downloadEnd, installEnd } = installJobEnds(queued);
+    let phase;
+    if (queued.phase === 'aborting') phase = 'aborting';
+    else if (now < downloadEnd) phase = 'downloading';
+    else phase = 'installing';
     const downloadProgress =
       phase === 'aborting'
         ? Math.min(1, Math.max(0, Number(queued.downloadProgressAtAbort) || 0))
@@ -1561,11 +1595,13 @@ export function killDeliveryTask(deliveryId) {
 
 export function listBackgroundTasks(stateObj = state) {
   const now = stateObj.sim?.elapsedMs ?? 0;
-  const installs = (stateObj.software?.activeInstalls || []).map((job) => {
+    const installs = (stateObj.software?.activeInstalls || []).map((job) => {
     const status = getInstallStatus(job.appId, stateObj);
     const app = getInstallableApp(job.appId);
+    const tid = `install:${job.appId}`;
     return {
-      id: `install:${job.appId}`,
+      id: tid,
+      taskId: tid,
       taskType: 'install',
       targetId: job.appId,
       icon: app?.icon || '💾',
@@ -1752,13 +1788,13 @@ export function cancelSiteRepairTask(taskId) {
 export function processSoftwareInstallsIfNeeded() {
   const completed = [];
   const now = state.sim?.elapsedMs ?? 0;
+  const pending = state.software?.activeInstalls;
   if (
-    !state.software?.activeInstalls?.some(
-      (job) =>
-        (job.phase === 'aborting' && (job.abortCompleteAtSimMs ?? 0) <= now) ||
-        (job.downloadCompleteAtSimMs ?? 0) <= now ||
-        (job.installCompleteAtSimMs ?? 0) <= now
-    )
+    !pending?.some((job) => {
+      if (job.phase === 'aborting') return (Number(job.abortCompleteAtSimMs) || 0) <= now;
+      const { downloadEnd, installEnd } = installJobEnds(job);
+      return downloadEnd <= now || installEnd <= now;
+    })
   ) {
     return completed;
   }
@@ -1768,15 +1804,16 @@ export function processSoftwareInstallsIfNeeded() {
     const keep = [];
     for (const job of software.activeInstalls) {
       if (job.phase === 'aborting') {
-        if ((job.abortCompleteAtSimMs ?? 0) > now) {
+        if ((Number(job.abortCompleteAtSimMs) || 0) > now) {
           keep.push(job);
         }
         continue;
       }
-      if ((job.downloadCompleteAtSimMs ?? 0) <= now && job.phase === 'downloading') {
+      const { downloadEnd, installEnd } = installJobEnds(job);
+      if (downloadEnd <= now && job.phase === 'downloading') {
         job.phase = 'installing';
       }
-      if ((job.installCompleteAtSimMs ?? 0) > now) {
+      if (installEnd > now) {
         keep.push(job);
         continue;
       }

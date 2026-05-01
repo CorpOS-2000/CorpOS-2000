@@ -1,0 +1,137 @@
+[
+  {
+    "taglet_id": "cutting_edge",
+    "category": "quality",
+    "weight": 1.2,
+    "category_boost": ["electronics", "software", "computers", "hardware"],
+    "resonates_with_actor_taglets": ["tech_enthusiast", "early_adopter", "corporate_loyalist"],
+    "clashes_with_actor_taglets": ["anti_tech", "frugal_shopper"],
+    "description": "Latest-generation technology, often commands premium pricing"
+  },
+  {
+    "taglet_id": "budget_friendly",
+    "category": "value",
+    "weight": 1.1,
+    "category_boost": ["office_supplies", "consumables", "general"],
+    "resonates_with_actor_taglets": ["frugal_shopper", "family_oriented", "civic_minded"],
+    "clashes_with_actor_taglets": ["corporate_loyalist", "status_seeker"],
+    "description": "Affordable pricing accessible to most income brackets"
+  },
+  {
+    "taglet_id": "premium_brand",
+    "category": "status",
+    "weight": 1.0,
+    "category_boost": ["luxury", "fashion", "electronics"],
+    "resonates_with_actor_taglets": ["status_seeker", "corporate_loyalist", "tech_enthusiast"],
+    "clashes_with_actor_taglets": ["frugal_shopper", "anti_corp"],
+    "description": "High-end brand cachet drives aspirational purchases"
+  },
+  {
+    "taglet_id": "reliable_workhorse",
+    "category": "quality",
+    "weight": 0.9,
+    "category_boost": ["tools", "hardware", "computers", "software"],
+    "resonates_with_actor_taglets": ["civic_minded", "family_oriented", "forum_regular"],
+    "clashes_with_actor_taglets": ["trend_chaser"],
+    "description": "Dependable and long-lasting; built for sustained daily use"
+  },
+  {
+    "taglet_id": "niche_appeal",
+    "category": "audience",
+    "weight": 0.8,
+    "category_boost": ["hobby", "collectibles", "specialty"],
+    "resonates_with_actor_taglets": ["forum_regular", "hobbyist"],
+    "clashes_with_actor_taglets": ["mainstream_consumer"],
+    "description": "Appeals to a specific enthusiast community rather than the mass market"
+  },
+  {
+    "taglet_id": "mainstream_hit",
+    "category": "audience",
+    "weight": 1.0,
+    "category_boost": ["media", "entertainment", "consumer_goods"],
+    "resonates_with_actor_taglets": ["mainstream_consumer", "family_oriented", "casual_speaker"],
+    "clashes_with_actor_taglets": ["niche_enthusiast", "anti_corp"],
+    "description": "Broad mass-market appeal, widely recognized and purchased"
+  },
+  {
+    "taglet_id": "locally_sourced",
+    "category": "origin",
+    "weight": 0.7,
+    "category_boost": ["food", "crafts", "services"],
+    "resonates_with_actor_taglets": ["civic_minded", "family_oriented"],
+    "clashes_with_actor_taglets": ["globalist_buyer"],
+    "description": "Produced or supplied within the Hargrove regional economy"
+  },
+  {
+    "taglet_id": "fast_mover",
+    "category": "demand",
+    "weight": 0.9,
+    "category_boost": ["consumer_goods", "media", "food"],
+    "resonates_with_actor_taglets": ["trend_chaser", "mainstream_consumer", "casual_speaker"],
+    "clashes_with_actor_taglets": ["contrarian"],
+    "description": "High turnover velocity; frequently restocked due to demand"
+  },
+  {
+    "taglet_id": "controversial",
+    "category": "sentiment",
+    "weight": 0.6,
+    "category_boost": ["media", "politics", "specialty"],
+    "resonates_with_actor_taglets": ["contrarian", "forum_regular", "anti_corp"],
+    "clashes_with_actor_taglets": ["family_oriented", "civic_minded"],
+    "description": "Generates polarized opinions; strong lover/hater split"
+  },
+  {
+    "taglet_id": "eco_conscious",
+    "category": "values",
+    "weight": 0.8,
+    "category_boost": ["consumables", "food", "services"],
+    "resonates_with_actor_taglets": ["civic_minded", "eco_advocate"],
+    "clashes_with_actor_taglets": ["corporate_loyalist", "frugal_shopper"],
+    "description": "Low-impact or sustainably positioned product or service"
+  },
+  {
+    "taglet_id": "nostalgic",
+    "category": "sentiment",
+    "weight": 0.7,
+    "category_boost": ["media", "collectibles", "food"],
+    "resonates_with_actor_taglets": ["family_oriented", "forum_regular", "casual_speaker"],
+    "clashes_with_actor_taglets": ["early_adopter", "trend_chaser"],
+    "description": "Evokes a sense of familiar comfort or retro appeal"
+  },
+  {
+    "taglet_id": "impulse_buy",
+    "category": "demand",
+    "weight": 1.0,
+    "category_boost": ["consumer_goods", "snacks", "accessories"],
+    "resonates_with_actor_taglets": ["casual_speaker", "trend_chaser", "mainstream_consumer"],
+    "clashes_with_actor_taglets": ["frugal_shopper"],
+    "description": "Unplanned purchase triggered by placement, display, or low price"
+  },
+  {
+    "taglet_id": "high_margin",
+    "category": "economics",
+    "weight": 0.8,
+    "category_boost": ["electronics", "luxury", "software"],
+    "resonates_with_actor_taglets": ["status_seeker", "corporate_loyalist"],
+    "clashes_with_actor_taglets": ["frugal_shopper", "anti_corp"],
+    "description": "Significant markup above cost; profitable unit economics for the seller"
+  },
+  {
+    "taglet_id": "utility_focused",
+    "category": "quality",
+    "weight": 0.9,
+    "category_boost": ["tools", "office_supplies", "software"],
+    "resonates_with_actor_taglets": ["civic_minded", "forum_regular", "corporate_loyalist"],
+    "clashes_with_actor_taglets": ["status_seeker", "trend_chaser"],
+    "description": "Gets the job done without fanfare; valued for practical function"
+  },
+  {
+    "taglet_id": "limited_supply",
+    "category": "demand",
+    "weight": 0.7,
+    "category_boost": ["collectibles", "specialty", "luxury"],
+    "resonates_with_actor_taglets": ["status_seeker", "hobbyist", "trend_chaser"],
+    "clashes_with_actor_taglets": ["frugal_shopper", "mainstream_consumer"],
+    "description": "Scarcity creates urgency and elevated perceived value"
+  }
+]

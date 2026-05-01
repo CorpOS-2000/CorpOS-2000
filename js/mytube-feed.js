@@ -519,7 +519,15 @@ function appendMytubeNpcCommentDom(vid, c) {
  * Sim-time NPC comments: 1d20 comments per batch, next batch in 1d4 sim hours.
  * @param {number} simElapsedMs
  */
+const MYTUBE_NPC_MIN_REAL_MS = 500;
+let _mytubeNpcLastRealMs = 0;
+
 export function tickMytubeNpcComments(simElapsedMs) {
+  if (typeof performance !== 'undefined') {
+    const now = performance.now();
+    if (now - _mytubeNpcLastRealMs < MYTUBE_NPC_MIN_REAL_MS) return;
+    _mytubeNpcLastRealMs = now;
+  }
   const t = Number(simElapsedMs) || 0;
   if (!catalogCache) return;
   const videos = allVideos();

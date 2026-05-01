@@ -21,6 +21,7 @@ import {
 } from './boot-audio.js';
 import { generateWorldNpcsDuringBios, fireQueuedSmsEvents } from './world-generation.js';
 import { SaveManager } from '../engine/SaveManager.js';
+import { FIRMWARE_LEGAL_SCROLL_RAW } from './firmware-legal-ack-lines.js';
 
 /** Per-line delay from bios.json (`d` ms); 0 in data = short beat (50ms) before next line. */
 const BIOS_MS_MULT = 1.55;
@@ -114,22 +115,25 @@ function stopAudioEl(a) {
   }
 }
 
-function hideBios() {
+function hideBios(showLogoAfter = true) {
   stopAudioEl(biosInitAudioInstance);
   stopAudioEl(biosExecAudioInstance);
   stopAudioEl(powerOnAudioInstance);
 
   const b = document.getElementById('bios');
   if (!b) {
-    showLogo();
-    return;
+    if (showLogoAfter) showLogo();
+    return Promise.resolve();
   }
-  b.style.transition = 'opacity 1s ease';
-  b.style.opacity = '0';
-  setTimeout(() => {
-    b.style.display = 'none';
-    showLogo();
-  }, 1000);
+  return new Promise((resolve) => {
+    b.style.transition = 'opacity 1s ease';
+    b.style.opacity = '0';
+    setTimeout(() => {
+      b.style.display = 'none';
+      if (showLogoAfter) showLogo();
+      resolve();
+    }, 1000);
+  });
 }
 
 let biosIdx = 0;
@@ -336,7 +340,15 @@ async function runBiosWithAudio() {
   nextBiosLine();
 
   await Promise.all([biosLinesPromise, _npcGenPromise]);
-  hideBios();
+  const saveStatus = await waitForSaveReady();
+  if (!saveStatus.hasUsers) {
+    await hideBios(false);
+    await runFirmwareLegalAckScreen();
+    firmwareAckSatisfiedForBoot = true;
+    showLogo();
+    return;
+  }
+  await hideBios(true);
 }
 
 async function playPowerOnThenBios() {
@@ -511,6 +523,216 @@ async function waitForSaveReady() {
   return window.__corpOsSaveStatus;
 }
 
+function buildFirmwareLegalLines() {
+  return FIRMWARE_LEGAL_SCROLL_RAW.trim().split(/\r?\n/).map((t) => {
+    const tr = t.trimEnd();
+    const blank = tr.length === 0;
+    const isRule = /^[\s\-]{20,}$/.test(tr) && /-/.test(tr);
+    let d = 70;
+    if (blank) d = 42;
+    else if (isRule) d = 130;
+    else if (/^INITIALIZING|^LOADING|^VERIFYING/.test(tr)) d = 92;
+    let c = 'dim';
+    if (blank) c = 'skip';
+    else if (isRule) c = 'hi';
+    else if (/^(NOTICE|ENTITY|SIMULATED|BRAND|USER ACKNOWLEDGEMENT|SYSTEM PROMPT)\b/.test(tr.trim())) c = 'hi';
+    else if (/^TYPE\s+"/i.test(tr)) c = 'warn';
+    else if (/\.\.\.OK\s*$/i.test(tr)) c = 'ok';
+    else if (/PENDING/i.test(tr)) c = 'warn';
+    return { t: tr, d, c };
+  });
+}
+
+function quitApplicationFromRenderer() {
+  if (window.corpOS?.quit) {
+    window.corpOS.quit();
+  } else if (typeof window.require === 'function') {
+    try {
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.send('app-quit');
+    } catch {
+      /* browser dev */
+    }
+  }
+}
+
+function hideFirmwareAckScreen() {
+  interruptBiosPostAudio();
+  const s = document.getElementById('firmware-ack-screen');
+  if (s) {
+    s.style.display = 'none';
+    s.style.opacity = '0';
+  }
+  const inp = document.getElementById('firmware-ack-input');
+  if (inp) {
+    inp.value = '';
+    inp.disabled = false;
+  }
+  const foot = document.getElementById('firmware-ack-footer');
+  if (foot) foot.style.display = 'none';
+  const hint = document.getElementById('firmware-ack-hint');
+  if (hint) {
+    hint.style.display = 'none';
+    hint.textContent = '';
+  }
+  const cur = document.getElementById('firmware-ack-cursor');
+  if (cur) cur.style.display = '';
+}
+
+/** @type {Array<{ t: string, d: number, c: string }>} */
+let _firmwareLegalLinesRun = [];
+let _firmwareAckResolve = null;
+let firmwareAckIdx = 0;
+let firmwareAckInitPlayed = false;
+let firmwareAckSatisfiedForBoot = false;
+/** @type {HTMLElement | null} */
+let firmwareAckEl = null;
+
+function showFirmwarePrompt() {
+  const cur = document.getElementById('firmware-ack-cursor');
+  if (cur) cur.style.display = 'none';
+  const foot = document.getElementById('firmware-ack-footer');
+  if (foot) foot.style.display = 'block';
+  const inp = document.getElementById('firmware-ack-input');
+  if (!inp) {
+    const fn = _firmwareAckResolve;
+    _firmwareAckResolve = null;
+    fn?.();
+    return;
+  }
+  inp.value = '';
+  inp.disabled = false;
+  inp.focus();
+
+  const onKey = (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const norm = String(inp.value || '')
+      .trim()
+      .toUpperCase();
+    const hint = document.getElementById('firmware-ack-hint');
+    if (norm === 'ACCEPT') {
+      inp.removeEventListener('keydown', onKey);
+      hideFirmwareAckScreen();
+      const fn = _firmwareAckResolve;
+      _firmwareAckResolve = null;
+      fn?.();
+      return;
+    }
+    if (norm === 'DECLINE') {
+      inp.removeEventListener('keydown', onKey);
+      inp.disabled = true;
+      const text = document.getElementById('firmware-ack-text');
+      if (text) {
+        const err = document.createElement('div');
+        err.style.color = '#ff4444';
+        err.style.marginTop = '12px';
+        err.style.fontWeight = 'bold';
+        err.textContent = 'ERROR: USER DECLINED';
+        text.appendChild(err);
+        const sub = document.createElement('div');
+        sub.style.color = '#aa6666';
+        sub.style.marginTop = '6px';
+        sub.textContent = 'TERMINATING SESSION — MANDATE COMPLIANCE HALT';
+        text.appendChild(sub);
+      }
+      if (foot) foot.style.display = 'none';
+      interruptBiosPostAudio();
+      setTimeout(() => quitApplicationFromRenderer(), 1600);
+      return;
+    }
+    if (hint) {
+      hint.textContent = 'Invalid response. Type ACCEPT or DECLINE and press Enter.';
+      hint.style.display = 'block';
+    }
+  };
+  inp.addEventListener('keydown', onKey);
+}
+
+function nextFirmwareAckLine() {
+  const lines = _firmwareLegalLinesRun;
+  if (!firmwareAckEl) return;
+  if (firmwareAckIdx >= lines.length) {
+    setTimeout(() => showFirmwarePrompt(), 380);
+    return;
+  }
+  const line = lines[firmwareAckIdx++];
+  const delay = Math.round(biosLineDelayMs(line));
+  setTimeout(() => {
+    if (!firmwareAckEl) return;
+    const span = document.createElement('span');
+    span.textContent = (line.t || '') + '\n';
+    if (line.c === 'hi') span.style.color = '#ffffff';
+    if (line.c === 'ok') span.style.color = '#00ff66';
+    if (line.c === 'warn') span.style.color = '#ffcc00';
+    if (line.c === 'dim') span.style.color = '#aaaaaa';
+    if (line.c === 'skip') span.style.color = '#8899aa';
+    firmwareAckEl.appendChild(span);
+    const parent = firmwareAckEl.parentElement;
+    if (parent) parent.scrollTop = parent.scrollHeight;
+
+    const hasText = String(line.t || '').trim().length > 0;
+    if (hasText && !firmwareAckInitPlayed) {
+      firmwareAckInitPlayed = true;
+      void playBiosInitialize();
+    } else if (hasText && firmwareAckInitPlayed) {
+      void playBiosExecuteStutter();
+    }
+
+    nextFirmwareAckLine();
+  }, delay);
+}
+
+function runFirmwareLegalAckScreen() {
+  return new Promise((resolve) => {
+    _firmwareAckResolve = resolve;
+    const screen = document.getElementById('firmware-ack-screen');
+    firmwareAckEl = document.getElementById('firmware-ack-text');
+    if (!screen || !firmwareAckEl) {
+      _firmwareAckResolve = null;
+      resolve();
+      return;
+    }
+
+    firmwareAckEl.innerHTML = '';
+    const foot = document.getElementById('firmware-ack-footer');
+    if (foot) foot.style.display = 'none';
+    const hint = document.getElementById('firmware-ack-hint');
+    if (hint) {
+      hint.style.display = 'none';
+      hint.textContent = '';
+    }
+    const cur = document.getElementById('firmware-ack-cursor');
+    if (cur) cur.style.display = 'inline-block';
+
+    screen.style.display = 'flex';
+    screen.style.opacity = '1';
+    screen.style.transition = '';
+    screen.setAttribute('tabindex', '-1');
+    try {
+      screen.focus({ preventScroll: true });
+    } catch {
+      /* ignore */
+    }
+
+    _firmwareLegalLinesRun = buildFirmwareLegalLines();
+    firmwareAckIdx = 0;
+    firmwareAckInitPlayed = false;
+
+    void (async () => {
+      try {
+        const [initA, execA] = await prefetchBiosPostAudio();
+        biosInitAudioInstance = initA;
+        biosExecAudioInstance = execA;
+      } catch {
+        biosInitAudioInstance = null;
+        biosExecAudioInstance = null;
+      }
+      nextFirmwareAckLine();
+    })();
+  });
+}
+
 /**
  * Enrollment must sit above Start menu (z-index 99999), Black Cherry (10050), and logoff (99998).
  * After logoff / purge, login or other chrome can otherwise stay in the stacking order and steal hits.
@@ -551,6 +773,11 @@ async function showLoginOrEnrollment() {
   if (saveStatus.hasUsers) {
     showUserPicker(saveStatus.accounts);
     return;
+  }
+
+  if (!firmwareAckSatisfiedForBoot) {
+    await runFirmwareLegalAckScreen();
+    firmwareAckSatisfiedForBoot = true;
   }
 
   prepareChromeForEnrollment();

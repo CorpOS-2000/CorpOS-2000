@@ -10,6 +10,7 @@ import { rollD4, rollD20 } from './d20.js';
 import { applyAffinityDelta } from './social-affinity.js';
 import { escapeHtml } from './identity.js';
 import { generateYourspaceRtcPost } from './yourspace-rtc.js';
+import { recordProductSignal, normalizeProductKey } from './product-pulse.js';
 
 function wahooViewerKey() {
   const u = getSessionState().wahoo?.currentUser;
@@ -73,10 +74,18 @@ function ensureWebexRtcCounts(page, postId) {
   if (!page.webexRtc.rtcCounts[postId]) page.webexRtc.rtcCounts[postId] = { up: 0, down: 0 };
 }
 
+const WEBEX_RTC_MIN_REAL_MS = 500;
+let _webexRtcLastRealMs = 0;
+
 /**
  * @param {number} simElapsedMs
  */
 export function tickWebexSiteRtcPages(simElapsedMs) {
+  if (typeof performance !== 'undefined') {
+    const now = performance.now();
+    if (now - _webexRtcLastRealMs < WEBEX_RTC_MIN_REAL_MS) return;
+    _webexRtcLastRealMs = now;
+  }
   const t = Number(simElapsedMs) || 0;
   const gd = getCurrentGameDate();
   const raw = window.ActorDB?.getActiveNow?.(gd.getUTCHours(), gd.getUTCDay(), null);
@@ -197,6 +206,9 @@ export function applyWebexRtcVote(pageId, postId, vote, actorId) {
     else if (prev === 'down' && vote === 'up') delta = 4;
     if (delta) applyAffinityDelta(patchSession, viewer, `actor:${actorId}`, delta);
   }
+  // Feed into publicPulse product signals (use pageId as a loose product proxy)
+  const productKey = normalizeProductKey(pageId);
+  recordProductSignal(productKey, vote === 'up' ? 'like' : 'dislike');
 }
 
 function feedRowsHtml(pageId) {

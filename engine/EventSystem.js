@@ -25,6 +25,7 @@ import { recordHashtagEvent } from '../js/market-dynamics.js';
 import { getCurrentGameDate } from '../js/clock.js';
 import { getTotalInventoryValue, getLiquidationPool } from '../js/warehouse-tick.js';
 import { getGdpIndex, getConsumerConf, getDotComPhase, getInflationRate } from '../js/economy.js';
+import { tickHeraldNpcComments } from '../js/herald-comments.js';
 
 const SIM_DAY_MS = 86400000;
 const SIM_HOUR_MS = 3600000;
@@ -62,6 +63,10 @@ export const EventSystem = {
 
     on('hour',       (payload) => this._onHour(payload));
     on('dayChanged', (payload) => this._onDay(payload));
+    on('tick',       (payload) => {
+      const simMs = typeof payload?.elapsedMs === 'number' ? payload.elapsedMs : getState().sim?.elapsedMs || 0;
+      tickHeraldNpcComments(simMs);
+    });
 
     console.log('[EventSystem] Initialized.');
   },

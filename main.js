@@ -299,19 +299,32 @@ ipcMain.handle('write-content-pack', (_, payload, passphrase) => {
   return { ok: true, path: full };
 });
 
-/** Audio files in packaged assets/music (renderer merges with tracks.json). */
+/** Audio files in packaged assets/music (flat + one level of subfolders). */
 ipcMain.handle('list-assets-music-files', () => {
   const dir = path.join(__dirname, 'assets', 'music');
   if (!fs.existsSync(dir)) return [];
+  const AUDIO_RE = /\.(mp3|ogg|opus|wav|m4a|flac)$/i;
   try {
-    return fs
-      .readdirSync(dir)
-      .filter((f) => {
-        const low = String(f).toLowerCase();
-        if (low === 'tracks.json') return false;
-        return /\.(mp3|ogg|opus|wav|m4a|flac)$/i.test(f);
-      })
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const results = [];
+    const topEntries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of topEntries) {
+      if (entry.name.toLowerCase() === 'tracks.json') continue;
+      if (entry.isDirectory()) {
+        // Recurse exactly one level into named subfolders
+        try {
+          const subDir = path.join(dir, entry.name);
+          const subEntries = fs.readdirSync(subDir, { withFileTypes: true });
+          for (const sub of subEntries) {
+            if (sub.isFile() && AUDIO_RE.test(sub.name)) {
+              results.push(`${entry.name}/${sub.name}`);
+            }
+          }
+        } catch { /* skip unreadable subfolder */ }
+      } else if (entry.isFile() && AUDIO_RE.test(entry.name)) {
+        results.push(entry.name);
+      }
+    }
+    return results.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   } catch (e) {
     console.warn('[CorpOS] list-assets-music-files:', e.message);
     return [];

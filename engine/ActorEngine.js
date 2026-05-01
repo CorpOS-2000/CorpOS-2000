@@ -7,6 +7,9 @@ function hourNow(gameTime) {
   return new Date().getHours();
 }
 
+const ACTOR_TICK_MIN_REAL_MS = 1000;
+let _actorTickLastRealMs = 0;
+
 export const ActorEngine = {
   _activeIds: new Set(),
   _suspended: new Set(),
@@ -20,6 +23,11 @@ export const ActorEngine = {
   },
 
   tick(gameTime) {
+    if (typeof performance !== 'undefined') {
+      const now = performance.now();
+      if (now - _actorTickLastRealMs < ACTOR_TICK_MIN_REAL_MS) return;
+      _actorTickLastRealMs = now;
+    }
     const h = hourNow(gameTime);
     for (const actorId of this._activeIds) {
       if (this._suspended.has(actorId)) continue;

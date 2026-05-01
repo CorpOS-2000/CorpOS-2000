@@ -9,6 +9,7 @@ import { generateYourspaceRtcPost, initYourspaceRtc } from './yourspace-rtc.js';
 import { on } from './events.js';
 import { applyAffinityDelta, affinityLabel, getAffinityScore } from './social-affinity.js';
 import { getById as getRivalById } from './rival-companies.js';
+import { recordProductSignal, normalizeProductKey } from './product-pulse.js';
 
 let ysGen = 0;
 let rootEl = null;
@@ -100,6 +101,8 @@ function applyRtcVote(postId, actorId, vote) {
     else if (prev === 'down' && vote === 'up') delta = 4;
     if (delta) applyAffinityDelta(patchSession, viewer, `actor:${actorId}`, delta);
   }
+  // Feed into publicPulse (use postId as product key proxy for now)
+  recordProductSignal(normalizeProductKey(postId), vote === 'up' ? 'like' : 'dislike');
   syncRtcDom();
 }
 
@@ -354,11 +357,20 @@ export async function initYourspaceFeed(loadJson) {
   }
 }
 
+const YS_RTC_MIN_REAL_MS = 500;
+let _ysRtcLastRealMs = 0;
+
 /**
  * Advance RTC on 1d4 sim-hour cadence; 1d20 = how many actors post each batch.
+ * Throttled to at most once per 500 ms real-time to avoid per-frame patchSession calls.
  * @param {number} simElapsedMs
  */
 export function tickYourspaceRtc(simElapsedMs) {
+  if (typeof performance !== 'undefined') {
+    const now = performance.now();
+    if (now - _ysRtcLastRealMs < YS_RTC_MIN_REAL_MS) return;
+    _ysRtcLastRealMs = now;
+  }
   const t = Number(simElapsedMs) || 0;
   patchSession((s) => {
     if (!s.yourspace) {
@@ -594,7 +606,13 @@ export async function mountYourspace(container, subPath = '') {
       vibeEl.innerHTML = `How you see them: <b>${escapeHtml(label)}</b>`;
     }
   };
-  sessionOff = on('sessionChanged', onSession);
+  sessionOff = on('sessionChanged', () => {
+    if (ysSessionDomRaf !== 0) return;
+    ysSessionDomRaf = requestAnimationFrame(() => {
+      ysSessionDomRaf = 0;
+      onSession();
+    });
+  });
 }
 
 export function teardownYourspace() {

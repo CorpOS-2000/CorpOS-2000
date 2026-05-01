@@ -1,4 +1,5 @@
 import { initCorpOsCursorFollower } from './cursor-follower.js';
+import { initAmbientMusic } from './ambient-music.js';
 import { loadBiosLines, startBootFlow, exposeGlobals as exposeBoot } from './boot.js';
 import { startClock, pause, unpause, setSpeed } from './clock.js';
 import {
@@ -61,7 +62,6 @@ import {
 } from './ui.js';
 import { getInstallStatus, processSoftwareInstallsIfNeeded } from './gameState.js';
 import { getInstallableApp } from './installable-apps.js';
-import { getMouseClickCandidates, loadFirstPlayableAudio } from './boot-audio.js';
 import { initAxis, hydrateAxisFromSave, tickAxisNpcInitiatedContact } from './axis.js';
 import { SaveManager } from '../engine/SaveManager.js';
 import { initSocialComments } from './social-comments.js';
@@ -79,11 +79,14 @@ import { tickPlayerStore } from './player-store.js';
 import { initPlayerReplies, tickPlayerReplies, wireReplyDeps } from './player-interaction-replies.js';
 import { MediaPlayer } from '../engine/MediaPlayer.js';
 import { initMediaPlayer } from './media-player.js';
+import { wireTimeControlSounds, syncTimeControlLoopToState } from './time-control-sounds.js';
+import { initMouseClickSounds } from './mouse-click-sounds.js';
 import { initFileExplorer } from './file-explorer.js';
 import { initWritepad } from './writepad.js';
 import { mountInventoryWindow } from './inventory-ui.js';
 import { tickEconomy, ensureEconomy, ECON_CONSTANTS } from './economy.js';
 import { initMarketDynamics } from './market-dynamics.js';
+import { tickHeraldSyndication } from './herald-syndication.js';
 import { initDailyHerald, getDailyHeraldTickerArticles } from './daily-herald.js';
 import { EventSystem } from '../engine/EventSystem.js';
 import { verifyAppIntegrity, seedAllProgramFiles, seedProgramFiles, showAppErrorDialog } from './program-files.js';
@@ -469,13 +472,7 @@ function fireNews() {
 }
 
 function wireSpeedControls() {
-  document.querySelectorAll('#speed-controls [data-speed]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const v = Number(btn.getAttribute('data-speed'));
-      setSpeed(v);
-      syncSpeedButtons();
-    });
-  });
+  wireTimeControlSounds({ setSpeed, syncSpeedButtons });
 }
 
 function queueContentSummary(category, amount = 1, delayOverride = CONTENT_TOAST_DEBOUNCE_MS) {
@@ -517,7 +514,8 @@ function flushContentSummaries() {
 }
 
 async function main() {
-  initCorpOsCursorFollower();
+  // Software cursor temporarily disabled — to re-enable, uncomment the line below:
+  // initCorpOsCursorFollower();
   pause('boot');
   bankUi.installBankWindowGlobals();
   exposeWin();
@@ -530,9 +528,6 @@ async function main() {
   window.startDesktopNewsTicker = () => {
     startAutoTicker();
   };
-  loadFirstPlayableAudio(getMouseClickCandidates()).then((audio) => {
-    mouseClickAudio = audio;
-  });
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#smenu') && !e.target.closest('#start-btn')) {
@@ -540,25 +535,6 @@ async function main() {
       document.getElementById('start-btn')?.classList.remove('active');
     }
   });
-  document.addEventListener(
-    'mousedown',
-    () => {
-      if (!mouseClickAudio) return;
-      try {
-        mouseClickAudio.currentTime = 0;
-        const p = mouseClickAudio.play();
-        if (p && typeof p.catch === 'function') {
-          p.catch((err) => {
-            if (err && err.name !== 'AbortError') console.warn('[CorpOS] click sound:', err);
-          });
-        }
-      } catch {
-        /* ignore */
-      }
-    },
-    true
-  );
-
   // Must run before any `await`. If IPC (loadDataFile) or fetch hangs, we still reach the boot UI.
   const kickBootOnce = (() => {
     let done = false;
@@ -631,6 +607,7 @@ async function main() {
         /* ok */
       }
       SaveManager.applyPendingDiscoveredActors();
+      syncTimeControlLoopToState();
     }
     // First-time operators have no save blob yet; still lay out the desktop once #desktop is shown.
     refreshDesktopLayoutFromSession();
@@ -687,6 +664,7 @@ async function main() {
   initContextMenus();
   initTaskHandlerPanel();
   wireSpeedControls();
+  initMouseClickSounds();
 
   await initWebExPublisher(loadJsonFile);
   await initMarketDynamics(loadJsonFile);
@@ -698,6 +676,15 @@ async function main() {
   await initMediaPlayer();
   window.GameSystems = window.GameSystems || {};
   window.GameSystems.mediaPlayer = MediaPlayer;
+  // Ambient music: starts after MediaPlayer is ready; uses the same file list IPC
+  try {
+    const ambientFiles = window.corpOS?.listAssetsMusicFiles
+      ? await window.corpOS.listAssetsMusicFiles()
+      : [];
+    initAmbientMusic(Array.isArray(ambientFiles) ? ambientFiles : []);
+  } catch (e) {
+    console.warn('[AmbientMusic] init failed:', e?.message ?? e);
+  }
   await initFileExplorer(loadJsonFile);
   {
     const inv = document.getElementById('player-inventory-root');
@@ -796,6 +783,7 @@ async function main() {
       return s;
     });
     tickPhantomSmearCampaignsDaily();
+    tickHeraldSyndication(getState().sim?.elapsedMs || 0);
     tickPlayerStore();
     window.WorldNet?.axis?.processDecay?.();
     WebExploiter.tickSiteRecovery();
@@ -805,12 +793,17 @@ async function main() {
     }
     refreshIfBank();
   });
+  let _stateChangedRaf = 0;
   on('stateChanged', () => {
-    renderProfilesFromState();
-    syncSpeedButtons();
-    renderActiveTasksPanel();
-    refreshInstallableAppVisibility();
-    refreshTransferDialog();
+    if (_stateChangedRaf) return;
+    _stateChangedRaf = requestAnimationFrame(() => {
+      _stateChangedRaf = 0;
+      renderProfilesFromState();
+      syncSpeedButtons();
+      renderActiveTasksPanel();
+      refreshInstallableAppVisibility();
+      refreshTransferDialog();
+    });
   });
 
   on('news:breaking', ({ headline } = {}) => {

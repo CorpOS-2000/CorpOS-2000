@@ -1,5 +1,5 @@
 /**
- * Moogle — in-world Google parody (WorldNet). Cow theme: minimal, spec-locked.
+ * Moogle — in-world web search parody (WorldNet). Cow theme: minimal, spec-locked.
  */
 import { escapeHtml } from './identity.js';
 import { getState } from './gameState.js';

@@ -36,7 +36,7 @@ export const MediaPlayer = {
   favorites: new Set(),
   shuffle: false,
   repeat: 'off',
-  volume: 0.8,
+  volume: 0.2,
   isOverride: false,
   overrideTrack: null,
   overrideAudio: null,
@@ -63,6 +63,12 @@ export const MediaPlayer = {
         if (err && err.name !== 'AbortError') console.warn('[MediaPlayer] play:', err);
       });
     }
+  },
+
+  /** Game time > 1× — library playback stays paused (ambient handled separately). */
+  _simSpeedBlocksPlayback() {
+    const sp = Number(this.getState?.()?.sim?.speed);
+    return Number.isFinite(sp) && sp > 1;
   },
 
   _notify() {
@@ -92,7 +98,7 @@ export const MediaPlayer = {
     this.overrideAudio.preload = 'auto';
 
     const st = this.getState().mediaPlayer;
-    this.volume = typeof st.volume === 'number' ? st.volume : 0.8;
+    this.volume = typeof st.volume === 'number' ? st.volume : 0.2;
     this.shuffle = !!st.shuffle;
     this.repeat = st.repeat === 'all' || st.repeat === 'one' ? st.repeat : 'off';
     this.favorites = new Set(Array.isArray(st.favorites) ? st.favorites : []);
@@ -336,7 +342,15 @@ export const MediaPlayer = {
     this.audio.src = url;
     this.audio.volume = this.volume;
     this.audio.currentTime = 0;
-    this._safePlay(this.audio);
+    if (this._simSpeedBlocksPlayback()) {
+      try {
+        this.audio.pause();
+      } catch {
+        /* ignore */
+      }
+    } else {
+      this._safePlay(this.audio);
+    }
     this._shufflePlayed.add(String(track.id));
     this.persistPlaybackState();
     this._notify();
@@ -351,6 +365,7 @@ export const MediaPlayer = {
 
   resume() {
     if (this.isOverride) return;
+    if (this._simSpeedBlocksPlayback()) return;
     this._safePlay(this.audio);
     this._notify();
   },
@@ -415,7 +430,7 @@ export const MediaPlayer = {
 
     if (this.repeat === 'one' && this.currentTrack) {
       this.audio.currentTime = 0;
-      this._safePlay(this.audio);
+      if (!this._simSpeedBlocksPlayback()) this._safePlay(this.audio);
       return;
     }
 
@@ -448,7 +463,7 @@ export const MediaPlayer = {
     const played = (this.audio.currentTime || 0) > 3;
     if (played && this.currentTrack) {
       this.audio.currentTime = 0;
-      this._safePlay(this.audio);
+      if (!this._simSpeedBlocksPlayback()) this._safePlay(this.audio);
       this._notify();
       return;
     }
@@ -466,7 +481,7 @@ export const MediaPlayer = {
   _onEnded() {
     if (this.repeat === 'one') {
       this.audio.currentTime = 0;
-      this._safePlay(this.audio);
+      if (!this._simSpeedBlocksPlayback()) this._safePlay(this.audio);
       return;
     }
     this.next();
@@ -590,7 +605,7 @@ export const MediaPlayer = {
           } catch {
             /* ignore */
           }
-          if (!snap.paused) this._safePlay(this.audio);
+          if (!snap.paused && !this._simSpeedBlocksPlayback()) this._safePlay(this.audio);
           else this.audio.pause();
           this._notify();
         };

@@ -127,10 +127,14 @@ export function renderProfilesFromState() {
   setText('corp-net-worth', `Net Worth: ${formatMoney(getNetWorth(st))}`);
 }
 
+let _lastClockText = '';
 export function updateClockDisplay() {
   const clk = document.getElementById('clk');
   if (!clk) return;
-  clk.textContent = formatGameDateTime(getCurrentGameDate());
+  const text = formatGameDateTime(getCurrentGameDate());
+  if (text === _lastClockText) return;
+  _lastClockText = text;
+  clk.textContent = text;
 }
 
 export function syncSpeedButtons() {
@@ -139,4 +143,7 @@ export function syncSpeedButtons() {
     const v = Number(btn.getAttribute('data-speed'));
     btn.classList.toggle('active-speed', v === speed);
   });
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.dataset.corposSimSpeed = String(speed);
+  }
 }

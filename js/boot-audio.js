@@ -4,7 +4,7 @@
  * (after mouse/keyboard through technical batch) → one full BiosExecute → quiet tail (drivers…) →
  * Phased POST: BiosExecute stutter after mouse through FrontPage, again while loading drivers
  * (until “Starting CorpOS…”), then audio is cut; final blank line is preceded by a deeper POST beep.
- * Logo: corpOSbootingsound. Clicks: Mouse Click Sound CorpOS / MouseClickSoundCorpOS.
+ * Logo: corpOSbootingsound.
  * Legacy POST: PConsound (optional; unused when Bios* sounds are present).
  * Use .mp3, .wav, or .ogg
  */
@@ -14,7 +14,6 @@ const POWER_ON_BASES = ['PowerON'];
 const BIOS_INIT_BASES = ['BiosInitialize'];
 const BIOS_EXEC_BASES = ['BiosExecute'];
 const CORP_BOOT_BASES = ['corpOSbootingsound'];
-const MOUSE_CLICK_BASES = ['Mouse Click Sound CorpOS', 'MouseClickSoundCorpOS'];
 const EXT = ['.mp3', '.wav', '.ogg'];
 
 function candidateUrls(baseNames) {
@@ -80,10 +79,6 @@ export function getBiosExecuteCandidates() {
 
 export function getCorpBootCandidates() {
   return candidateUrls(CORP_BOOT_BASES);
-}
-
-export function getMouseClickCandidates() {
-  return candidateUrls(MOUSE_CLICK_BASES);
 }
 
 /**

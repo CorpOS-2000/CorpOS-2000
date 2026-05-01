@@ -90,6 +90,14 @@ const state = {
     /** `${pageId}:${sectionId}` -> { comments: object[] } */
     threads: {}
   },
+  /** Daily Herald desktop app — per-article threads + NPC drip (session-only). */
+  heraldLive: {
+    nextDueSimMs: 0,
+    /** articleId -> true once ~3 seed comments written */
+    seededArticleIds: {},
+    /** articleId -> { comments: object[] } */
+    threads: {}
+  },
   /** Pending NPC replies to player posts (delivered after simMs delay). */
   pendingPlayerReplies: [],
   /** viewer username -> targetKey -> score (see social-affinity.js). */

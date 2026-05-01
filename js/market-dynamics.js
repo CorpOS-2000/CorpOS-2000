@@ -5,6 +5,7 @@
 import { getState, patchState, SIM_HOUR_MS } from './gameState.js';
 import { rollD4 } from './d20.js';
 import { getPageAdOutcomeWeights, getAllAdAnalytics } from './ad-analytics.js';
+import { recordProductSignal, recordProductSale, normalizeProductKey } from './product-pulse.js';
 
 const SIM_DAY_MS = SIM_HOUR_MS * 24;
 
@@ -41,6 +42,8 @@ export function recordHashtagEvent(tag, type = 'mention') {
     else { b.mentions++; }
     return s;
   });
+  // Mirror into publicPulse
+  recordProductSignal(normalizeProductKey(key), type === 'like' ? 'like' : type === 'dislike' ? 'dislike' : 'mention');
 }
 
 /**
@@ -56,6 +59,8 @@ export function recordPurchase(tag, simMs) {
     s.marketBuzz[key].lastPurchaseSimMs = simMs;
     return s;
   });
+  // Mirror into publicPulse
+  recordProductSale(normalizeProductKey(key));
 }
 
 /**

@@ -67518,29 +67518,29 @@
   },
   {
     "actor_id": "PLAYER_PRIMARY",
-    "full_legal_name": "Sarah Wilson",
-    "first_name": "Sarah",
-    "last_name": "Wilson",
+    "full_legal_name": "Jennifer Lopez",
+    "first_name": "Jennifer",
+    "last_name": "Lopez",
     "aliases": [
-      "sarahwilson"
+      "jenniferlopez"
     ],
-    "ssn": "676-81-0291",
+    "ssn": "789-52-1058",
     "phone_numbers": [
-      "(559) 498-4200"
+      "(559) 479-4118"
     ],
     "emails": [
-      "sarah.wilson@jeemail.net",
-      "vdoe@jeemail.net"
+      "jennifer.lopez@jeemail.net",
+      "jenny123@jeemail.net"
     ],
     "home_address": {
-      "street": "1188 Hazel Court, Hargrove, CA 94523",
+      "street": "251 Pine Street, Hargrove, CA 94521",
       "city": "Hargrove",
       "state": "CA",
       "zip": "93720"
     },
-    "hargrove_address_id": "addr_01463",
-    "dob": "January 21, 1948",
-    "age": 78,
+    "hargrove_address_id": "addr_00562",
+    "dob": "December 29, 1977",
+    "age": 48,
     "household_id": "HH_PLAYER",
     "employer_id": null,
     "profession": "Entrepreneur",
@@ -67560,7 +67560,7 @@
     },
     "relationships": [
       {
-        "actor_id": "ACT-MOM-8H2SSJ7Q",
+        "actor_id": "ACT-MOM-IQJE9ZEQ",
         "type": "family",
         "subtype": "mother",
         "strength": 10
@@ -67591,7 +67591,7 @@
       "government": "legal"
     },
     "public_profile": {
-      "display_name": "Sarah Wilson",
+      "display_name": "Jennifer Lopez",
       "bio": "Entrepreneur.",
       "occupation": "Business Operator",
       "avatar_description": "Young professional"
@@ -70957,6 +70957,276 @@
       "intimidation_check": 14,
       "trust_check": 15
     },
+    "work_schedule": {
+      "shift": "day",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "peak_hours": [
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17
+      ],
+      "off_hours": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        22,
+        23
+      ]
+    }
+  },
+  {
+    "actor_id": "ACT-MOM-6F2KYJLE",
+    "full_legal_name": "Patricia Martinez",
+    "first_name": "Patricia",
+    "last_name": "Martinez",
+    "maiden_name": "Davis",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "694-94-8073",
+    "phone_numbers": [
+      "(559) 827-8515"
+    ],
+    "emails": [
+      "patricia.martinez745@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "5476 Dogwood Lane",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94527"
+    },
+    "hargrove_address_id": "addr_03525",
+    "dob": "1941-03-06",
+    "age": 85,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Nurse",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Patricia Martinez",
+      "bio": "",
+      "occupation": "Retired Nurse",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Elizabeth, it's Mom. I just wanted to say I'm proud of you for starting your own business. Call me when you get a chance. Love you.",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother",
+    "work_schedule": {
+      "shift": "day",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "peak_hours": [
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17
+      ],
+      "off_hours": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        22,
+        23
+      ]
+    }
+  },
+  {
+    "actor_id": "ACT-MOM-IQJE9ZEQ",
+    "full_legal_name": "Janet Lopez",
+    "first_name": "Janet",
+    "last_name": "Lopez",
+    "maiden_name": "Miller",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "333-31-4326",
+    "phone_numbers": [
+      "(559) 760-8196"
+    ],
+    "emails": [
+      "janet.lopez101@mailbox2000.com"
+    ],
+    "home_address": {
+      "street": "9714 Cherry Lane",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_01774",
+    "dob": "1949-03-19",
+    "age": 77,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Part-time Librarian",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Janet Lopez",
+      "bio": "",
+      "occupation": "Part-time Librarian",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Jennifer it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother",
     "work_schedule": {
       "shift": "day",
       "days": [

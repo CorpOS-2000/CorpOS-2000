@@ -365,54 +365,371 @@ function buildElementary() {
   </td></tr></table></div>`;
 }
 
+function hashKey(input) {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function pseudoNumber(seed, min, max) {
+  const range = Math.max(1, max - min + 1);
+  const value = (Math.imul(seed ^ 0x9e3779b1, 1103515245) + 12345) >>> 0;
+  return min + (value % range);
+}
+
+function pickFrom(arr, seed, offset = 0) {
+  if (!arr.length) return '';
+  return arr[(seed + offset) % arr.length];
+}
+
+function buildRelatedRows(related) {
+  return related
+    .map(
+      (s, i) =>
+        `<tr bgcolor="${i % 2 ? '#f8f8f8' : '#ffffff'}"><td><a href="#" data-nav="${escapeHtml(s.pageKey)}">${escapeHtml(
+          s.title
+        )}</a></td><td><font size="1">${escapeHtml(s.description.slice(0, 78))}</font></td></tr>`
+    )
+    .join('');
+}
+
+function buildCategoryWidget(meta, seed) {
+  if (meta.category === 'sports') {
+    const wins = pseudoNumber(seed, 5, 22);
+    const losses = pseudoNumber(seed + 17, 2, 14);
+    const rank = pseudoNumber(seed + 31, 1, 12);
+    return `<table width="100%" border="1" cellpadding="3" bgcolor="#ffffff" style="font-size:11px;">
+      <tr bgcolor="#ddeedd"><td colspan="2"><b>Season Tracker</b></td></tr>
+      <tr><td>Record</td><td>${wins}-${losses}</td></tr>
+      <tr><td>Power Rank</td><td>#${rank}</td></tr>
+      <tr><td>Next Event</td><td>${escapeHtml(pickFrom(['Saturday scrimmage', 'Tuesday league night', 'Regional qualifier', 'Open gym challenge'], seed, 9))}</td></tr>
+    </table>`;
+  }
+  if (meta.category === 'food') {
+    const special = pickFrom(
+      ['2-for-1 milkshakes', 'Midnight pie window', 'Office lunch combo #7', 'Family-size chili fries', 'Coupon day: free onion rings'],
+      seed,
+      4
+    );
+    return `<div style="border:2px dashed #cc9933;background:#fff7dd;padding:8px;font-size:11px;">
+      <b>DINER SPECIAL BOARD</b><br>
+      <font color="#663300">${escapeHtml(special)}</font><br>
+      <font size="1">Print this page and mention "WorldNet" for a free refill.</font>
+    </div>`;
+  }
+  if (meta.category === 'business') {
+    const latency = pseudoNumber(seed, 18, 140);
+    const uptime = (99 + pseudoNumber(seed + 12, 0, 9) / 100).toFixed(2);
+    return `<table width="100%" border="1" cellpadding="3" bgcolor="#fffff7" style="font-size:11px;">
+      <tr bgcolor="#dddddd"><td colspan="2"><b>Operations Console</b></td></tr>
+      <tr><td>Order queue</td><td>${pseudoNumber(seed + 5, 6, 88)} pending</td></tr>
+      <tr><td>Uptime</td><td>${uptime}%</td></tr>
+      <tr><td>Regional ping</td><td>${latency}ms</td></tr>
+    </table>`;
+  }
+  if (meta.category === 'politics') {
+    const pollA = pseudoNumber(seed, 33, 61);
+    const pollB = Math.max(1, 100 - pollA - pseudoNumber(seed + 11, 3, 16));
+    const undec = 100 - pollA - pollB;
+    return `<table width="100%" border="1" cellpadding="3" bgcolor="#ffffff" style="font-size:11px;">
+      <tr bgcolor="#dde8ff"><td colspan="2"><b>Instant Phone Poll</b></td></tr>
+      <tr><td>Support</td><td>${pollA}%</td></tr>
+      <tr><td>Oppose</td><td>${pollB}%</td></tr>
+      <tr><td>Undecided</td><td>${undec}%</td></tr>
+    </table>`;
+  }
+  if (meta.category === 'weird') {
+    const stamp = `CASE-${pseudoNumber(seed, 104, 997)}-${pseudoNumber(seed + 1, 10, 99)}`;
+    return `<div style="border:1px solid #770000;background:#1b0909;color:#ffb0b0;padding:8px;font-size:11px;">
+      <b>UNVERIFIED FILE:</b> ${stamp}<br>
+      <font size="1">Accessing this page may alter your recommended links for 48 hours.</font>
+    </div>`;
+  }
+  return `<div style="border:1px solid #999;background:#f5f5f5;padding:8px;font-size:11px;">
+    <b>Webring Note:</b> This site auto-links to neighbors in the ${escapeHtml(meta.category)} ring every midnight.
+  </div>`;
+}
+
+function buildInteractionCard(action, key, pal, seed) {
+  const legends = {
+    guestbook_submit: 'Sign the wall',
+    petition_sign: 'Add your name',
+    newsletter_subscribe: 'Join update list',
+    poll_vote: 'Cast your vote',
+    order_submit: 'Place request',
+    contact_submit: 'Send message',
+    donate: 'Pledge support',
+    complaint_submit: 'File issue',
+    typing_test_submit: 'Submit score'
+  };
+  const actionLabel = legends[action] || 'Interact';
+  const surface = seed % 2 ? '#ffffff' : '#f9f9ff';
+  return `<table width="100%" border="1" cellpadding="6" cellspacing="0" bgcolor="${surface}" style="font-size:11px;margin-top:8px;">
+    <tr bgcolor="${pal.bar}"><td><font color="#ffffff"><b>${escapeHtml(actionLabel)}</b></font></td></tr>
+    <tr><td>
+      <form data-wn-action="${escapeHtml(action)}" data-wn-page-key="${escapeHtml(key)}">
+        ${formFieldsHtml(action, key)}
+      </form>
+    </td></tr>
+  </table>`;
+}
+
 function buildGenericWorldNetSite(key, sub) {
   const meta = REG_BY_KEY.get(key);
   if (!meta) return `<div class="iebody"><p>Site not found: ${escapeHtml(key)}</p></div>`;
   const pal = CAT_PAL[meta.category] || CAT_PAL.blog;
   const action = inferFormAction(key, meta);
   const visits = getWorldNetVisitCount(key);
+  const seed = hashKey(`${key}|${meta.category}|${meta.tone}`);
+  const host = String(meta.url || '')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '');
+  const webringName = pickFrom(
+    [
+      'WorldNet Hobby Orbit',
+      'Midnight Modem Ring',
+      'Hargrove Hyperlink Exchange',
+      'Y2K Neighbors Circuit',
+      'Dial-Up Discovery Ring'
+    ],
+    seed,
+    2
+  );
+  const badge = pickFrom(
+    ['[ MEMBER SINCE 1999 ]', '[ NETSCAPE READY ]', '[ 800x600 OPTIMIZED ]', '[ GEO-SAFE HTML ]', '[ NO JAVA REQUIRED ]'],
+    seed,
+    7
+  );
   const related = searchWorldNetRegistry(meta.searchKeywords[0] || meta.title, 4)
     .filter((s) => s.pageKey !== key)
     .slice(0, 3);
-  const relHtml = related
-    .map(
-      (s) =>
-        `<li style="font-size:10px;"><a href="#" data-nav="${escapeHtml(s.pageKey)}">${escapeHtml(s.title)}</a> — <i>${escapeHtml(
-          s.description.slice(0, 72)
-        )}</i></li>`
-    )
+  const relatedRows = buildRelatedRows(related);
+  const relatedList = related
+    .map((s) => `<li><a href="#" data-nav="${escapeHtml(s.pageKey)}">${escapeHtml(s.title)}</a></li>`)
     .join('');
   const subHtml =
-    sub ?
-      `<table width="100%" bgcolor="#fffacd" border="1" cellpadding="4" style="font-size:11px;margin-bottom:8px;"><tr><td><b>Section:</b> ${escapeHtml(
+    sub
+      ? `<table width="100%" bgcolor="#fffacd" border="1" cellpadding="4" style="font-size:11px;margin-bottom:8px;"><tr><td><b>Section:</b> ${escapeHtml(
         sub
-      )}</td></tr><tr><td><i>This subsection is stored on the same 420MB drive.</i></td></tr></table>`
-    : '';
-  const quirks =
-    key.length % 3 === 0 ?
-      `<div class="wn-marquee-soft"><font size="2">${escapeHtml(meta.title)} — ${escapeHtml(meta.description)}</font></div>`
-    : '';
+      )}</td></tr><tr><td><i>Subpage cache refreshed at ${String(pseudoNumber(seed + 14, 1, 12)).padStart(2, '0')}:${String(
+          pseudoNumber(seed + 22, 0, 59)
+        ).padStart(2, '0')} AM.</i></td></tr></table>`
+      : '';
+  const quirks = seed % 3 === 0 ? `<div class="wn-marquee-soft"><font size="2">${escapeHtml(meta.title)} — ${escapeHtml(meta.description)}</font></div>` : '';
   const patternClass =
-    meta.category === 'hobby' ? 'wn-tile-paw' : meta.category === 'advocacy' ? 'wn-tile-patchwork' : 'wn-tile-checker';
-  const formInner = formFieldsHtml(action, key);
+    meta.category === 'hobby' ? 'wn-tile-paw' : meta.category === 'advocacy' || meta.category === 'politics' ? 'wn-tile-patchwork' : 'wn-tile-checker';
+  const categoryWidget = buildCategoryWidget(meta, seed);
+  const interaction = buildInteractionCard(action, key, pal, seed);
+  const toneChipColor =
+    meta.tone === 'official' ? '#d6e6ff' : meta.tone === 'corporate' ? '#ffe7b3' : meta.tone === 'underground' ? '#ffd6d6' : '#e4d7ff';
+  const layout = seed % 6;
+  const classicStat = `VISITOR #${(14000 + visits * 17 + (seed % 97)).toString().padStart(6, '0')}`;
+  const relatedFallback = '<tr><td colspan="2"><font size="1">No neighbor sites indexed. Try Wahoo search.</font></td></tr>';
+
+  if (layout === 0) {
+    return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
+      <table width="100%" border="1" bordercolor="${pal.border}" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" style="font-family:Tahoma,Arial,sans-serif;font-size:11px;">
+        <tr bgcolor="${pal.bar}"><td style="padding:8px 10px;">
+          <font color="#fff" size="4"><b>${escapeHtml(meta.title)}</b></font><br>
+          <font color="#d7e8ff" size="1">${escapeHtml(host)} · ${escapeHtml(meta.category.toUpperCase())} CHANNEL</font>
+        </td></tr>
+        <tr><td style="padding:10px;">
+          ${quirks}
+          <table width="100%" border="0" cellpadding="6"><tr valign="top">
+            <td width="66%" style="background:#fff;border:1px solid #d5d5d5;">
+              <font size="3">${escapeHtml(meta.description)}</font>
+              <p style="margin:8px 0 0 0;font-size:10px;"><span style="background:${toneChipColor};padding:1px 6px;border:1px solid #999;">${escapeHtml(meta.tone.toUpperCase())}</span> ${escapeHtml(badge)}</p>
+              ${subHtml}
+              ${interaction}
+            </td>
+            <td width="34%" style="padding-left:6px;">
+              <table width="100%" border="1" cellpadding="4" bgcolor="#ffffff" style="font-size:10px;">
+                <tr bgcolor="#ececec"><td><b>Site Meter</b></td></tr>
+                <tr><td>${classicStat}<br>Tracked hits: <b>${visits}</b></td></tr>
+              </table>
+              <div style="height:6px;"></div>
+              ${categoryWidget}
+              <div style="height:6px;"></div>
+              <table width="100%" border="1" cellpadding="3" bgcolor="#fff"><tr bgcolor="#ececec"><td><b>Mini Webring</b></td></tr>
+                <tr><td><font size="1">${escapeHtml(webringName)}</font><ul style="margin:4px 0 4px 16px;padding:0;">${relatedList || '<li>Ring pending</li>'}</ul></td></tr>
+              </table>
+            </td>
+          </tr></table>
+          ${footerHtml(key)}
+        </td></tr>
+      </table>
+    </div>`;
+  }
+
+  if (layout === 1) {
+    return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
+      <table width="100%" border="1" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" bordercolor="${pal.border}" style="font-family:Verdana,Tahoma,sans-serif;font-size:11px;">
+        <tr bgcolor="${pal.bar}"><td colspan="2" style="padding:8px;">
+          <font color="#fff" size="3"><b>${escapeHtml(meta.title)}</b></font>
+        </td></tr>
+        <tr valign="top">
+          <td width="190" bgcolor="#f4f4f4" style="border-right:1px solid ${pal.border};padding:8px;">
+            <font size="1"><b>NAVIGATION FRAME</b></font>
+            <ul style="margin:6px 0 10px 14px;padding:0;line-height:1.35;">
+              <li><a href="#" data-nav="${escapeHtml(key)}">Home</a></li>
+              <li><a href="#" data-nav="home">Wahoo search</a></li>
+              <li><a href="#" data-nav="net99669">99669 index</a></li>
+            </ul>
+            <table width="100%" border="1" cellpadding="3" bgcolor="#fff" style="font-size:10px;">
+              <tr><td><b>${escapeHtml(meta.tone.toUpperCase())}</b><br>${escapeHtml(classicStat)}</td></tr>
+            </table>
+            <div style="height:6px;"></div>
+            ${categoryWidget}
+          </td>
+          <td style="padding:10px;">
+            ${subHtml}
+            <p style="margin-top:0;"><font size="3">${escapeHtml(meta.description)}</font></p>
+            <table width="100%" border="1" cellpadding="4" bgcolor="#fff" style="font-size:10px;">
+              <tr bgcolor="#ececec"><td colspan="2"><b>Related Nodes</b></td></tr>
+              ${relatedRows || relatedFallback}
+            </table>
+            ${interaction}
+            ${footerHtml(key)}
+          </td>
+        </tr>
+      </table>
+    </div>`;
+  }
+
+  if (layout === 2) {
+    return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
+      <table width="100%" border="1" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" bordercolor="${pal.border}" style="font-family:Tahoma,Arial,sans-serif;">
+        <tr><td style="padding:10px;background:linear-gradient(90deg, ${pal.bar}, ${pal.page});color:#fff;">
+          <font size="4"><b>${escapeHtml(meta.title)}</b></font><br>
+          <font size="1">${escapeHtml(host)} · district ${meta.district ?? 'citywide'} · ${escapeHtml(meta.category)}</font>
+        </td></tr>
+        <tr><td style="padding:10px;">
+          ${quirks}
+          <table width="100%" border="0" cellpadding="6"><tr>
+            <td width="60%" valign="top" style="border:1px solid #ddd;background:#fff;">
+              <font size="3">${escapeHtml(meta.description)}</font>
+              <p style="font-size:10px;margin:8px 0 0 0;">Updated: ${pseudoNumber(seed, 1, 12)}/${pseudoNumber(seed + 4, 1, 28)}/2000 · tone profile: <b>${escapeHtml(meta.tone)}</b></p>
+              ${subHtml}
+              ${interaction}
+            </td>
+            <td width="40%" valign="top">
+              <table width="100%" border="1" cellpadding="4" bgcolor="#fff" style="font-size:10px;">
+                <tr bgcolor="#ececec"><td><b>Bulletin Strip</b></td></tr>
+                <tr><td>Guestbook pings: ${pseudoNumber(seed + 8, 2, 19)}<br>New links: ${pseudoNumber(seed + 13, 1, 7)}<br>Visits today: ${pseudoNumber(seed + 3, 9, 64)}</td></tr>
+              </table>
+              <div style="height:6px;"></div>
+              ${categoryWidget}
+              <div style="height:6px;"></div>
+              <table width="100%" border="1" cellpadding="4" bgcolor="#fff" style="font-size:10px;">
+                <tr bgcolor="#ececec"><td><b>Ring Neighbors</b></td></tr>
+                <tr><td><ul style="margin:4px 0 4px 16px;padding:0;">${relatedList || '<li>No neighbors cached</li>'}</ul></td></tr>
+              </table>
+            </td>
+          </tr></table>
+          ${footerHtml(key)}
+        </td></tr>
+      </table>
+    </div>`;
+  }
+
+  if (layout === 3) {
+    return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
+      <table width="100%" border="1" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" bordercolor="${pal.border}" style="font-family:'Trebuchet MS',Arial,sans-serif;font-size:11px;">
+        <tr><td style="padding:0;">
+          <table width="100%" cellpadding="8" bgcolor="${pal.bar}" style="color:#fff;"><tr>
+            <td><font size="3"><b>${escapeHtml(meta.title)}</b></font></td>
+            <td align="right"><font size="1">${escapeHtml(badge)}</font></td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:10px;">
+          ${subHtml}
+          <marquee scrollamount="2" style="font-size:11px;color:${pal.bar};margin-bottom:8px;">${escapeHtml(
+            `${meta.title} // ${meta.description} // ${webringName} // tracked visits ${visits}`
+          )}</marquee>
+          <table width="100%" border="0" cellpadding="6"><tr valign="top">
+            <td width="52%" style="border:1px solid #d8d8d8;background:#fff;">
+              <font size="3">${escapeHtml(meta.description)}</font>
+              <p style="font-size:10px;">Mirror host: ${escapeHtml(host)}<br>Lookup key: ${escapeHtml(key)}</p>
+              ${interaction}
+            </td>
+            <td width="48%">
+              <table width="100%" border="1" cellpadding="4" bgcolor="#fff" style="font-size:10px;">
+                <tr bgcolor="#ececec"><td colspan="2"><b>Cross-Registry Signals</b></td></tr>
+                ${relatedRows || relatedFallback}
+              </table>
+              <div style="height:6px;"></div>
+              ${categoryWidget}
+            </td>
+          </tr></table>
+          ${footerHtml(key)}
+        </td></tr>
+      </table>
+    </div>`;
+  }
+
+  if (layout === 4) {
+    return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
+      <table width="100%" border="1" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" bordercolor="${pal.border}" style="font-family:Tahoma,Arial,sans-serif;">
+        <tr bgcolor="${pal.bar}"><td style="padding:8px 10px;">
+          <font color="#fff" size="3"><b>${escapeHtml(meta.title)}</b></font><br>
+          <font color="#d9ecff" size="1">${escapeHtml(meta.category.toUpperCase())} · ${escapeHtml(meta.tone.toUpperCase())} · ${escapeHtml(classicStat)}</font>
+        </td></tr>
+        <tr><td style="padding:10px;">
+          <table width="100%" border="0" cellpadding="6"><tr valign="top">
+            <td width="35%" style="background:#fff;border:1px solid #d6d6d6;">
+              <b>Quick Links</b>
+              <ul style="margin:6px 0 8px 16px;padding:0;">
+                <li><a href="#" data-nav="${escapeHtml(key)}">Reload page</a></li>
+                <li><a href="#" data-nav="web_registry">Web Registry</a></li>
+                <li><a href="#" data-nav="home">Wahoo homepage</a></li>
+              </ul>
+              ${categoryWidget}
+            </td>
+            <td width="65%" style="background:#fff;border:1px solid #d6d6d6;">
+              ${quirks}
+              <p style="margin-top:0;"><font size="3">${escapeHtml(meta.description)}</font></p>
+              ${subHtml}
+              <table width="100%" border="1" cellpadding="4" bgcolor="#fffffd" style="font-size:10px;">
+                <tr bgcolor="#ececec"><td><b>Linked Pages</b></td></tr>
+                <tr><td><ul style="margin:4px 0 4px 16px;padding:0;">${relatedList || '<li>No cached pages yet</li>'}</ul></td></tr>
+              </table>
+              ${interaction}
+            </td>
+          </tr></table>
+          ${footerHtml(key)}
+        </td></tr>
+      </table>
+    </div>`;
+  }
+
   return `<div class="iebody ${patternClass}" style="background:${pal.page};padding:6px;">
-  <table width="100%" bgcolor="${pal.inner}" border="1" bordercolor="${pal.border}" cellpadding="10" cellspacing="0" style="font-family:Tahoma,Arial,sans-serif;font-size:11px;">
-  <tr bgcolor="${pal.bar}"><td><font color="#ffffff" size="3"><b>${escapeHtml(meta.title)}</b></font><br>
-  <font color="#ddeeff" size="1">${escapeHtml(meta.tone.toUpperCase())} · District ${meta.district ?? '—'} · ${escapeHtml(meta.category)}</font></td></tr>
-  <tr><td>
-    ${quirks}
-    <p style="color:#222;line-height:1.35;"><font size="3">${escapeHtml(meta.description)}</font></p>
-    <p style="font-size:10px;color:#555;">Visitor hits (since tracking): <b>${visits}</b></p>
-    ${subHtml}
-    <table width="100%" cellpadding="6" bgcolor="#ffffff" border="1" style="font-size:11px;"><tr><td>
-      <b>Latest intel:</b><ul style="margin:6px 0 6px 18px;">${relHtml || '<li style="font-size:10px;">No related listings. Try Wahoo search.</li>'}</ul>
-    </td></tr></table>
-    <h3 style="color:${pal.bar};font-size:13px;margin-bottom:4px;">Interact</h3>
-    <form data-wn-action="${escapeHtml(action)}" data-wn-page-key="${escapeHtml(key)}">
-      ${formInner}
-    </form>
-    ${footerHtml(key)}
-  </td></tr></table></div>`;
+    <table width="100%" border="1" cellpadding="0" cellspacing="0" bgcolor="${pal.inner}" bordercolor="${pal.border}" style="font-family:'Courier New',Tahoma,sans-serif;font-size:11px;">
+      <tr bgcolor="${pal.bar}"><td style="padding:7px 9px;">
+        <font color="#fff"><b>${escapeHtml(meta.title)}</b></font> <font color="#d6e8ff" size="1">:: ${escapeHtml(host)}</font>
+      </td></tr>
+      <tr><td style="padding:10px;">
+        <table width="100%" border="1" cellpadding="4" bgcolor="#0e1418" style="color:#a9f3c6;font-size:11px;">
+          <tr><td>
+            C:\\WORLDNET\\${escapeHtml(key.toUpperCase())}&gt; TYPE README.TXT<br>
+            ${escapeHtml(meta.description)}<br>
+            STATUS: ${escapeHtml(meta.tone.toUpperCase())} / ${escapeHtml(meta.category.toUpperCase())} / VISITS ${visits}
+          </td></tr>
+        </table>
+        <div style="height:8px;"></div>
+        ${subHtml}
+        ${categoryWidget}
+        ${interaction}
+        <table width="100%" border="1" cellpadding="4" bgcolor="#fff" style="font-size:10px;margin-top:8px;">
+          <tr bgcolor="#ececec"><td><b>Neighbor Links</b></td></tr>
+          <tr><td><ul style="margin:4px 0 4px 16px;padding:0;">${relatedList || '<li>Registry cold-start in progress</li>'}</ul></td></tr>
+        </table>
+        ${footerHtml(key)}
+      </td></tr>
+    </table>
+  </div>`;
 }
 
 /**

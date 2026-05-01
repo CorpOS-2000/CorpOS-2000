@@ -10,6 +10,10 @@ import { rollD4, rollD20 } from './d20.js';
 import { generatePlayerReplies, schedulePlayerReplies } from './player-interaction-replies.js';
 import { scanHashtags } from './market-dynamics.js';
 
+/** Pipeline NPC drip — same cadence concern as Herald (tick fires every animation frame). */
+const PIPELINE_NPC_MIN_REAL_MS = 320;
+let _pipelineNpcLastRealMs = 0;
+
 let plGen = 0;
 /** @type {HTMLElement | null} */
 let mountHost = null;
@@ -120,7 +124,6 @@ export function mountPipelineLiveComments(container, pageDef) {
 
   const myGen = ++plGen;
   mountHost = container;
-  mountedPageId = String(pid);
 
   const onInteract = (e) => {
     if (myGen !== plGen || !mountHost?.contains(e.target)) return;
@@ -229,6 +232,12 @@ export function teardownPipelineLiveComments() {
  * @param {number} simElapsedMs
  */
 export function tickPipelineLiveComments(simElapsedMs) {
+  if (typeof performance !== 'undefined') {
+    const now = performance.now();
+    if (now - _pipelineNpcLastRealMs < PIPELINE_NPC_MIN_REAL_MS) return;
+    _pipelineNpcLastRealMs = now;
+  }
+
   const t = Number(simElapsedMs) || 0;
   const pages = getState().contentRegistry?.pages || [];
 
@@ -238,60 +247,58 @@ export function tickPipelineLiveComments(simElapsedMs) {
     const pid = page.pageId;
     if (!pid) continue;
 
-    let safety = 0;
-    while (safety < 64) {
-      const pl = getSessionState().pipelineLive;
-      let due = Number(pl?.byPage?.[pid]?.nextDueSimMs) || 0;
-      if (!due) {
-        patchSession((s) => {
-          ensurePipelineLive(s);
-          if (!s.pipelineLive.byPage[pid]) s.pipelineLive.byPage[pid] = { nextDueSimMs: 0 };
-          s.pipelineLive.byPage[pid].nextDueSimMs = t + rollD4() * SIM_HOUR_MS;
-        });
-        break;
-      }
-      if (t < due) break;
-      safety += 1;
-
-      const rng = mulberry32((t ^ due ^ safety ^ pid.length * 13) >>> 0);
-      const nRoll = rollD20();
-      const day = getGameDayIndex();
-
+    const pl = getSessionState().pipelineLive;
+    let due = Number(pl?.byPage?.[pid]?.nextDueSimMs) || 0;
+    if (!due) {
       patchSession((s) => {
         ensurePipelineLive(s);
         if (!s.pipelineLive.byPage[pid]) s.pipelineLive.byPage[pid] = { nextDueSimMs: 0 };
         s.pipelineLive.byPage[pid].nextDueSimMs = t + rollD4() * SIM_HOUR_MS;
-
-        for (let i = 0; i < nRoll; i++) {
-          const sec = secs[Math.floor(rng() * secs.length)] || secs[0];
-          const sid = String(sec.sectionId || sec.section_id || 'main');
-          const scope = scopeId(String(pid), sid);
-          if (!s.pipelineLive.threads[scope]) s.pipelineLive.threads[scope] = { comments: [] };
-          if (!Array.isArray(s.pipelineLive.threads[scope].comments)) s.pipelineLive.threads[scope].comments = [];
-
-          const post = sec.commentFlavor === 'snack' || sec.commentFlavor === 'generic' ? sec.commentFlavor : 'auto';
-          const seed = ((t ^ due) >>> 0) + i * 131071 + sid.length * 17;
-          const gen = generateSocialComment({
-            seed,
-            flavor: post,
-            context: String(sec.commentContext || 'generic'),
-            forcedPersonality:
-              rng() < 0.36
-                ? SOCIAL_COMMENT_VOICE_KEYS[Math.floor(rng() * SOCIAL_COMMENT_VOICE_KEYS.length)]
-                : undefined
-          });
-          s.pipelineLive.threads[scope].comments.push({
-            id: `pl-npc-${t}-${i}-${scope.replace(/\W/g, '')}`.slice(0, 96),
-            author: gen.author,
-            text: gen.text,
-            source: 'npc',
-            personality: gen.tone,
-            postedGameDay: day
-          });
-        }
       });
+      continue;
     }
+    if (t < due) continue;
+
+    const rng = mulberry32((t ^ due ^ pid.length * 13) >>> 0);
+    const nRoll = rollD20();
+    const day = getGameDayIndex();
+
+    patchSession((s) => {
+      ensurePipelineLive(s);
+      if (!s.pipelineLive.byPage[pid]) s.pipelineLive.byPage[pid] = { nextDueSimMs: 0 };
+      s.pipelineLive.byPage[pid].nextDueSimMs = t + rollD4() * SIM_HOUR_MS;
+
+      for (let i = 0; i < nRoll; i++) {
+        const sec = secs[Math.floor(rng() * secs.length)] || secs[0];
+        const sid = String(sec.sectionId || sec.section_id || 'main');
+        const scope = scopeId(String(pid), sid);
+        if (!s.pipelineLive.threads[scope]) s.pipelineLive.threads[scope] = { comments: [] };
+        if (!Array.isArray(s.pipelineLive.threads[scope].comments)) s.pipelineLive.threads[scope].comments = [];
+
+        const post = sec.commentFlavor === 'snack' || sec.commentFlavor === 'generic' ? sec.commentFlavor : 'auto';
+        const seed = ((t ^ due) >>> 0) + i * 131071 + sid.length * 17;
+        const gen = generateSocialComment({
+          seed,
+          flavor: post,
+          context: String(sec.commentContext || 'generic'),
+          forcedPersonality:
+            rng() < 0.36
+              ? SOCIAL_COMMENT_VOICE_KEYS[Math.floor(rng() * SOCIAL_COMMENT_VOICE_KEYS.length)]
+              : undefined
+        });
+        s.pipelineLive.threads[scope].comments.push({
+          id: `pl-npc-${t}-${i}-${scope.replace(/\W/g, '')}`.slice(0, 96),
+          author: gen.author,
+          text: gen.text,
+          source: 'npc',
+          personality: gen.tone,
+          postedGameDay: day
+        });
+      }
+    });
   }
 
-  syncAllPipelineLists();
+  if (typeof document !== 'undefined' && document.querySelector('.wn-live-thread[data-pl-scope]')) {
+    syncAllPipelineLists();
+  }
 }

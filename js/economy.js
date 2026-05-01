@@ -7,6 +7,8 @@
  */
 import { getState, patchState, SIM_DAY_MS as GS_SIM_DAY_MS } from './gameState.js';
 import { emit } from './events.js';
+import { resolveProductKey, getProductEntry, getSuggestedRetailBand as _ppSuggestBand } from './product-pulse.js';
+import { computeAffinity } from './taglet-affinity.js';
 
 export const SIM_DAY_MS = GS_SIM_DAY_MS;
 
@@ -121,7 +123,7 @@ export function ensureEconomy(st) {
   if (!st.economy.priceIndex) st.economy.priceIndex = {};
 }
 
-export function computeBuyPrice(basePrice, category, tags = []) {
+export function computeBuyPrice(basePrice, category, tags = [], item = null) {
   const st = getState();
   ensureEconomy(st);
   const base = Number(basePrice) || 0;
@@ -136,8 +138,26 @@ export function computeBuyPrice(basePrice, category, tags = []) {
     tagStrs.some((t) => techTags.includes(t)) || ['hardware', 'software', 'data'].includes(cat);
   const dotComMod = isTech && st.economy.dotComBubble === 'peak' ? 1.08 : 1.0;
   const confidenceMod = 0.85 + (st.economy.consumerConfidence / 100) * 0.3;
-  const raw = base * catIndex * buzzMulti * supplyMod * dotComMod * confidenceMod;
+  // Popularity multiplier from publicPulse
+  let popularityMod = 1.0;
+  if (item) {
+    const pk = resolveProductKey(item);
+    const entry = getProductEntry(pk);
+    const pop = typeof entry.popularity === 'number' ? entry.popularity : 50;
+    popularityMod = 0.85 + (pop / 100) * 0.35; // 0.85 – 1.20 range
+  }
+  const raw = base * catIndex * buzzMulti * supplyMod * dotComMod * confidenceMod * popularityMod;
   return Math.round(Math.max(base * 0.5, Math.min(base * 3, raw)) * 100) / 100;
+}
+
+/**
+ * Suggested retail price band from publicPulse popularity.
+ * @param {object|string} itemOrKey Item object or product key string.
+ * @param {number} basePrice
+ */
+export function getSuggestedRetailBand(itemOrKey, basePrice) {
+  const pk = typeof itemOrKey === 'string' ? itemOrKey : resolveProductKey(itemOrKey);
+  return _ppSuggestBand(pk, basePrice);
 }
 
 function computeBuzzMultiplier(tags, st) {
@@ -208,9 +228,20 @@ export function npcPurchaseDecision(actor, item, price) {
   const econMood = 0.7 + (st.economy.consumerConfidence / 100) * 0.6;
   const unemploymentMod = 1 - st.economy.unemploymentRate * 2;
   const buzzBonus = computeBuzzMultiplier(item.tags || [], st);
+  // Affinity multiplier: if item has product taglets, weight by actor–product affinity
+  let affinityMod = 1.0;
+  const productTaglets = item.productTaglets || getProductEntry(resolveProductKey(item)).taglets || [];
+  if (productTaglets.length) {
+    const { score } = computeAffinity(taglets, productTaglets);
+    affinityMod = 1.0 + (score / 100) * 0.3; // -30% to +30%
+  }
+  // Popularity modifier
+  const popEntry = getProductEntry(resolveProductKey(item));
+  const pop = typeof popEntry.popularity === 'number' ? popEntry.popularity : 50;
+  const popularityMod = 0.85 + (pop / 100) * 0.3; // 0.85 – 1.15
   const probability = Math.max(
     0,
-    Math.min(0.98, baseSpendProbability * profile.spendRate * catBonus * econMood * unemploymentMod * buzzBonus)
+    Math.min(0.98, baseSpendProbability * profile.spendRate * catBonus * econMood * unemploymentMod * buzzBonus * affinityMod * popularityMod)
   );
   const willBuy = Math.random() < probability;
   const reason = willBuy

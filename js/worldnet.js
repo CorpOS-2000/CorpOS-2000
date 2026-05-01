@@ -1749,9 +1749,10 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     return true;
   }
   if (action === 'install-app') {
+    const holder = sourceEl?.closest?.('[data-install-app-id]');
     const appId =
+      holder?.getAttribute?.('data-install-app-id') ||
       sourceEl?.getAttribute?.('data-install-app-id') ||
-      rootEl?.querySelector?.('[data-install-app-id]')?.getAttribute?.('data-install-app-id') ||
       '';
     const app = getInstallableApp(appId);
     const price = getSoftwarePurchasePriceUsd(app);
@@ -1799,7 +1800,8 @@ function dispatchAction(action, rootEl, sourceEl = null) {
     return true;
   }
   if (action === 'open-install-window') {
-    const appId = sourceEl?.getAttribute?.('data-install-app-id') || '';
+    const holder = sourceEl?.closest?.('[data-install-app-id]');
+    const appId = holder?.getAttribute?.('data-install-app-id') || sourceEl?.getAttribute?.('data-install-app-id') || '';
     openTransferDialog(appId);
     return true;
   }

@@ -868,6 +868,24 @@ export function initMediaPlayer() {
     wireDom(win);
     lastUnlockSet = new Set(getState().mediaPlayer.unlockedIds || []);
 
+    let mpWasPlayingBeforeFastSim = false;
+    on('simSpeedChanged', ({ speed }) => {
+      const sp = Number(speed);
+      if (sp > 1) {
+        if (!MediaPlayer.audio?.paused && MediaPlayer.currentTrack && !MediaPlayer.isOverride) {
+          mpWasPlayingBeforeFastSim = true;
+          MediaPlayer.pause();
+        }
+      } else if (sp === 1) {
+        if (mpWasPlayingBeforeFastSim && MediaPlayer.currentTrack && !MediaPlayer.isOverride) {
+          mpWasPlayingBeforeFastSim = false;
+          MediaPlayer.resume();
+        } else {
+          mpWasPlayingBeforeFastSim = false;
+        }
+      }
+    });
+
     on('stateChanged', () => {
       MediaPlayer.syncFavoritesFromState();
       MediaPlayer.refreshMergedTracks();

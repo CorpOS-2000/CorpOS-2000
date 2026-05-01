@@ -44,6 +44,7 @@ html.corpos-soft-cursor .wtb .wcb {
   cursor: none !important;
 }
 
+/* Above purge / app-error / in-app prompt overlays (100120–100130), below full-screen flows that set their own z-index. */
 #corpos-cursor-root {
   position: fixed;
   left: 0;
@@ -52,7 +53,7 @@ html.corpos-soft-cursor .wtb .wcb {
   height: 0;
   overflow: visible;
   pointer-events: none;
-  z-index: 100090;
+  z-index: 100200;
 }
 
 /* Slightly larger than source art (32px) — hotspots scaled in JS */

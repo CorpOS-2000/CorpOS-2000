@@ -14,6 +14,8 @@ html, body {
 #boot-drive-screen *,
 #bios,
 #bios *,
+#firmware-ack-screen,
+#firmware-ack-screen *,
 #logo-screen,
 #logo-screen * {
   cursor: url('../assets/cursors/corpos-arrow.png') 0 0, default;

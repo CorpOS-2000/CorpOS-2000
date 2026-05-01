@@ -64,10 +64,12 @@ export function stopClock() {
 }
 
 export function setSpeed(speed) {
+  const v = Number(speed);
   patchState((st) => {
-    st.sim.speed = speed;
+    st.sim.speed = v;
     return st;
   });
+  emit('simSpeedChanged', { speed: v });
 }
 
 export function formatGameDateTime(date) {

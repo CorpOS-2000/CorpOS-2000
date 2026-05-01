@@ -159,6 +159,78 @@ body {
   vertical-align: middle;
 }
 
+/* First-boot firmware legal ack — same POST look as #bios, after logo when no users */
+.firmware-ack-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100055;
+  background: #000;
+  font-family: 'Courier New', Consolas, 'Fixedsys', monospace;
+  font-size: 14px;
+  color: #ffffff;
+  padding: 28px 32px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.firmware-ack-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+#firmware-ack-text {
+  white-space: pre-wrap;
+  max-width: 52rem;
+}
+
+.firmware-ack-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: #ccc;
+  animation: blink 0.6s step-end infinite;
+  vertical-align: middle;
+}
+
+.firmware-ack-footer {
+  flex-shrink: 0;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #334444;
+}
+
+.firmware-ack-prompt {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  max-width: 52rem;
+  color: #fff;
+  cursor: text;
+}
+
+#firmware-ack-input {
+  flex: 1;
+  min-width: 12em;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  letter-spacing: inherit;
+  outline: none;
+}
+
+.firmware-ack-hint {
+  width: 100%;
+  max-width: 52rem;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ffcc00;
+}
+
 @keyframes blink {
   0%,
   100% {
@@ -409,6 +481,20 @@ body.corpos-crt .crt-overlay {
   visibility: visible;
 }
 
+/* Sim speed > 1× — CRT/VHS micro-motions run faster (duration ÷ speed factor) */
+body.corpos-crt {
+  --crt-speed-factor: 1;
+}
+body.corpos-crt[data-corpos-sim-speed='2'] {
+  --crt-speed-factor: 2;
+}
+body.corpos-crt[data-corpos-sim-speed='4'] {
+  --crt-speed-factor: 4;
+}
+body.corpos-crt[data-corpos-sim-speed='8'] {
+  --crt-speed-factor: 8;
+}
+
 /* Slight tube curvature + edge shading (no lens warp — keeps text sharp) */
 .crt-overlay__curvature {
   position: absolute;
@@ -419,6 +505,7 @@ body.corpos-crt .crt-overlay {
     inset 0 0 40px rgba(0, 15, 30, 0.22),
     inset 0 4px 24px rgba(255, 255, 255, 0.04);
   animation: crt-curve-breathe 14s ease-in-out infinite;
+  animation-duration: calc(14s / var(--crt-speed-factor, 1));
 }
 
 @keyframes crt-curve-breathe {
@@ -472,6 +559,7 @@ body.corpos-crt .crt-overlay {
   background: rgba(0, 0, 0, 0);
   opacity: 0;
   animation: crt-flicker 4.2s steps(24, end) infinite;
+  animation-duration: calc(4.2s / var(--crt-speed-factor, 1));
   mix-blend-mode: overlay;
 }
 
@@ -522,6 +610,7 @@ body.corpos-crt .crt-overlay {
   opacity: 0;
   transform: translateY(-30%);
   animation: crt-vhs-roll 32s ease-in-out infinite;
+  animation-duration: calc(32s / var(--crt-speed-factor, 1));
   mix-blend-mode: overlay;
   pointer-events: none;
 }

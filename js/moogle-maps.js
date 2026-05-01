@@ -1,5 +1,5 @@
 /**
- * Moogle Maps — in-game Google Maps parody for CorpOS 2000.
+ * Moogle Maps — in-game web maps parody for CorpOS 2000.
  * Standalone WorldNet page + embeddable widget with search/autocomplete API.
  */
 

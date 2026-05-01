@@ -10,6 +10,7 @@ import { generateSocialComment, SOCIAL_COMMENT_VOICE_KEYS } from './social-comme
 import { rollD4, rollD20 } from './d20.js';
 import { generatePlayerReplies, schedulePlayerReplies } from './player-interaction-replies.js';
 import { scanHashtags } from './market-dynamics.js';
+import { recordProductSignal, recordSyndicatedComment, normalizeProductKey } from './product-pulse.js';
 
 let rbGen = 0;
 let rootEl = null;
@@ -292,6 +293,12 @@ function applyVote(postId, vote) {
     rb.userVote[postId] = vote;
   });
   updateCountSpans(postId);
+  // Feed into publicPulse
+  const post = postsCache?.posts?.find((p) => p.id === postId);
+  if (post) {
+    const productKey = normalizeProductKey(post.commentContext || post.id);
+    recordProductSignal(productKey, vote === 'up' ? 'like' : 'dislike');
+  }
 }
 
 function pickDistinctActors(n, rng) {
@@ -331,7 +338,15 @@ function appendLiveCommentToDom(postId, author, text) {
  * Sim-time NPC comment batches: 1d20 comments per tick, next tick in 1d4 sim hours.
  * @param {number} simElapsedMs
  */
+const REVIEW_BOMBER_MIN_REAL_MS = 500;
+let _reviewBomberLastRealMs = 0;
+
 export function tickReviewBomberNpc(simElapsedMs) {
+  if (typeof performance !== 'undefined') {
+    const now = performance.now();
+    if (now - _reviewBomberLastRealMs < REVIEW_BOMBER_MIN_REAL_MS) return;
+    _reviewBomberLastRealMs = now;
+  }
   const t = Number(simElapsedMs) || 0;
   const posts = postsCache?.posts;
   if (!Array.isArray(posts) || !posts.length) return;
@@ -587,6 +602,13 @@ function onComposeInteraction(e, posts) {
       const replies = generatePlayerReplies({ channel: 'review_bomber', postId, playerText: text, simMs });
       if (replies.length) schedulePlayerReplies({ channel: 'review_bomber', targetId: postId, replies, simMs });
       scanHashtags(text);
+      // Feed player comment into syndicated pool
+      const _rbPost = posts?.find?.((p) => p.id === postId);
+      if (_rbPost) {
+        const _rbKey = normalizeProductKey(_rbPost.commentContext || _rbPost.id);
+        recordSyndicatedComment({ text, likes: 0, dislikes: 0, source: 'reviewbomber', productKey: _rbKey });
+        recordProductSignal(_rbKey, 'mention');
+      }
 
       const ul = article.querySelector(`[data-rb-comments="${postId}"]`);
       if (ul) {

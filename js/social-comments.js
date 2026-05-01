@@ -1,10 +1,14 @@
-/**
- * Modular combinatorial social comments — no network, no AI.
- * Feeds on JSON fragments + optional ActorDB display names and taglet tone hints.
- */
+import { computeAffinity, pickAffinityComment } from './taglet-affinity.js';
+import { ensureProductTaglets } from './product-taglets.js';
 
 /** @type {object | null} */
 let fragments = null;
+
+/** Herald NPC lines — tiered openers/middles/closers (`data/news-comment-fragments.json`). */
+/** @type {object | null} */
+let newsFragments = null;
+
+const NEWS_TIER_ORDER = Object.freeze(['terrible', 'bad', 'average', 'good', 'great']);
 
 /** Player/NPC composer personalities map to existing tone styling. */
 const FORCED_PERSONALITY_TONES = Object.freeze({
@@ -140,6 +144,22 @@ function applyToneStyle(sentence, tone, rng) {
   }
 }
 
+/** Map Herald/story affinity band to modular voice keys. */
+function affinityVoiceKeyForNews(band, rng) {
+  switch (band) {
+    case 'love':
+      return rng() < 0.55 ? 'supporter' : 'hype';
+    case 'like':
+      return rng() < 0.55 ? 'casual' : 'supporter';
+    case 'dislike':
+      return rng() < 0.55 ? 'skeptic' : 'worried';
+    case 'hate':
+      return rng() < 0.55 ? 'ranter' : 'troll';
+    default:
+      return '';
+  }
+}
+
 /**
  * @param {(name: string) => Promise<unknown>} [loadJson] returns text or parsed object
  */
@@ -177,12 +197,32 @@ export async function initSocialComments(loadJson) {
  *   seed: number,
  *   actor_id?: string,
  *   forcedPersonality?: string,
- *   personality?: string
+ *   personality?: string,
+ *   storyTopicTaglets?: string[],
+ *   storyProductKey?: string
  * }} opts
  */
 export function generateSocialComment(opts) {
   const seed = Number(opts?.seed) || 1;
   const rng = mulberry32(seed >>> 0);
+
+  let topicTaglets = Array.isArray(opts?.storyTopicTaglets) ? opts.storyTopicTaglets.filter(Boolean).slice(0, 5) : [];
+  if (!topicTaglets.length && opts?.storyProductKey) {
+    try {
+      topicTaglets = ensureProductTaglets({ id: opts.storyProductKey, category: '' });
+    } catch {
+      topicTaglets = [];
+    }
+  }
+  let affinityBand = 'neutral';
+  let forcedKeyFromNews = '';
+  if (topicTaglets.length && opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
+    const ra = window.ActorDB.getRaw(opts.actor_id);
+    const aff = computeAffinity(ra?.taglets || [], topicTaglets);
+    affinityBand = aff.band;
+    forcedKeyFromNews = affinityVoiceKeyForNews(aff.band, rng);
+  }
+
   const ctx = opts?.context === 'buttertoes' ? 'buttertoes' : opts?.context === 'snack' ? 'snack' : opts?.context === 'generic' ? 'generic' : 'auto';
 
   const flavor =
@@ -213,7 +253,10 @@ export function generateSocialComment(opts) {
 
   let sentence = [op, mid, cl].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 
-  const forcedRaw = opts?.forcedPersonality ?? opts?.personality;
+  const forcedRaw =
+    topicTaglets.length && opts?.actor_id && forcedKeyFromNews
+      ? forcedKeyFromNews
+      : opts?.forcedPersonality ?? opts?.personality;
   const forcedKey =
     forcedRaw != null && String(forcedRaw).trim()
       ? String(forcedRaw).trim().toLowerCase()
@@ -251,6 +294,10 @@ export function generateSocialComment(opts) {
     }
   }
 
+  if (topicTaglets.length && affinityBand !== 'neutral' && rng() < 0.38) {
+    sentence = `${sentence} ${pickAffinityComment(affinityBand, seed)}`.replace(/\s+/g, ' ').trim();
+  }
+
   let author = '';
   if (opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
     author = displayNameFromActor(window.ActorDB.getRaw(opts.actor_id));
@@ -265,6 +312,141 @@ export function generateSocialComment(opts) {
   }
 
   return { author, text: sentence, flavor, tone: tone || undefined };
+}
+
+function tierIndex(tier) {
+  const i = NEWS_TIER_ORDER.indexOf(tier);
+  return i < 0 ? 2 : i;
+}
+
+/**
+ * When NPC taglets love/hate the story topic, nudge fragment tier so tone matches affinity vs headline sentiment.
+ * @param {string} newsTier
+ * @param {string} affinityBand
+ * @param {() => number} rng
+ */
+function effectiveNewsTier(newsTier, affinityBand, rng) {
+  let t = newsTier && newsFragments?.tiers?.[newsTier] ? newsTier : 'average';
+  const idx = tierIndex(t);
+  if ((affinityBand === 'love' || affinityBand === 'like') && idx <= 2 && rng() < 0.4) {
+    return NEWS_TIER_ORDER[Math.min(4, idx + 1)];
+  }
+  if ((affinityBand === 'hate' || affinityBand === 'dislike') && idx >= 2 && rng() < 0.4) {
+    return NEWS_TIER_ORDER[Math.max(0, idx - 1)];
+  }
+  return t;
+}
+
+function pickNewsLine(rng, tier, field) {
+  const bucket = newsFragments?.tiers?.[tier]?.[field];
+  const picked = pick(rng, bucket);
+  if (picked) return picked;
+  const fb = newsFragments?.tiers?.average?.[field];
+  return pick(rng, fb) || '';
+}
+
+/**
+ * Herald NPC comments — uses `item.newsTier` + taglet/topic affinity vs sentiment.
+ * @param {{
+ *   seed: number,
+ *   actor_id?: string,
+ *   forcedPersonality?: string,
+ *   personality?: string,
+ *   storyTopicTaglets?: string[],
+ *   storyProductKey?: string,
+ *   newsTier?: string,
+ *   newsScore?: number
+ * }} opts
+ */
+export function generateNewsComment(opts) {
+  const seed = Number(opts?.seed) || 1;
+  const rng = mulberry32(seed >>> 0);
+
+  let topicTaglets = Array.isArray(opts?.storyTopicTaglets) ? opts.storyTopicTaglets.filter(Boolean).slice(0, 5) : [];
+  if (!topicTaglets.length && opts?.storyProductKey) {
+    try {
+      topicTaglets = ensureProductTaglets({ id: opts.storyProductKey, category: '' });
+    } catch {
+      topicTaglets = [];
+    }
+  }
+
+  let affinityBand = 'neutral';
+  let forcedKeyFromNews = '';
+  if (topicTaglets.length && opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
+    const ra = window.ActorDB.getRaw(opts.actor_id);
+    const aff = computeAffinity(ra?.taglets || [], topicTaglets);
+    affinityBand = aff.band;
+    forcedKeyFromNews = affinityVoiceKeyForNews(aff.band, rng);
+  }
+
+  const rawTier = opts?.newsTier || 'average';
+  const tier = effectiveNewsTier(rawTier, affinityBand, rng);
+
+  const op = pickNewsLine(rng, tier, 'openers') || pick(rng, fragments.openers);
+  const mid = pickNewsLine(rng, tier, 'middles') || pick(rng, fragments.middles_generic) || pick(rng, fragments.middles_snack);
+  const cl = pickNewsLine(rng, tier, 'closers') || pick(rng, fragments.closers_generic) || pick(rng, fragments.closers_snack);
+
+  let sentence = [op, mid, cl].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
+  const forcedRaw =
+    topicTaglets.length && opts?.actor_id && forcedKeyFromNews
+      ? forcedKeyFromNews
+      : opts?.forcedPersonality ?? opts?.personality;
+  const forcedKey =
+    forcedRaw != null && String(forcedRaw).trim() ? String(forcedRaw).trim().toLowerCase() : '';
+
+  let tone = null;
+  if (forcedKey && FORCED_PERSONALITY_TONES[forcedKey]) {
+    tone = FORCED_PERSONALITY_TONES[forcedKey];
+    sentence = applyToneStyle(sentence, tone, rng);
+  } else if (opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
+    const rawAct = window.ActorDB.getRaw(opts.actor_id);
+    tone = firstToneTaglet(rawAct?.taglets);
+    sentence = applyToneStyle(sentence, tone, rng);
+  }
+
+  if (
+    opts?.aboutPlayer &&
+    opts?.actor_id &&
+    typeof window !== 'undefined' &&
+    window.AXIS?.getTier
+  ) {
+    const tierAx = window.AXIS.getTier(opts.actor_id);
+    const label = tierAx?.label || '';
+    if (label === 'Hostile' || label === 'Enemy') {
+      tone = 'aggressive_poster';
+      sentence = applyToneStyle(sentence, tone, rng);
+    } else if (label === 'Trusted Ally' || label === 'Favorable' || label === 'Acquainted') {
+      tone = 'optimistic_voice';
+      sentence = applyToneStyle(sentence, tone, rng);
+    } else if (label === 'Cool') {
+      if (rng() < 0.7) {
+        tone = 'contrarian';
+        sentence = applyToneStyle(sentence, tone, rng);
+      }
+    }
+  }
+
+  if (topicTaglets.length && affinityBand !== 'neutral' && rng() < 0.38) {
+    sentence = `${sentence} ${pickAffinityComment(affinityBand, seed)}`.replace(/\s+/g, ' ').trim();
+  }
+
+  let author = '';
+  if (opts?.actor_id && typeof window !== 'undefined' && window.ActorDB?.getRaw) {
+    author = displayNameFromActor(window.ActorDB.getRaw(opts.actor_id));
+  }
+  if (!author) {
+    const fromDb = randomActorDisplayName(rng);
+    author =
+      fromDb ||
+      pick(rng, fragments.handles_fallback) ||
+      pick(rng, fragments.openers) ||
+      'Guest';
+  }
+
+  const flavor = rng() < 0.45 ? 'snack' : 'generic';
+  return { author, text: sentence, flavor, tone: tone || undefined, newsTierUsed: tier };
 }
 
 function loadPairFallback(rng, flavor) {

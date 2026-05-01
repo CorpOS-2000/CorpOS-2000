@@ -1,0 +1,89 @@
+/** Scroll text for first-boot firmware legal acknowledgement (after BIOS, no registered users). */
+export const FIRMWARE_LEGAL_SCROLL_RAW = `
+-------------------------------------------------------------------------------
+ CORPOS 2000 FIRMWARE INTERFACE v1.0.0
+ FEDERAL MANDATE 2000-CR7 COMPLIANCE LAYER
+ LEGAL ACKNOWLEDGEMENT PROTOCOL
+-------------------------------------------------------------------------------
+
+INITIALIZING LEGAL MODULE...
+LOADING DISCLOSURE PARAMETERS...OK
+VERIFYING USER AWARENESS STATE...PENDING
+
+-------------------------------------------------------------------------------
+ NOTICE OF FICTIONAL CONTENT
+-------------------------------------------------------------------------------
+
+THIS SOFTWARE PRODUCT ("CORPOS 2000") IS A WORK OF FICTION.
+
+ALL SYSTEMS, EVENTS, ENTITIES, ORGANIZATIONS, AND INDIVIDUALS DEPICTED
+WITHIN THIS ENVIRONMENT ARE FICTIONALIZED SIMULATIONS CREATED FOR
+ENTERTAINMENT PURPOSES ONLY.
+
+-------------------------------------------------------------------------------
+ ENTITY & IDENTITY DISCLAIMER
+-------------------------------------------------------------------------------
+
+ANY NAMES, IDENTITIES, OR LIKENESSES OF PERSONS — WHETHER EXPLICIT OR
+IMPLIED — ARE NOT INTENDED TO REPRESENT REAL INDIVIDUALS.
+
+ANY RESEMBLANCE TO ACTUAL PERSONS, LIVING OR DEAD, IS PURELY
+COINCIDENTAL AND NON-INTENTIONAL.
+
+ALL CORPORATIONS, GOVERNMENT BODIES, FINANCIAL INSTITUTIONS, AND
+REGULATORY AGENCIES PRESENTED IN THIS SYSTEM ARE FICTIONAL CONSTRUCTS
+OR PARODIC REPRESENTATIONS.
+
+NO ASSOCIATION, ENDORSEMENT, OR CONNECTION TO REAL-WORLD ENTITIES IS
+EXPRESSED OR IMPLIED.
+
+-------------------------------------------------------------------------------
+ SIMULATED EVENTS & SYSTEMS DISCLAIMER
+-------------------------------------------------------------------------------
+
+ALL DEPICTIONS OF:
+
+ - FEDERAL OVERSIGHT
+ - INVESTIGATIONS
+ - AUDITS
+ - ARRESTS
+ - LEGAL PROCEEDINGS
+ - CORPORATE SCANDALS
+ - CRIMINAL ACTIVITIES
+
+ARE ABSTRACTED GAMEPLAY SYSTEMS AND NARRATIVE DEVICES.
+
+THEY DO NOT REPRESENT REAL-WORLD PROCESSES, PROCEDURES, OR OUTCOMES.
+
+ALL RESULTS ARE GENERATED THROUGH INTERNAL SIMULATION MECHANISMS.
+
+-------------------------------------------------------------------------------
+ BRAND & PARODY NOTICE
+-------------------------------------------------------------------------------
+
+ANY RECOGNIZABLE PRODUCTS, SERVICES, OR BRANDS APPEARING IN THIS
+ENVIRONMENT ARE ALTERED, PARODIED, OR FICTIONALIZED.
+
+THEY EXIST SOLELY TO SUPPORT SETTING AUTHENTICITY AND USER IMMERSION.
+
+NO REAL-WORLD BRAND OR ENTITY IS BEING REPLICATED OR REPRESENTED.
+
+-------------------------------------------------------------------------------
+ USER ACKNOWLEDGEMENT
+-------------------------------------------------------------------------------
+
+BY PROCEEDING, YOU ACKNOWLEDGE AND AGREE THAT:
+
+ - YOU UNDERSTAND THIS IS A FICTIONAL SIMULATION
+ - YOU WILL NOT INTERPRET CONTENT AS REAL-WORLD FACT
+ - YOU ACCEPT THAT ALL SYSTEMS ARE ARTIFICIAL CONSTRUCTS
+ - YOU RELEASE THE DEVELOPERS FROM ANY CLAIM OF MISREPRESENTATION
+
+-------------------------------------------------------------------------------
+ SYSTEM PROMPT
+-------------------------------------------------------------------------------
+
+TYPE "ACCEPT" TO CONTINUE INITIALIZATION
+TYPE "DECLINE" TO TERMINATE SESSION
+
+`;

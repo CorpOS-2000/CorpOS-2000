@@ -172,6 +172,77 @@
   border-bottom: 1px solid #808080;
 }
 
+/* ── Article engagement (like / dislike) ─────────────── */
+
+.dh-engage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 5px 26px;
+  font-size: 10px;
+}
+.dh-engage-btn {
+  border: 1px solid #b0a898;
+  background: #e8e4dc;
+  padding: 1px 6px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1.4;
+  border-radius: 2px;
+}
+.dh-engage-btn:hover { background: #d4d0c8; }
+.dh-engage-btn.active-like  { background: #bce4bc; border-color: #5a9a5a; color: #1f4a1f; }
+.dh-engage-btn.active-dislike { background: #e4bcbc; border-color: #9a5a5a; color: #4a1f1f; }
+.dh-engage-count { color: #888; min-width: 24px; text-align: right; }
+.dh-engage-sep { color: #ccc; }
+.dh-angle {
+  font-size: 10px;
+  color: #5a7a5a;
+  font-style: italic;
+  padding: 0 6px 4px 26px;
+}
+
+/* ── Reader forum (modular comments, pipeline-style) ───── */
+
+.dh-hl-thread {
+  margin: 6px 6px 10px 20px;
+  border: 1px solid #b0a898;
+  background: #faf8f2;
+  font-size: 10px;
+}
+.dh-hl-thread-hdr {
+  background: #e4dfd4;
+  padding: 4px 8px;
+  font-weight: bold;
+  border-bottom: 1px solid #d4d0c8;
+}
+.dh-hl-comment { margin: 2px 0; }
+.dh-hl-compose {
+  padding: 8px;
+  border-top: 1px solid #d4d0c8;
+  background: #f5f3ee;
+}
+.dh-hl-compose-lbl { display: block; margin-bottom: 4px; font-size: 10px; }
+.dh-hl-voice {
+  width: 100%;
+  max-width: 220px;
+  margin-bottom: 6px;
+  font-size: 10px;
+}
+.dh-hl-ta {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.dh-hl-compose-actions { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dh-hl-ready-lbl { font-size: 10px; }
+.dh-hl-post {
+  padding: 2px 10px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
 /* ── Footer ──────────────────────────────────────────── */
 
 .dh-footer {

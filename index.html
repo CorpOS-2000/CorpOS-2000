@@ -69,6 +69,16 @@
 
 <div id="bios"><div id="bios-text"></div><span id="bios-cursor"></span></div>
 
+<div id="firmware-ack-screen" class="firmware-ack-screen" style="display:none" aria-live="polite">
+  <div class="firmware-ack-body">
+    <div id="firmware-ack-text"></div><span id="firmware-ack-cursor" class="firmware-ack-cursor" aria-hidden="true"></span>
+  </div>
+  <div id="firmware-ack-footer" class="firmware-ack-footer" style="display:none">
+    <label class="firmware-ack-prompt"><span id="firmware-ack-prompt-gt">&gt; </span><input type="text" id="firmware-ack-input" autocomplete="off" spellcheck="false" aria-label="Type ACCEPT or DECLINE" /></label>
+    <div id="firmware-ack-hint" class="firmware-ack-hint" style="display:none"></div>
+  </div>
+</div>
+
 <div id="logo-screen">
   <!-- Official brand: Wordmark Option A — Dark variant (Part 1) -->
   <div class="logo-wordmark logo-wordmark--dark" role="img" aria-label="CorpOS 2000">
