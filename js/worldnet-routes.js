@@ -39,6 +39,7 @@ export const ROOT_URL_BY_PAGE = {
   ssa: 'http://www.ssa.gov.net/',
   fra: 'http://www.fra.gov.net/',
   devtools: 'http://www.devtools.net/',
+  corpos_com: 'http://www.corpos.com/',
   backrooms: 'http://www.backrooms.hck/',
   dmb: 'http://www.davidmitchellbanking.com/',
   net99669: 'http://www.99669.net/',
@@ -167,6 +168,8 @@ const HOST_ALIASES = [
   ['fra.gov.net', 'fra'],
   ['www.devtools.net', 'devtools'],
   ['devtools.net', 'devtools'],
+  ['www.corpos.com', 'corpos_com'],
+  ['corpos.com', 'corpos_com'],
   ['www.backrooms.hck', 'backrooms'],
   ['backrooms.hck', 'backrooms'],
   ['mail.jeemail.net', 'jeemail_login'],
@@ -214,6 +217,7 @@ const EXTRA_PAGE_TITLES = {
   ssa: 'Social Security Administration (SSA.NET)',
   fra: 'Federal Revenue Authority (FRA.NET)',
   devtools: 'devtools.net',
+  corpos_com: 'CorpOS.com — Official Software Store',
   backrooms: 'backrooms.hck — Underground Software',
   dmb: 'David & Mitchell Banking',
   net99669: '99669.net — WorldNet Master Directory',
@@ -346,6 +350,14 @@ export function subPathFromUrl(pageKey, pathname) {
     if (segs[0]?.toLowerCase() === 'profile' && segs[1]) return `profile/${segs[1]}`;
     return '';
   }
+  if (pageKey === 'corpos_com') {
+    const p = (pathname || '/').replace(/\\/g, '/');
+    let clean = p.replace(/^\/+/, '');
+    if (clean.length > 1) clean = clean.replace(/\/$/, '');
+    const seg = (clean.split('/').filter(Boolean)[0] || '').toLowerCase();
+    if (seg === 'apps') return 'apps';
+    return '';
+  }
   if (pageKey === 'mytube') {
     const p = (pathname || '/').replace(/\\/g, '/');
     let clean = p.replace(/^\/+/, '');
@@ -376,6 +388,16 @@ export function resolveLocationFromAddress(raw) {
     const href = t.includes('://') ? t : `http://${t}`;
     const u = new URL(href);
     const host = u.hostname.toLowerCase();
+    const shopStoreId = resolveShopStoreIdFromHost(host);
+    if (shopStoreId) {
+      let path = (u.pathname || '/').replace(/\\/g, '/');
+      path = path.replace(/^\/+/, '');
+      if (path.length > 1) path = path.replace(/\/+$/, '');
+      const parts = path.split('/').filter(Boolean);
+      if (parts[0] === shopStoreId) parts.shift();
+      const rest = parts.length ? parts.join('/') : 'home';
+      return { pageKey: 'wn_shop', subPath: `${shopStoreId}/${rest}` };
+    }
     const pageKey = HOST_TO_PAGE[host];
     if (pageKey) {
       const sub = subPathFromUrl(pageKey, u.pathname);
@@ -426,6 +448,11 @@ export function resolveLocationFromAddress(raw) {
   if (low.includes('yourspace')) return { pageKey: 'yourspace', subPath: '' };
   if (low.includes('mytube')) return { pageKey: 'mytube', subPath: '' };
   if (low.includes('moogle')) return { pageKey: 'moogle_home', subPath: '' };
+  if (low.includes('amazone')) return { pageKey: 'wn_shop', subPath: 'amazone/home' };
+  if (low.includes('corpos.com')) {
+    if (/\/apps(\/|$)/.test(low) || low.includes('corpos.com/apps')) return { pageKey: 'corpos_com', subPath: 'apps' };
+    return { pageKey: 'corpos_com', subPath: '' };
+  }
 
   return { pageKey: 'home', subPath: '' };
 }
@@ -445,7 +472,8 @@ export const WAHOO_LISTED_PAGE_KEYS = new Set([
   'hiring',
   'ssa',
   'web_registry',
-  'net99669'
+  'net99669',
+  'amazone_corp'
 ]);
 
 /**
@@ -463,13 +491,17 @@ export function getWorldWideWebRegistryRows() {
       title = `${BANK_META[key].title} (main site)`;
     }
     if (!title) title = key;
+    let note = 'Public entry point';
+    if (key === 'amazone_corp') {
+      note = 'Active storefront — Wahoo! Shopping directory';
+    }
     rows.push({
       pageKey: key,
       subPath: '',
       title,
       url,
       onWahoo: onY,
-      note: 'Public entry point'
+      note
     });
 
     if (BANK_META[key]) {

@@ -310,7 +310,7 @@ export const SIM_HOUR_MS = 3600000;
 
 function createInitialStateInternal() {
   return {
-    meta: { version: 31 },
+    meta: { version: 34 },
     sim: { elapsedMs: 0, speed: 1 },
     player: {
       actor_id: 'ACT-PLAYER01',
@@ -352,6 +352,9 @@ function createInitialStateInternal() {
       webExDomainSubscriptions: [],
       pendingSmsEvents: [],
       lastActiveWebExProjectId: null,
+      assetDiscardDays: [],
+      assetLitterNewsDayIndex: null,
+      assetLitterSevereDayIndex: null,
       worldSeed: null,
       exploredDistricts: [1]
     },
@@ -794,13 +797,6 @@ export function migrateStateIfNeeded(st) {
     ) {
       st.software.installedAppIds.push('media-player');
     }
-    if (
-      preMigrateVersion >= 1 &&
-      preMigrateVersion <= 6 &&
-      !st.software.installedAppIds.includes('player-inventory')
-    ) {
-      st.software.installedAppIds.push('player-inventory');
-    }
   }
   if ((st.meta.version || 0) < 8) {
     st.meta.version = 8;
@@ -1102,7 +1098,6 @@ export function migrateStateIfNeeded(st) {
     }
     st.software = st.software || { installedAppIds: [], activeInstalls: [] };
     st.software.installedAppIds = Array.isArray(st.software.installedAppIds) ? st.software.installedAppIds : [];
-    if (!st.software.installedAppIds.includes('player-inventory')) st.software.installedAppIds.push('player-inventory');
   }
   if ((st.meta.version || 0) < 31) {
     st.meta.version = 31;
@@ -1135,6 +1130,20 @@ export function migrateStateIfNeeded(st) {
     if (!Array.isArray(st.player?.taglets) || st.player.taglets.length === 0) {
       if (st.player) st.player.taglets = ['casual_speaker', 'civic_minded'];
     }
+  }
+  if ((st.meta.version || 0) < 33) {
+    st.meta.version = 33;
+    if (st.player) {
+      if (!Array.isArray(st.player.assetDiscardDays)) st.player.assetDiscardDays = [];
+      if (st.player.assetLitterNewsDayIndex == null) st.player.assetLitterNewsDayIndex = null;
+      if (st.player.assetLitterSevereDayIndex == null) st.player.assetLitterSevereDayIndex = null;
+    }
+  }
+  if ((st.meta.version || 0) < 34) {
+    st.meta.version = 34;
+    st.software = st.software || { installedAppIds: [], activeInstalls: [] };
+    st.software.installedAppIds = Array.isArray(st.software.installedAppIds) ? st.software.installedAppIds : [];
+    st.software.installedAppIds = st.software.installedAppIds.filter((id) => id !== 'player-inventory');
   }
   return st;
 }

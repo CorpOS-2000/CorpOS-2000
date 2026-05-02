@@ -5,10 +5,12 @@ import { startClock, pause, unpause, setSpeed } from './clock.js';
 import {
   initWorldNet,
   currentPageKey,
+  currentSubPath,
   ensureWorldNetHome,
   exposeGlobals as exposeWn,
   refreshTransferDialog,
   refreshIfBank,
+  refreshCorposAppstoreWindow,
   wnetGo,
   wnetReload
 } from './worldnet.js';
@@ -75,6 +77,7 @@ import { initMoogleMaps } from './moogle-maps.js';
 import { initWebExPublisher, tickWebExDomainBilling } from './webex-publisher.js';
 import { tickWarehouseDaily } from './warehouse-tick.js';
 import { initRivalCompanies, tickRivals } from './rival-companies.js';
+import { hydrateAmazoneWorldNetStore } from './worldnet-shop.js';
 import { tickPlayerStore } from './player-store.js';
 import { initPlayerReplies, tickPlayerReplies, wireReplyDeps } from './player-interaction-replies.js';
 import { MediaPlayer } from '../engine/MediaPlayer.js';
@@ -347,7 +350,7 @@ async function openW(id) {
           ? `${app?.label || 'This app'} is still downloading.`
           : installStatus.state === 'installing'
           ? `${app?.label || 'This app'} is still installing.`
-          : `${app?.label || 'This app'} is available from devtools.net.`,
+          : `${app?.label || 'This app'} is available from the CorpOS Appstore or devtools.net.`,
       icon: '💾',
       autoDismiss: 5000
     });
@@ -369,6 +372,14 @@ async function openW(id) {
   openingApps.add(id);
   if (id === 'cherry') {
     openBlackCherryDock();
+    openingApps.delete(id);
+    return;
+  }
+  if (id === 'corpos-appstore') {
+    await openWindowWithFeedback(id, 'CorpOS Appstore', () => {
+      openWin(id);
+      refreshCorposAppstoreWindow();
+    });
     openingApps.delete(id);
     return;
   }
@@ -669,6 +680,7 @@ async function main() {
   await initWebExPublisher(loadJsonFile);
   await initMarketDynamics(loadJsonFile);
   await initRivalCompanies(loadJsonFile);
+  hydrateAmazoneWorldNetStore();
   patchState((s) => {
     ensureEconomy(s);
     return s;
@@ -744,6 +756,7 @@ async function main() {
     for (const app of processSoftwareInstallsIfNeeded()) {
       seedProgramFiles(app.id);
       refreshInstallableAppVisibility();
+      refreshCorposAppstoreWindow();
       try {
         const meta = getInstallableApp(app.id);
         window.ActivityLog?.log?.('APP_INSTALL_DONE', `Install complete: ${app.label}`, {
@@ -760,10 +773,16 @@ async function main() {
         autoDismiss: 6000
       });
     }
-    if (currentPageKey === 'devtools' || currentPageKey === 'net99669' || currentPageKey === 'backrooms') {
+    if (
+      currentPageKey === 'devtools' ||
+      currentPageKey === 'net99669' ||
+      currentPageKey === 'backrooms' ||
+      (currentPageKey === 'corpos_com' && currentSubPath === 'apps')
+    ) {
       const hasActiveInstalls = !!getState().software?.activeInstalls?.length;
       if (hasActiveInstalls) wnetReload();
     }
+    refreshCorposAppstoreWindow();
     refreshTransferDialog();
   });
   on('dayChanged', () => {

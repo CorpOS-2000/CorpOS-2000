@@ -226,7 +226,7 @@
     "relationship_score": 80,
     "favor_balance": 0,
     "discovered_date": "2000-01-01T07:03:14.988Z",
-    "last_contact_date": "2000-01-02T12:00:08.856Z",
+    "last_contact_date": "2000-01-01T18:00:00.870Z",
     "agenda_known": false,
     "intel_level": 0,
     "intel_entries": [],
@@ -1038,6 +1038,32 @@
     "favor_balance": 0,
     "discovered_date": "2000-01-01T06:00:00.000Z",
     "last_contact_date": "2000-01-01T18:00:01.872Z",
+    "agenda_known": false,
+    "intel_level": 0,
+    "intel_entries": [],
+    "memory": [
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Family bond — Mom",
+        "delta": 50,
+        "score": 50,
+        "tier": "Acquainted"
+      },
+      {
+        "at": "2000-01-01T06:00:00.000Z",
+        "description": "Synced from your phone book.",
+        "delta": 0,
+        "score": 0,
+        "tier": "Neutral"
+      }
+    ]
+  },
+  {
+    "actor_id": "ACT-MOM-UPBXXS8F",
+    "relationship_score": 50,
+    "favor_balance": 0,
+    "discovered_date": "2000-01-01T06:00:00.000Z",
+    "last_contact_date": "2000-01-02T06:00:01.812Z",
     "agenda_known": false,
     "intel_level": 0,
     "intel_entries": [],

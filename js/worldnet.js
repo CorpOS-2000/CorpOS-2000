@@ -145,7 +145,9 @@ const PAGE_LOAD_TIMES = {
   market_pulse: 880,
   moogle_maps: 900,
   bizreg: 520,
-  web_registry: 580
+  web_registry: 580,
+  corpos_com: 520,
+  devtools: 520
 };
 
 function getPageLoadDelay(pageKey) {
@@ -403,12 +405,7 @@ function renderCombatProgramFamiliesHtml() {
 
 function renderDevtoolsPage() {
   const base = pages.devtools || worldnetPages.devtools || defaultNotFoundHtml();
-  let html = base.replace(
-    /<div data-devtools-app="([^"]+)"><\/div>/g,
-    (_match, appId) => renderDevtoolsAppCard(appId)
-  );
-  html = html.replace(/<div data-devtools-combat-families>\s*<\/div>/i, renderCombatProgramFamiliesHtml());
-  return html;
+  return expandDevtoolsCatalogPlaceholders(base);
 }
 
 function renderBackroomsPage() {
@@ -556,6 +553,7 @@ function pageKeyForSoftwareSource(app) {
   if (tl === 'dark' || host === 'darkweb') return 'backrooms';
   if (host.includes('99669.net/tools')) return 'net99669';
   if (host.includes('backrooms')) return 'backrooms';
+  if (host.includes('corpos.com')) return 'corpos_com';
   return 'devtools';
 }
 
@@ -615,8 +613,8 @@ function ensureCorpOsTransferDialog() {
           const res = cancelSoftwareInstall(appId);
           toast(res.message);
           refreshTransferDialog();
-          if (currentPageKey === 'devtools' || currentPageKey === 'backrooms' || currentPageKey === 'net99669')
-            navigate(currentPageKey, '', { pushHistory: false });
+          if (currentPageKey === 'devtools' || currentPageKey === 'backrooms' || currentPageKey === 'net99669' || (currentPageKey === 'corpos_com' && currentSubPath === 'apps'))
+            navigate(currentPageKey, currentPageKey === 'corpos_com' ? currentSubPath : '', { pushHistory: false });
         }
       },
       false
@@ -795,6 +793,37 @@ function renderDevtoolsAppCard(appId) {
   </div>
 </div>
 </div>`;
+}
+
+function expandDevtoolsCatalogPlaceholders(html) {
+  let out = html.replace(
+    /<div data-devtools-app="([^"]+)"><\/div>/g,
+    (_match, appId) => renderDevtoolsAppCard(appId)
+  );
+  return out.replace(/<div data-devtools-combat-families>\s*<\/div>/i, renderCombatProgramFamiliesHtml());
+}
+
+function renderCorposComAppsPage() {
+  const inner = pages.corpos_com_apps_inner || worldnetPages.corpos_com_apps_inner || '';
+  const wrap = `<div class="iebody" data-wn-ad-page="corpos_com_apps">
+<div class="ntbar">◆ CORPOS.COM — SOFTWARE CATALOG &nbsp;|&nbsp; ◆ ALL TITLES &nbsp;|&nbsp; ◆ CERTIFIED DOWNLOADS</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+  <div>
+    <div style="font-size:26px;font-weight:900;color:#0a246a;font-family:Verdana,Arial,sans-serif;">CorpOS.com</div>
+    <div style="font-size:11px;color:#666;">Verified titles and combat-suite ladders — same inventory as devtools.net.</div>
+  </div>
+</div>
+<div style="display:flex;gap:8px;align-items:flex-start;">
+<aside style="width:120px;flex-shrink:0;"><div data-wnet-ad-slot="left-rail-primary" data-wnet-ad-region="left-rail"></div></aside>
+<div style="flex:1;min-width:0;">
+<div data-wnet-ad-slot="below-header" data-wnet-ad-region="below-header" style="margin:6px 0;"></div>
+${inner}
+<div style="margin-top:12px;font-size:10px;"><a href="#" data-nav="corpos_com" style="color:#0a246a;font-weight:bold;">← CorpOS.com home</a> &nbsp;|&nbsp; <a href="#" data-nav="devtools" style="color:#666;">Developer mirror (devtools.net)</a></div>
+</div>
+<aside style="width:120px;flex-shrink:0;"><div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div></aside>
+</div>
+</div>`;
+  return expandDevtoolsCatalogPlaceholders(wrap);
 }
 
 function sendNewAccountSms(serviceName, line) {
@@ -1255,6 +1284,10 @@ function renderPage(key, sub = '') {
   if (key === 'corpos_portal') return renderCorposPortalHtml();
   if (key === 'market_pulse') return pages.market_pulse || defaultNotFoundHtml();
   if (key === 'herald') return '<div id="dh-wnet-root" style="min-height:100%;"></div>';
+  if (key === 'corpos_com') {
+    if (sub === 'apps') return renderCorposComAppsPage();
+    return pages.corpos_com || worldnetPages.corpos_com || defaultNotFoundHtml();
+  }
   if (key === 'devtools') return renderDevtoolsPage();
   if (key === 'backrooms') return renderBackroomsPage();
   if (key === 'wn_shop') return renderShopHtml(sub || '');
@@ -1340,6 +1373,8 @@ function entryTitleForKey(key) {
   if (key === 'warehouse') return 'WhereAllThingsGo.net';
   if (key === 'hargrove_vault') return 'HargroveVault';
   if (key === 'stor_it') return 'StorIt Hargrove';
+  if (key === 'corpos_com') return currentSubPath === 'apps' ? 'CorpOS.com — catalog' : 'CorpOS.com';
+  if (key === 'amazone_corp') return 'Amazone.com';
   return key.replace(/_/g, ' ');
 }
 
@@ -1794,7 +1829,10 @@ function dispatchAction(action, rootEl, sourceEl = null) {
             smsToPlayer(msg);
           }
         }
-        navigate(pageKeyForSoftwareSource(app), '', { pushHistory: false });
+        const pk = pageKeyForSoftwareSource(app);
+        const sub = pk === 'corpos_com' ? 'apps' : '';
+        navigate(pk, sub, { pushHistory: false });
+        refreshCorposAppstoreWindow();
       }
     });
     return true;
@@ -2746,6 +2784,28 @@ export function ensureWorldNetHome() {
       navigate('moogle_home', '', { pushHistory: true });
     }
   }
+}
+
+export function refreshCorposAppstoreWindow() {
+  const root = document.getElementById('corpos-appstore-root');
+  if (!root) return;
+  const inner = pages.corpos_com_apps_inner || worldnetPages.corpos_com_apps_inner || '';
+  const wrap = `<div class="iebody" data-wn-ad-page="corpos_com_apps">${inner}<p style="margin-top:14px;font-size:10px;color:#888;border-top:1px solid #ddd;padding-top:8px;">CorpOS Appstore shows the CorpOS.com catalog only. Open WorldNet Explorer to browse the full web.</p></div>`;
+  root.innerHTML = expandDevtoolsCatalogPlaceholders(wrap);
+  root.classList.remove('wn-scam-light', 'wn-scam-medium', 'wn-scam-heavy');
+  bindCorposAppstoreRoot(root);
+  mountPage(root, 'corpos_com');
+}
+
+function bindCorposAppstoreRoot(root) {
+  root.querySelectorAll('button,[role="button"]').forEach((el) => {
+    el.addEventListener('click', (ev) => {
+      const node = /** @type {HTMLElement} */ (el);
+      if (node.hasAttribute('onclick')) return;
+      const action = node.getAttribute('data-action');
+      if (action && dispatchAction(action, root, node)) ev.preventDefault();
+    });
+  });
 }
 
 export function exposeGlobals() {

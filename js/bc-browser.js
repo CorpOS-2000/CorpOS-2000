@@ -41,6 +41,7 @@ const HARD_BLOCKED_KEYS = new Set([
   'darkweb_entry',
   'darkweb',
   'devtools',
+  'corpos_com',
   'bank_darkweb',
 ]);
 

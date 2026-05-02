@@ -18,7 +18,11 @@ import { createStore, getStoreById } from './worldnet-shop.js';
 import { newPageId, defaultPageDef } from './pipeline/website-editor.js';
 import { setPipelinePageRoutes } from './worldnet-routes.js';
 import { on } from './events.js';
+import { productVisualDataUri } from './product-visuals.js';
+import { openW } from './windows.js';
 
+/** Pending Personal inventory row to flash after opening publisher from Assets. */
+let _pendingStockHighlightId = null;
 let _modules = [];
 let _rootEl = null;
 let _currentProjectId = null;
@@ -1279,8 +1283,13 @@ function renderInventoryPanels(proj) {
   const personalRows = room.length
     ? room.map((item) => {
         const pr = item.salePrice != null ? Number(item.salePrice) : Number(item.price) || 0;
+        const uri = productVisualDataUri({
+          id: item.sourceSku || item.id,
+          title: item.title,
+          categoryId: item.categoryId
+        });
         return `<div class="wx-inv-item" draggable="true" data-wx-stock-id="${escapeHtml(item.id)}">
-          <span class="wx-inv-swatch" style="background:${escapeHtml(item.swatch || '#ccc')}"></span>
+          <span class="wx-inv-swatch wx-inv-swatch--thumb"><img src="${uri}" alt="" draggable="false"/></span>
           <span class="wx-inv-item-text">${escapeHtml(item.title)} · $${pr.toFixed(2)}</span>
         </div>`;
       }).join('')
@@ -1290,8 +1299,13 @@ function renderInventoryPanels(proj) {
         const src = room.find((i) => i.id === line.stockItemId);
         const title = src?.title || line.stockItemId;
         const lp = Number(line.listPrice) || 0;
+        const uri = productVisualDataUri({
+          id: src?.sourceSku || src?.id || line.stockItemId,
+          title,
+          categoryId: src?.categoryId
+        });
         return `<div class="wx-inv-item" draggable="true" data-wx-listing-idx="${idx}">
-          <span class="wx-inv-swatch" style="background:${escapeHtml(src?.swatch || '#aaa')}"></span>
+          <span class="wx-inv-swatch wx-inv-swatch--thumb"><img src="${uri}" alt="" draggable="false"/></span>
           <span class="wx-inv-item-text">${escapeHtml(title)} · $${lp.toFixed(2)}</span>
         </div>`;
       }).join('')
@@ -2895,6 +2909,41 @@ function deleteProject() {
 function setStatus(msg) {
   const el = document.getElementById('webex-status');
   if (el) el.textContent = msg;
+}
+
+export function playerHasWebsiteWithShopModule() {
+  const projects = getState().player?.webExProjects || [];
+  return projects.some((proj) => (proj.slots || []).some((sl) => sl.moduleId === 'shop'));
+}
+
+function flashWebExStockRow(stockItemId) {
+  if (!_rootEl || !stockItemId) return;
+  const row = _rootEl.querySelector(`[data-wx-stock-id="${stockItemId}"]`);
+  if (!row) return;
+  try {
+    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  } catch {
+    row.scrollIntoView();
+  }
+  row.classList.add('wx-inv-flash');
+  setTimeout(() => row.classList.remove('wx-inv-flash'), 4200);
+}
+
+/**
+ * Open WebEx-Publisher on Editor tab and highlight a Personal inventory row for dragging to Shop.
+ * @param {string} stockItemId e.g. wxs-rm-modem
+ */
+export function openWebExPublisherHighlightStock(stockItemId) {
+  if (!stockItemId) return;
+  _pendingStockHighlightId = stockItemId;
+  _mainTab = 'editor';
+  openW('webex-publisher');
+  setTimeout(() => {
+    render();
+    const id = _pendingStockHighlightId;
+    _pendingStockHighlightId = null;
+    flashWebExStockRow(id);
+  }, 420);
 }
 
 export async function initWebExPublisher(loadJson) {

@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "start:safe": "node scripts/start-safe.mjs",
     "build:data": "node data/build-pages.mjs",
     "build:brands": "node data/build-parody-brands.mjs",
     "build:mytube": "node data/build-mytube-videos.mjs",

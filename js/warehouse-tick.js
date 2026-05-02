@@ -416,6 +416,11 @@ export function addToPlayerInventory(item) {
 
 export function inferCategoryFromProduct(p) {
   if (!p) return 'consumer';
+  const cid = String(p.categoryId || '').toLowerCase();
+  if (cid.includes('food') || cid.includes('grocery')) return 'food';
+  if (cid.includes('hardware') || cid.includes('electron')) return 'hardware';
+  if (cid.includes('software') || cid.includes('game')) return 'data';
+  if (cid.includes('vehicle') || cid.includes('auto')) return 'vehicle';
   const t = String(p.title || p.name || '').toLowerCase();
   const c = String(p.category || '').toLowerCase();
   if (c.includes('food') || t.includes('snack') || t.includes('coffee')) return 'food';

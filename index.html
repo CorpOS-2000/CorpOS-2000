@@ -148,13 +148,13 @@
 
   <div class="di" data-open="herald" style="top:56px;left:20px"><div class="ico">📰</div><div class="lbl">Daily Herald</div></div>
   <div class="di" data-open="worldnet" style="top:108px;left:20px"><div class="ico">🌐</div><div class="lbl">WorldNet Explorer</div></div>
-  <div class="di" data-icon-slot="properties" style="top:268px;left:20px"><div class="ico">🏢</div><div class="lbl">Properties</div></div>
+  <div class="di" data-open="corpos-appstore" style="top:160px;left:20px"><div class="ico">🛒</div><div class="lbl">CorpOS Appstore</div></div>
+  <div class="di" data-app-id="player-inventory" data-icon-slot="properties" data-open="player-inventory" style="top:268px;left:20px"><div class="ico">🔢</div><div class="lbl">Assets</div></div>
   <div class="di" data-open="explorer" style="top:348px;left:20px"><div class="ico">🖥️</div><div class="lbl">My Computer</div></div>
   <div class="di" data-open="tasks" style="top:428px;left:20px"><div class="ico">🗂️</div><div class="lbl">Task Handler</div></div>
   <div class="di" data-open="personal" style="top:56px;left:110px"><div class="ico">👤</div><div class="lbl">Personal Profile</div></div>
   <div class="di" data-open="corporate" style="top:108px;left:110px"><div class="ico">🏛️</div><div class="lbl">Corporate Profile</div></div>
   <div class="di" data-icon-slot="ledger" style="top:188px;left:110px"><div class="ico">📊</div><div class="lbl">Corp. Ledger</div></div>
-  <div class="di" data-app-id="player-inventory" data-open="player-inventory" style="top:268px;left:20px"><div class="ico">📦</div><div class="lbl">Inventory</div></div>
   <div class="di" data-app-id="media-player" data-open="media-player" style="top:268px;left:110px"><div class="ico">🎵</div><div class="lbl">Media Player</div></div>
   <div class="di" data-app-id="admin-npc" data-open="admin-npc" style="top:348px;left:110px"><div class="ico">👤</div><div class="lbl">NPC Creator</div></div>
   <div class="di" data-app-id="admin-company" data-open="admin-company" style="top:428px;left:110px"><div class="ico">🏭</div><div class="lbl">Company Creator</div></div>
@@ -382,6 +382,19 @@
     <div class="wc wb" style="padding:0;overflow:auto;" id="wnet-content"></div>
     <div class="wsb"><div class="sp" id="wnet-status">Done</div><div class="sp">🔒 CorpOS Secure</div><div class="sp">Internet Zone</div></div>
     <div class="wrz" onmousedown="resz(event,'win-worldnet')">◢</div>
+  </div>
+
+  <div class="ww inactive" id="win-corpos-appstore" style="width:640px;height:520px;top:70px;left:190px;display:none;">
+    <div class="wtb" onmousedown="drag(event,'win-corpos-appstore')">
+      <span class="wti">🛒</span><span class="wtt">CorpOS Appstore</span>
+      <button type="button" class="wcb" onclick="minW('corpos-appstore')">_</button>
+      <button type="button" class="wcb" onclick="maxW('corpos-appstore')">□</button>
+      <button type="button" class="wcb" onclick="closeW('corpos-appstore')">✕</button>
+    </div>
+    <div class="wmb"><span class="wmi">File</span><span class="wmi">View</span><span class="wmi">Help</span></div>
+    <div class="wc wb" style="padding:0;overflow:auto;" id="corpos-appstore-root"></div>
+    <div class="wsb"><div class="sp">http://www.corpos.com/apps</div><div class="sp">🔒 Catalog mode</div></div>
+    <div class="wrz" onmousedown="resz(event,'win-corpos-appstore')">◢</div>
   </div>
 
   <div class="ww inactive" id="win-media-player" style="width:380px;height:520px;top:90px;left:240px;display:none;flex-direction:column;">
@@ -624,7 +637,7 @@
 
   <div class="ww inactive" id="win-player-inventory" style="width:640px;height:480px;top:100px;left:180px;display:none;flex-direction:column;">
     <div class="wtb" onmousedown="drag(event,'win-player-inventory')">
-      <span class="wti">📦</span><span class="wtt">Inventory — Carried &amp; Stored</span>
+      <span class="wti">🔢</span><span class="wtt">Assets — Inventory &amp; Holdings</span>
       <button type="button" class="wcb" onclick="minW('player-inventory')">_</button>
       <button type="button" class="wcb" onclick="maxW('player-inventory')">□</button>
       <button type="button" class="wcb" onclick="closeW('player-inventory')">✕</button>
@@ -633,7 +646,7 @@
     <div class="wc" style="padding:0;overflow:hidden;flex:1;min-height:0;">
       <div id="player-inventory-root" style="height:100%;"></div>
     </div>
-    <div class="wsb"><div class="sp">Player inventory</div><div class="sp">ETradeBay · warehouse</div></div>
+    <div class="wsb"><div class="sp">Assets</div><div class="sp">Products · sites · property · rentals</div></div>
     <div class="wrz" onmousedown="resz(event,'win-player-inventory')">◢</div>
   </div>
 
@@ -661,13 +674,13 @@
       <div class="smitems">
         <div class="smitem" onclick="openW('herald');toggleStart()">📰 Daily Herald</div>
         <div class="smitem" onclick="openW('worldnet');toggleStart()">🌐 WorldNet Explorer</div>
-        <div class="smitem">🏢 Properties</div>
+        <div class="smitem" onclick="openW('corpos-appstore');toggleStart()">🛒 CorpOS Appstore</div>
         <div class="smitem" onclick="openW('explorer');toggleStart()">🖥️ My Computer</div>
         <div class="smitem" onclick="(window.openBlankWritepad||function(){openW('writepad')})();toggleStart()">📝 Writepad</div>
         <div class="smitem" onclick="openW('personal');toggleStart()">👤 Personal Profile</div>
         <div class="smitem" onclick="openW('corporate');toggleStart()">🏛️ Corporate Profile</div>
         <div class="smitem">📊 Corp. Ledger</div>
-        <div class="smitem" data-app-id="player-inventory" onclick="openW('player-inventory');toggleStart()">📦 Inventory</div>
+        <div class="smitem" data-app-id="player-inventory" onclick="openW('player-inventory');toggleStart()">🔢 Assets</div>
         <div class="smitem" data-app-id="media-player" onclick="openW('media-player');toggleStart()">🎵 Media Player</div>
         <div class="smsep"></div>
         <div class="smitem" data-app-id="admin-npc" onclick="openW('admin-npc');toggleStart()">👤 NPC Creator</div>

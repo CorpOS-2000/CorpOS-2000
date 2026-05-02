@@ -458,14 +458,14 @@ export function refreshInstallableAppVisibility() {
   const stateObj = getState();
   /** @type {HTMLElement[]} */
   const newlyVisible = [];
-  document.querySelectorAll('[data-app-id]').forEach((el) => {
+  document.querySelectorAll('#desktop [data-app-id], #smenu [data-app-id]').forEach((el) => {
     const appId = el.getAttribute('data-app-id') || '';
     if (!isInstallableApp(appId)) return;
     const show = isAppInstalled(appId, stateObj);
     const next = show ? '' : 'none';
     const wasHidden = el.style.display === 'none';
     el.style.display = next;
-    if (next === '' && wasHidden) newlyVisible.push(el);
+    if (next === '' && wasHidden && el.classList.contains('di')) newlyVisible.push(el);
   });
   if (newlyVisible.length) {
     requestAnimationFrame(() => placeNewInstallableIconsAtFirstGap(newlyVisible));

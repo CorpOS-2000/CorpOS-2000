@@ -5,6 +5,8 @@ const { encryptPack, decryptPack } = require('./js/content-pack-main.cjs');
 
 if (process.env.CORPOS_NO_GPU === '1') {
   app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-gpu-compositing');
 }
 
 function getDataDir() {
@@ -215,9 +217,10 @@ function createWindow() {
 
   win.webContents.on('render-process-gone', (_event, details) => {
     if (details.reason === 'clean-exit') return;
+    console.error('[CorpOS] render-process-gone', details);
     showError(
       'Renderer process exited',
-      `${details.reason}${details.exitCode != null ? ` (code ${details.exitCode})` : ''}`
+      `${details.reason}${details.exitCode != null ? ` (code ${details.exitCode})` : ''}\n\nIf this repeats, try: npm run start:safe (disables GPU acceleration).`
     );
   });
 

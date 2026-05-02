@@ -12,14 +12,15 @@ export const INSTALLABLE_APPS = Object.freeze({
   },
   'player-inventory': {
     id: 'player-inventory',
-    label: 'Inventory',
-    icon: '📦',
-    sourceHost: 'corpos.local',
-    downloadDurationMs: 0,
-    installDurationMs: 0,
+    label: 'Assets',
+    icon: '🔢',
+    sourceHost: 'corpos.com',
+    downloadDurationMs: 20 * 60 * 1000,
+    installDurationMs: 15 * 60 * 1000,
     trustLevel: 'verified',
-    description: 'View carried items, warehouse storage, and sell on ETradeBay or wholesale.',
-    priceUsd: 0
+    description:
+      'Unified Assets desk: carried goods with visuals, websites, property, rentals, sales channels, and WebEx shop handoff.',
+    priceUsd: 200
   },
   'admin-web': {
     id: 'admin-web',

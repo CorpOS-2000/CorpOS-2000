@@ -16,6 +16,8 @@
     { "pageKey": "ssa",           "host": "www.ssa.gov.net",                "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
     { "pageKey": "fra",           "host": "www.fra.gov.net",                "outcome": "legit",       "category": "government",  "trustSignals": ["ssl","government"] },
     { "pageKey": "devtools",      "host": "www.devtools.net",               "outcome": "legit",       "category": "service",     "trustSignals": [] },
+    { "pageKey": "amazone_corp",  "host": "www.amazone.com",                  "outcome": "legit",       "category": "ecommerce",   "trustSignals": ["ssl","established"] },
+    { "pageKey": "corpos_com",    "host": "www.corpos.com",                 "outcome": "legit",       "category": "service",     "trustSignals": ["ssl"] },
     { "pageKey": "backrooms",     "host": "www.backrooms.hck",              "outcome": "scam",        "category": "service",     "scam": { "copyTypoLevel": 1, "sslMismatch": true, "whoisFake": true, "chargeMultiplier": 1.5, "deliveryTable": [{ "p": 0.15, "outcome": "jackpot" }, { "p": 0.45, "outcome": "fake" }, { "p": 0.4, "outcome": "nothing" }] } },
     { "pageKey": "net99669",      "host": "www.99669.net",                  "outcome": "legit",       "category": "directory",   "trustSignals": ["established"] },
     { "pageKey": "reviewbomber",  "host": "www.reviewbomber.net",           "outcome": "legit",       "category": "community",   "trustSignals": [] },

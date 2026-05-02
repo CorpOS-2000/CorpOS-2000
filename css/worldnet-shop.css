@@ -111,6 +111,20 @@
 .wn-shop-card-img {
   height: 72px;
   border-bottom: 1px solid #ccc;
+  background: #e4e4e8;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wn-shop-card-img-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 .wn-shop-card-body {
@@ -214,6 +228,19 @@
   height: 160px;
   border: 2px solid #666;
   flex-shrink: 0;
+  background: #e4e4e8;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wn-shop-product-visual-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  image-rendering: crisp-edges;
 }
 
 .wn-shop-desc {
@@ -329,6 +356,46 @@ a.wn-shop-btn:hover {
 .wn-shop-summary {
   font-size: 11px;
   margin: 8px 0;
+}
+
+.wn-shop-checkout-est {
+  font-size: 11px;
+  margin: 0 0 10px;
+  padding: 8px;
+  background: #fffaf0;
+  border: 1px dashed #996;
+}
+
+.wn-shop-amazone-deptnav {
+  font-size: 11px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  background: linear-gradient(180deg, #0054a8 0%, #003893 100%);
+  border: 2px solid #2b4c7e;
+  text-align: center;
+}
+
+.wn-shop-amazone-deptnav a {
+  color: #ffeb99;
+  font-weight: bold;
+}
+
+.wn-shop-amazone-sep {
+  color: #6699cc;
+  margin: 0 2px;
+}
+
+.wn-shop-root--amazone {
+  background: #e8dcc8;
+}
+
+.wn-shop-root--amazone .wn-shop-header {
+  background: linear-gradient(180deg, #ffffee 0%, #f0e6d2 100%);
+  border-color: #2b4c7e;
+}
+
+.wn-shop-root--amazone .wn-shop-logo {
+  color: #003893;
 }
 
 /* ── Active Tasks window ── */

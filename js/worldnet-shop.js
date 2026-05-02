@@ -15,11 +15,25 @@ import { registerWorldNetShopHost } from './worldnet-routes.js';
 import { smsToPlayer } from './black-cherry.js';
 import { getSiteByPageKey } from './worldnet-site-registry.js';
 import { addToPlayerInventory, inferCategoryFromProduct } from './warehouse-tick.js';
+import { syncShopProductRowToStockroom } from './webex-stockroom-sync.js';
+import { productVisualDataUri } from './product-visuals.js';
 import { resolveScamPurchase } from './scam-purchases.js';
 import { recordConversion } from './ad-analytics.js';
+import { recordPurchase } from './market-dynamics.js';
+import { ensureAmazoneRivalProducts } from './amazone-rival-catalog.js';
 
 /** @type {Map<string, object>} */
 const _stores = new Map();
+
+/** @param {{ id?: string, title?: string, categoryId?: string }} p */
+function productThumbImgHtml(p, imgClass = 'wn-shop-card-img-pic') {
+  const uri = productVisualDataUri({
+    id: p.id,
+    title: p.title,
+    categoryId: p.categoryId
+  });
+  return `<img class="${imgClass}" src="${uri}" alt="" draggable="false"/>`;
+}
 
 /** @type {(key: string, sub?: string, opts?: { pushHistory?: boolean }) => void} */
 let _navigate = () => {};
@@ -100,9 +114,279 @@ function fmtSimEtaHours(deliverBySimMs) {
 function layoutWrapper(store, innerHtml, adPageKey) {
   const storeId = escapeHtml(store.id);
   const adPg = escapeHtml(adPageKey);
-  return `<div class="wn-shop-root iebody" data-wn-shop-root="1" data-wn-ad-page="${adPg}" data-wn-ad-store="${storeId}">
+  const themeExtra =
+    store.themeClass && /^[a-zA-Z0-9_-]+$/.test(String(store.themeClass))
+      ? ` ${String(store.themeClass)}`
+      : '';
+  return `<div class="wn-shop-root iebody${themeExtra}" data-wn-shop-root="1" data-wn-ad-page="${adPg}" data-wn-ad-store="${storeId}">
 ${innerHtml}
 </div>`;
+}
+
+/** Y2K-style department strip for Amazone (matches classic nav tabs). */
+function amazoneDepartmentStrip(store) {
+  if (store.id !== 'amazone') return '';
+  const sid = store.id;
+  const tabs = [
+    ['books', 'Books'],
+    ['music', 'Music'],
+    ['dvd_video', 'DVD / Video'],
+    ['electronics', 'Electronics'],
+    ['auctions', 'Auctions'],
+    ['zshops', 'zShops']
+  ];
+  const parts = tabs.map(
+    ([cid, label]) => linkShop(sid, `${sid}/category/${cid}`, label)
+  );
+  parts.push(linkShop(sid, `${sid}/home`, 'All departments'));
+  parts.push(linkShop(sid, `${sid}/cart`, 'Cart'));
+  return `<div class="wn-shop-amazone-deptnav" role="navigation">${parts.join(
+    ' <span class="wn-shop-amazone-sep">|</span> '
+  )}</div>`;
+}
+
+function mapAmazoneRivalCategoryToShelf(raw) {
+  const c = String(raw || '').toLowerCase();
+  if (!c) return 'general';
+  if (c.includes('book')) return 'books';
+  if (c.includes('music')) return 'music';
+  if (c.includes('dvd') || c.includes('video') || c.includes('vhs') || c.includes('film'))
+    return 'dvd_video';
+  if (c.includes('electron')) return 'electronics';
+  if (c.includes('auction')) return 'auctions';
+  if (c.includes('zshop') || c.includes('marketplace')) return 'zshops';
+  if (c.includes('home') || c.includes('kitchen') || c.includes('desk')) return 'home';
+  if (c.includes('software') || c.includes('game')) return 'software';
+  if (c.includes('toy')) return 'toys';
+  if (c.includes('sport')) return 'sports';
+  if (c.includes('subscription')) return 'subscription';
+  if (c.includes('service')) return 'service';
+  if (c.includes('advertis') || c.includes('sponsor')) return 'advertising';
+  if (c.includes('logistic') || c.includes('fulfill')) return 'logistics';
+  if (c.includes('food') || c.includes('grocer') || c.includes('fresh')) return 'food';
+  if (c.includes('fintech') || c.includes('payment')) return 'fintech';
+  if (c.includes('consumer')) return 'consumer';
+  if (c.includes('education') || c.includes('training') || c.includes('cert')) return 'education';
+  if (c.includes('hardware') || c.includes('computer')) return 'hardware';
+  if (c.includes('office')) return 'office';
+  return 'general';
+}
+
+/** Extra SKUs so sparse shelves stay full (does not replace rival JSON data). */
+const AMAZONE_EXTRA_SKUS = [
+  {
+    id: 'amazone-sk-stapler',
+    title: 'Heavy-Duty Stapler — “Audit Ready”',
+    description: 'Bundled with 500 stainless vows to staple responsibly.',
+    price: 24.99,
+    categoryId: 'office',
+    stockCount: 40,
+    tags: ['amazone', 'office']
+  },
+  {
+    id: 'amazone-sk-pencils',
+    title: 'No. 2 Pencils — Gross Pack',
+    description: 'Pre-sharpened for standardized tests and standardized lives.',
+    price: 8.99,
+    categoryId: 'office',
+    stockCount: 120,
+    tags: ['amazone', 'office']
+  },
+  {
+    id: 'amazone-sk-toner',
+    title: 'Laser Toner — “Almost Compatible”',
+    description: 'Works with most printers until it doesn’t.',
+    price: 69,
+    categoryId: 'office',
+    stockCount: 22,
+    tags: ['amazone', 'office']
+  },
+  {
+    id: 'amazone-sk-mousepad',
+    title: 'Ergonomic Gel Mouse Pad — Cobalt Swirl',
+    description: 'Wrist depression molded by ergonomics interns.',
+    price: 16.5,
+    categoryId: 'office',
+    stockCount: 55,
+    tags: ['amazone', 'office']
+  },
+  {
+    id: 'amazone-sk-labelmaker',
+    title: 'Electronic Label Maker LT-2000',
+    description: 'Tape cartridges sold separately. Anxiety included.',
+    price: 44,
+    categoryId: 'electronics',
+    stockCount: 28,
+    tags: ['amazone', 'electronics']
+  },
+  {
+    id: 'amazone-sk-lamp',
+    title: 'Architect Swing-Arm Desk Lamp — Brass Finish',
+    description: 'Halogen bulb runs hot enough to simulate ambition.',
+    price: 39.99,
+    categoryId: 'home',
+    stockCount: 33,
+    tags: ['amazone', 'home']
+  },
+  {
+    id: 'amazone-sk-mug',
+    title: 'WorldNet Explorer Celebrity Mug',
+    description: 'Thermal ink fades when you admit you use competing browsers.',
+    price: 11.99,
+    categoryId: 'home',
+    stockCount: 80,
+    tags: ['amazone', 'home']
+  },
+  {
+    id: 'amazone-sk-backpack',
+    title: 'Cordura Laptop Backpack — “Southside Commuter”',
+    description: 'Padded sleeve fits most Y2K slabs under 8 lbs.',
+    price: 59.99,
+    categoryId: 'consumer',
+    stockCount: 44,
+    tags: ['amazone', 'consumer']
+  },
+  {
+    id: 'amazone-sk-water',
+    title: 'Bottled Water — 24-Pack “Harbor Mist”',
+    description: 'Filtered through marketing copy.',
+    price: 7.49,
+    categoryId: 'food',
+    stockCount: 200,
+    tags: ['amazone', 'food']
+  },
+  {
+    id: 'amazone-sk-energy',
+    title: 'Citrus Lightning Energy Drink — Case of 12',
+    description: 'Warning: may cause belief in overnight shipping.',
+    price: 18.99,
+    categoryId: 'food',
+    stockCount: 90,
+    tags: ['amazone', 'food']
+  },
+  {
+    id: 'amazone-sk-yoga',
+    title: 'Foam Yoga Block — Set of 2',
+    description: 'Achieve inner peace between quarterly filings.',
+    price: 21,
+    categoryId: 'sports',
+    stockCount: 36,
+    tags: ['amazone', 'sports']
+  },
+  {
+    id: 'amazone-sk-dumbbell',
+    title: 'Neoprene Dumbbell Pair — 10 lb',
+    description: 'Tone delts while downloading RealAudio.',
+    price: 27.99,
+    categoryId: 'sports',
+    stockCount: 24,
+    tags: ['amazone', 'sports']
+  },
+  {
+    id: 'amazone-sk-puzzle',
+    title: '1500-Piece Jigsaw — “Harbor at Dusk”',
+    description: 'Includes one factory-defect edge piece for realism.',
+    price: 15.99,
+    categoryId: 'toys',
+    stockCount: 48,
+    tags: ['amazone', 'toys']
+  },
+  {
+    id: 'amazone-sk-radio',
+    title: 'AM/FM Portable Radio — Telescopic Pride',
+    description: 'Picks up emergency broadcasts and lonely truckers.',
+    price: 22,
+    categoryId: 'electronics',
+    stockCount: 41,
+    tags: ['amazone', 'electronics']
+  },
+  {
+    id: 'amazone-sk-lan',
+    title: 'Cat-5 Patch Cable — 25 ft Aqua',
+    description: 'Certified for LAN parties up to moderate sabotage.',
+    price: 9.99,
+    categoryId: 'hardware',
+    stockCount: 150,
+    tags: ['amazone', 'hardware']
+  },
+  {
+    id: 'amazone-sk-hub',
+    title: '4-Port Ethernet Hub — Store-and-Forward Dreams',
+    description: 'Half-duplex nostalgia in brushed plastic.',
+    price: 34,
+    categoryId: 'hardware',
+    stockCount: 18,
+    tags: ['amazone', 'hardware']
+  },
+  {
+    id: 'amazone-sk-cert-prep',
+    title: 'CorpOS Operator Exam Flash Cards — Deluxe Tin',
+    description: '800 cards. Zero guarantees.',
+    price: 42,
+    categoryId: 'education',
+    stockCount: 30,
+    tags: ['amazone', 'education']
+  },
+  {
+    id: 'amazone-sk-giftcard',
+    title: 'Amazone Gift Certificate — $25 plastic',
+    description: 'Redeemable for anything we remember to ship.',
+    price: 25,
+    categoryId: 'general',
+    stockCount: 999,
+    tags: ['amazone', 'gift']
+  },
+  {
+    id: 'amazone-sk-zshop-slot',
+    title: 'zShops Featured Listing — 7 Days',
+    description: 'Boost visibility in the zShops bargain bin universe.',
+    price: 12.99,
+    categoryId: 'zshops',
+    stockCount: 500,
+    tags: ['amazone', 'seller']
+  },
+  {
+    id: 'amazone-sk-auction-snipe',
+    title: 'Auction Sniping Browser Toolbar — CD-ROM',
+    description: 'Live at the edge of dial-up latency.',
+    price: 19,
+    categoryId: 'auctions',
+    stockCount: 60,
+    tags: ['amazone', 'auctions']
+  }
+];
+
+/**
+ * After rivals load: merge Amazone Corp SKUs into the WorldNet shop + extras.
+ * Safe to call multiple times (skips existing product ids).
+ */
+export function hydrateAmazoneWorldNetStore() {
+  ensureAmazoneRivalProducts();
+  const store = _stores.get('amazone');
+  if (!store) return;
+
+  const rivals = (getState().rivalProducts || []).filter((p) => p.companyId === 'amazone-corp');
+  for (const rp of rivals) {
+    if (store.productsById[rp.id]) continue;
+    const categoryId = mapAmazoneRivalCategoryToShelf(rp.category);
+    addProduct('amazone', {
+      id: rp.id,
+      title: rp.name,
+      description: rp.description || '',
+      price: Math.max(0, Number(rp.priceUsd) || 0),
+      categoryId,
+      tags: rp.tags || [],
+      stockCount: Math.max(12, 40 + (Number(rp.quality) % 50))
+    });
+  }
+
+  for (const row of AMAZONE_EXTRA_SKUS) {
+    if (store.productsById[row.id]) continue;
+    addProduct('amazone', { ...row });
+  }
+
+  const feat = ['amazone-prime', 'amazone-cloud', 'amazone-pay'].filter((id) => store.productsById[id]);
+  if (feat.length) store.featuredProductIds = feat;
 }
 
 /**
@@ -170,6 +454,7 @@ function renderHome(store) {
   const badge = cartLineCount(sid);
   const inner = `
 <div class="wn-shop-banner-row">${adBannerSlot('below-header')}</div>
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-header">
   <div>
     <div class="wn-shop-logo">${escapeHtml(store.name)}</div>
@@ -188,7 +473,7 @@ function renderHome(store) {
         .map(
           (p) => `
       <div class="wn-shop-card">
-        <div class="wn-shop-card-img" style="background:${escapeHtml(p.swatch || '#dde6ff')}"></div>
+        <div class="wn-shop-card-img">${productThumbImgHtml(p)}</div>
         <div class="wn-shop-card-body">
           <div class="wn-shop-card-title">${linkShop(sid, `${sid}/product/${p.id}`, escapeHtml(p.title))}</div>
           <div class="wn-shop-price-row">${priceRowInner(p)}</div>
@@ -228,6 +513,7 @@ function renderCategory(store, catId) {
   <div><div class="wn-shop-logo">${escapeHtml(store.name)}</div></div>
   <div class="wn-shop-header-actions">${linkShop(sid, `${sid}/cart`, `Cart${badge ? ` (${badge})` : ''}`)}</div>
 </div>
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-layout">
   <main class="wn-shop-main">
     <p class="wn-shop-crumb">${linkShop(sid, `${sid}/home`, 'Home')} &raquo; ${escapeHtml(cat?.name || catId)}</p>
@@ -238,7 +524,7 @@ function renderCategory(store, catId) {
         .map(
           (p) => `
       <div class="wn-shop-card">
-        <div class="wn-shop-card-img" style="background:${escapeHtml(p.swatch || '#dde6ff')}"></div>
+        <div class="wn-shop-card-img">${productThumbImgHtml(p)}</div>
         <div class="wn-shop-card-body">
           <div class="wn-shop-card-title">${linkShop(sid, `${sid}/product/${p.id}`, escapeHtml(p.title))}</div>
           <div class="wn-shop-price-row">${priceRowInner(p)}</div>
@@ -300,6 +586,7 @@ ${shippingBannerHtml(store, subtotal)}
   <div><div class="wn-shop-logo">${escapeHtml(store.name)}</div></div>
   <div class="wn-shop-header-actions">${linkShop(sid, `${sid}/cart`, `Cart${badge ? ` (${badge})` : ''}`)}</div>
 </div>
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-layout">
   <main class="wn-shop-main">
     <p class="wn-shop-crumb">${linkShop(sid, `${sid}/home`, 'Home')} &raquo; ${linkShop(
@@ -308,7 +595,7 @@ ${shippingBannerHtml(store, subtotal)}
     escapeHtml(store.categories?.find((c) => c.id === p.categoryId)?.name || p.categoryId)
   )} &raquo; ${escapeHtml(p.title)}</p>
     <div class="wn-shop-product">
-      <div class="wn-shop-product-visual" style="background:${escapeHtml(p.swatch || '#dde6ff')}"></div>
+      <div class="wn-shop-product-visual">${productThumbImgHtml(p, 'wn-shop-product-visual-pic')}</div>
       <div>
         <h1 class="wn-shop-h1">${escapeHtml(p.title)}</h1>
         <div class="wn-shop-price-row big">${priceRowInner(p)}</div>
@@ -385,6 +672,8 @@ function renderCart(store) {
   <div><div class="wn-shop-logo">${escapeHtml(store.name)} — Cart</div></div>
   <div class="wn-shop-header-actions">${linkShop(sid, `${sid}/home`, 'Continue shopping')}</div>
 </div>
+${shippingBannerHtml(store, sub)}
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-main solo">
   <table class="wn-shop-table">
     <tr><th>Item</th><th>Price</th><th>Qty</th><th>Line</th><th></th></tr>
@@ -443,10 +732,15 @@ function renderCheckout(store) {
     !accounts.length ? 'checked' : ''
   }> Cash on hand — ${money(cash)}</label>`;
 
+  const estStandard = sub + (freeShip ? 0 : shipFeeStd);
+  const estPremium = sub + (freeShip ? shipFeePrem : shipFeePrem);
+
   const inner = `
 <div class="wn-shop-header"><div class="wn-shop-logo">Checkout — ${escapeHtml(store.name)}</div></div>
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-main solo">
   ${shippingBannerHtml(store, sub)}
+  <p class="wn-shop-checkout-est"><b>Merchandise:</b> ${money(sub)} · <b>Est. total (standard ship):</b> ${money(estStandard)} · <b>Est. total (premium ship):</b> ${money(estPremium)}</p>
   <p><b>Ship to</b></p>
   <form class="wn-shop-checkout-form" data-wn-shop-checkout="1">
     <table class="wn-shop-table wn-shop-form-table">
@@ -457,7 +751,7 @@ function renderCheckout(store) {
     <div class="wn-shop-radio-col">${shipOpts}</div>
     <p><b>Payment</b></p>
     <div class="wn-shop-radio-col">${payOpts}</div>
-    <p class="wn-shop-summary">Order subtotal: <b>${money(sub)}</b></p>
+    <p class="wn-shop-summary">Review totals above — shipping follows RapidMart rules (standard vs premium).</p>
     <button type="submit" class="wn-shop-btn">Place Order</button>
     &nbsp; ${linkShop(sid, `${sid}/cart`, 'Back to cart')}
     <input type="hidden" name="shopStore" value="${escapeHtml(sid)}">
@@ -489,11 +783,14 @@ function renderConfirm(store, orderId) {
     .join('');
   const inner = `
 <div class="wn-shop-header"><div class="wn-shop-logo">Order confirmed</div></div>
+${amazoneDepartmentStrip(store)}
 <div class="wn-shop-main solo">
   <h1 class="wn-shop-h1">Thank you!</h1>
   <p>Order <b>${escapeHtml(orderId)}</b></p>
   <p>Estimated delivery: <b>${eta}</b> (from time of purchase).</p>
   <table class="wn-shop-table"><tr><th>Item</th><th>Qty</th><th>Each</th><th>Total</th></tr>${lines}</table>
+  <p><b>Merchandise subtotal:</b> ${money(ord.subtotal)}</p>
+  <p><b>Shipping &amp; handling (${escapeHtml(ord.shipTier || 'standard')}):</b> ${money(ord.shipping)}</p>
   <p><b>Total charged:</b> ${money(ord.total)}</p>
   <p>${linkShop(sid, `${sid}/home`, 'Back to shop')}</p>
 </div>`;
@@ -779,6 +1076,7 @@ function completeCheckout(storeId, { shipTier, payRaw, shipName, shipAddr }) {
         source: 'purchase',
         tags: p.tags || []
       });
+      syncShopProductRowToStockroom(p);
     }
     ToastManager?.fire({
       key: `delivery_${orderId}`,
@@ -793,6 +1091,7 @@ function completeCheckout(storeId, { shipTier, payRaw, shipName, shipAddr }) {
     if (lastAdId) recordConversion(lastAdId);
 
     smsToPlayer(`Order ${orderId} confirmed. ETA ~${etaH} sim hours. ${store.name} thanks you.`);
+    recordPurchase(storeId === 'amazone' ? 'amazone_order' : 'worldnet_shop_order', st1.sim?.elapsedMs || 0);
   }
 
   return { ok: true, orderId };
@@ -803,6 +1102,21 @@ function completeCheckout(storeId, { shipTier, payRaw, shipName, shipAddr }) {
  */
 export function getStoreById(storeId) {
   return _stores.get(storeId) || null;
+}
+
+/**
+ * Resolve a product row by SKU across all registered WorldNet shops (RapidMart, Amazone, etc.).
+ * @param {string} productId
+ * @returns {{ storeId: string, product: object } | null}
+ */
+export function findShopProductById(productId) {
+  const pid = String(productId || '');
+  if (!pid) return null;
+  for (const store of _stores.values()) {
+    const product = store.productsById?.[pid];
+    if (product) return { storeId: store.id, product };
+  }
+  return null;
 }
 
 /**
@@ -818,7 +1132,7 @@ export function renderShopProductGridHtml(store, opts = {}) {
     .map(
       (p) => `
     <div class="wn-shop-card" style="min-width:140px;max-width:180px;border:1px solid #999;">
-      <div class="wn-shop-card-img" style="height:72px;background:${escapeHtml(p.swatch || '#dde6ff')}"></div>
+      <div class="wn-shop-card-img" style="height:72px">${productThumbImgHtml(p)}</div>
       <div class="wn-shop-card-body" style="padding:6px;">
         <div class="wn-shop-card-title" style="font-size:11px;font-weight:bold;">${escapeHtml(p.title)}</div>
         <div class="wn-shop-price-row" style="font-size:11px;">${priceRowInner(p)}</div>
@@ -840,6 +1154,12 @@ export function createStore(def) {
   const productsById = Object.fromEntries(plist.map((p) => [p.id, p]));
   _stores.set(def.id, { ...def, products: plist, productsById });
   if (def.publicHost) registerWorldNetShopHost(def.publicHost, def.id);
+  if (Array.isArray(def.alternateHosts)) {
+    for (const h of def.alternateHosts) {
+      const hn = String(h || '').trim();
+      if (hn) registerWorldNetShopHost(hn, def.id);
+    }
+  }
   patchState((st) => {
     for (const p of def.products || []) {
       const k = stockKey(def.id, p.id);
@@ -962,6 +1282,7 @@ export function getShopApi() {
     removeProduct,
     getCart,
     clearCart,
-    getStoreById
+    getStoreById,
+    hydrateAmazoneWorldNetStore
   };
 }

@@ -22,11 +22,11 @@ export const worldnetPages = {
 <div class="cgrid">
   <div class="cat"><div class="cat-t">💼 Business & Finance</div><a data-nav="bizreg">Register a Business</a><a data-nav="bank">First National Bank</a><a data-nav="bank_meridian">Meridian Savings</a><a data-nav="bank_harbor">Harbor Credit Union</a><a data-nav="bank_pacific">Pacific Rim Financial</a><a data-nav="etrade_bay">ETradeBay 2000</a><a data-nav="kittenorg">Financial Felines (kitten.org)</a><a data-nav="hargrove_careers">Hargrove Careers</a><a data-wnet-nav="http://www.realestatenow.net">Real Estate</a></div>
   <div class="cat"><div class="cat-t">📰 News & Media</div><a data-nav="herald">Daily Herald Online</a><a data-wnet-nav="http://www.corpnews.net">CorpNews Wire</a><a data-wnet-nav="http://www.megamergers.com">MegaMergers</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather</a></div>
-  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-wnet-nav="http://www.amazone.com">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-nav="onlyflans">Only Flans</a><a data-nav="rocksalive">Rocks Alive — Pet Rocks</a><a data-wnet-nav="http://www.bidbattle.net">BidBattle Auctions</a><a data-wnet-nav="http://www.discountelectronicsdirect.com">Electronics Direct</a></div>
+  <div class="cat"><div class="cat-t">🛒 Shopping</div><a data-nav="wn_shop" data-wnet-subpath="amazone/home">Amazone.com</a><a data-nav="wn_shop" data-wnet-subpath="rapidmart/home">RapidMart 1999</a><a data-nav="onlyflans">Only Flans</a><a data-nav="rocksalive">Rocks Alive — Pet Rocks</a><a data-wnet-nav="http://www.bidbattle.net">BidBattle Auctions</a><a data-wnet-nav="http://www.discountelectronicsdirect.com">Electronics Direct</a></div>
   <div class="cat"><div class="cat-t">🏘️ Community</div><a data-nav="patricias_garden">Patricia's Garden Corner</a><a data-nav="cubscouts">Hargrove Cub Scouts</a><a data-nav="bearscouts">Hargrove Bear Scouts</a><a data-nav="savethecookies">Save the Cookies Coalition</a><a data-nav="quarryhearts">Quarry Hearts International</a></div>
   <div class="cat"><div class="cat-t">👥 People & Jobs</div><a data-nav="hiring">Job Listings</a><a data-nav="staffing">Staffing Agency</a><a data-nav="yourspace">yourspace.net</a><a data-wnet-nav="http://www.careerlaunchpad.com">CareerLaunchPad</a><a data-wnet-nav="http://www.classmatesfinder.net">ClassmatesFinder</a></div>
   <div class="cat"><div class="cat-t">⚖️ Government</div><a data-nav="ssa">SSA — ID Services</a><a data-nav="bizreg">Business Registry</a><a data-nav="web_registry">World Wide Web Registry</a><a data-nav="net99669">99669.net — Site Directory</a><a data-nav="fra">Federal Revenue Auth.</a><a data-wnet-nav="http://www.citypermits.gov.net">Permits & Licenses</a></div>
-  <div class="cat"><div class="cat-t">💻 Technology</div><a data-nav="moogle_home">Moogle — Search</a><a data-wnet-nav="http://www.intek-corp.com">Intek Corporation</a><a data-nav="devtools">devtools.net</a><a data-nav="reviewbomber">reviewbomber.net</a><a data-nav="mytube">mytube.net</a><a data-wnet-nav="http://www.driverdump.com">DriverDump</a><a data-wnet-nav="http://www.pixelperfect.net">Web Tutorials</a></div>
+  <div class="cat"><div class="cat-t">💻 Technology</div><a data-nav="moogle_home">Moogle — Search</a><a data-wnet-nav="http://www.intek-corp.com">Intek Corporation</a><a data-nav="devtools">devtools.net</a><a data-nav="corpos_com">CorpOS.com</a><a data-nav="reviewbomber">reviewbomber.net</a><a data-nav="mytube">mytube.net</a><a data-wnet-nav="http://www.driverdump.com">DriverDump</a><a data-wnet-nav="http://www.pixelperfect.net">Web Tutorials</a></div>
   <div class="cat"><div class="cat-t">✈️ Travel & Tourism</div><a data-nav="hargrove_hotels">Hargrove Hospitality Guide</a></div>
   <div class="cat"><div class="cat-t">📚 Education</div><a data-nav="hargrove_elementary">Hargrove Elementary</a><a data-nav="hargrove_library">Hargrove Public Library</a></div>
   <div class="cat"><div class="cat-t">🗺️ Maps & Directions</div><a data-nav="moogle_maps">Moogle Maps — Hargrove</a><a data-wnet-nav="http://www.weatherchannel2k.com">Weather Forecast</a><a data-nav="net99669">Yellow Pages</a></div>
@@ -251,6 +251,7 @@ export const worldnetPages = {
   <div data-devtools-app="admin-npc"></div>
   <div data-devtools-app="admin-gov"></div>
   <div data-devtools-app="admin-axis"></div>
+  <div data-devtools-app="player-inventory"></div>
 </div>
 <div data-devtools-combat-families></div>
 <div style="margin-top:14px;padding-top:6px;border-top:1px solid #ddd;font-size:9px;color:#ccc;">
@@ -263,6 +264,60 @@ export const worldnetPages = {
 <aside style="width:120px;flex-shrink:0;">
 <div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div>
 <div data-wnet-ad-slot="right-rail-secondary" data-wnet-ad-region="right-rail"></div>
+</aside>
+</div>
+</div>`,
+
+  /** Official storefront catalog body (placeholders expanded like devtools). */
+  corpos_com_apps_inner: `<div data-wnet-corpos-appstore-inner="1">
+<div style="border:1px solid #9aa7c6;background:#f3f7ff;padding:8px;margin-bottom:10px;font-size:11px;line-height:1.5;">
+  Browse CorpOS-certified titles. Payment posts to your primary FNCB checking account when you confirm; download and install follow on the simulated timeline. Installed applications appear on the desktop when setup completes.
+</div>
+<div data-wnet-ad-slot="content-break" data-wnet-ad-region="content-break" style="margin:8px 0;"></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+  <div data-devtools-app="media-player"></div>
+  <div data-devtools-app="admin-web"></div>
+  <div data-devtools-app="webex-publisher"></div>
+  <div data-devtools-app="admin-company"></div>
+  <div data-devtools-app="admin-npc"></div>
+  <div data-devtools-app="admin-gov"></div>
+  <div data-devtools-app="admin-axis"></div>
+  <div data-devtools-app="player-inventory"></div>
+</div>
+<div data-devtools-combat-families></div>
+</div>`,
+
+  corpos_com: `<div class="iebody" data-wn-ad-page="corpos_com">
+<div class="ntbar">◆ CORPOS.COM — OFFICIAL SOFTWARE CHANNEL &nbsp;|&nbsp; ◆ DIGITAL DELIVERY &nbsp;|&nbsp; ◆ CERTIFIED FOR CORPOS 2000</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+  <div>
+    <div style="font-size:30px;font-weight:900;color:#0a246a;font-family:Verdana,Arial,sans-serif;letter-spacing:-1px;">CorpOS.com</div>
+    <div style="font-size:11px;color:#666;">The official CorpOS application storefront — same catalog as the developer mirror, consumer branding.</div>
+  </div>
+  <div style="font-size:10px;color:#666;text-align:right;">Trusted host &nbsp;|&nbsp; Federal interoperability</div>
+</div>
+<div style="display:flex;gap:8px;align-items:flex-start;">
+<aside style="width:120px;flex-shrink:0;">
+<div data-wnet-ad-slot="left-rail-primary" data-wnet-ad-region="left-rail"></div>
+</aside>
+<div style="flex:1;min-width:0;">
+<div data-wnet-ad-slot="below-header" data-wnet-ad-region="below-header" style="margin:6px 0;"></div>
+<div style="border:2px solid;border-color:#fff #404040 #404040 #fff;background:#f0f0f0;padding:12px;margin-bottom:10px;font-size:12px;line-height:1.5;">
+  <b>Welcome to CorpOS.com.</b> Shop verified business tools, editors, and system utilities in one place. Your purchases are logged per Mandate 2000-CR7.
+</div>
+<p style="font-size:11px;margin-bottom:10px;">
+  <a href="#" data-nav="corpos_com" data-wnet-subpath="apps" style="font-weight:bold;color:#0a246a;">Enter the software catalog →</a>
+</p>
+<p style="font-size:10px;color:#888;">Developer mirror: <a href="#" data-nav="devtools" style="color:#666;">devtools.net</a></p>
+<div data-wnet-ad-slot="above-footer" data-wnet-ad-region="above-footer" style="margin-top:12px;"></div>
+<div style="margin-top:14px;padding-top:6px;border-top:1px solid #ddd;font-size:9px;color:#ccc;">
+  <span style="color:#bbb;">CorpOS.com &copy; 2000 — </span>
+  <a data-nav="home" style="color:#aaa;">Wahoo! Home</a> &nbsp;|&nbsp;
+  <a data-nav="web_registry" style="color:#aaa;">Registry</a>
+</div>
+</div>
+<aside style="width:120px;flex-shrink:0;">
+<div data-wnet-ad-slot="right-rail-primary" data-wnet-ad-region="right-rail"></div>
 </aside>
 </div>
 </div>`,

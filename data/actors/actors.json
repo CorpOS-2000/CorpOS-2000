@@ -67518,29 +67518,29 @@
   },
   {
     "actor_id": "PLAYER_PRIMARY",
-    "full_legal_name": "Jennifer Lopez",
-    "first_name": "Jennifer",
-    "last_name": "Lopez",
+    "full_legal_name": "Richard Hernandez",
+    "first_name": "Richard",
+    "last_name": "Hernandez",
     "aliases": [
-      "jenniferlopez"
+      "richardhernandez"
     ],
-    "ssn": "789-52-1058",
+    "ssn": "821-10-1962",
     "phone_numbers": [
-      "(559) 479-4118"
+      "(559) 882-2059"
     ],
     "emails": [
-      "jennifer.lopez@jeemail.net",
-      "jenny123@jeemail.net"
+      "richard.hernandez@jeemail.net",
+      "rich1323@jeemail.net"
     ],
     "home_address": {
-      "street": "251 Pine Street, Hargrove, CA 94521",
+      "street": "311 Commerce Drive, Hargrove, CA 94521",
       "city": "Hargrove",
       "state": "CA",
       "zip": "93720"
     },
-    "hargrove_address_id": "addr_00562",
-    "dob": "December 29, 1977",
-    "age": 48,
+    "hargrove_address_id": "addr_00173",
+    "dob": "November 28, 1949",
+    "age": 76,
     "household_id": "HH_PLAYER",
     "employer_id": null,
     "profession": "Entrepreneur",
@@ -67560,7 +67560,7 @@
     },
     "relationships": [
       {
-        "actor_id": "ACT-MOM-IQJE9ZEQ",
+        "actor_id": "ACT-MOM-UPBXXS8F",
         "type": "family",
         "subtype": "mother",
         "strength": 10
@@ -67591,7 +67591,7 @@
       "government": "legal"
     },
     "public_profile": {
-      "display_name": "Jennifer Lopez",
+      "display_name": "Richard Hernandez",
       "bio": "Entrepreneur.",
       "occupation": "Business Operator",
       "avatar_description": "Young professional"
@@ -71216,6 +71216,141 @@
       "trust_check": 4
     },
     "welcomeMessage": "Jennifer it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
+    "moneyGivenCount": 0,
+    "rudeness_count": 0,
+    "rudeness_sms_sent": 0,
+    "role": "contact",
+    "investigator_tier": null,
+    "is_player": false,
+    "is_key_character": false,
+    "created_at": "2000-01-01T06:00:00",
+    "active": true,
+    "contactDisplayName": "Mom",
+    "relationToPlayer": "Mother",
+    "work_schedule": {
+      "shift": "day",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "peak_hours": [
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17
+      ],
+      "off_hours": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        22,
+        23
+      ]
+    }
+  },
+  {
+    "actor_id": "ACT-MOM-UPBXXS8F",
+    "full_legal_name": "Betty Hernandez",
+    "first_name": "Betty",
+    "last_name": "Hernandez",
+    "maiden_name": "Miller",
+    "aliases": [
+      "Mom"
+    ],
+    "ssn": "488-63-2140",
+    "phone_numbers": [
+      "(559) 917-4101"
+    ],
+    "emails": [
+      "betty.hernandez23@intekmail.net"
+    ],
+    "home_address": {
+      "street": "5100 Cherry Lane",
+      "city": "Hargrove",
+      "state": "CA",
+      "zip": "94522"
+    },
+    "hargrove_address_id": "addr_03194",
+    "dob": "1943-01-03",
+    "age": 83,
+    "household_id": "HH_MOM",
+    "employer_id": null,
+    "profession": "Retired Teacher",
+    "lifestyle_tier": "middle",
+    "taglets": [
+      "pro_government",
+      "status_quo",
+      "vocal",
+      "optimistic_voice",
+      "community_first",
+      "casual_speaker"
+    ],
+    "social_weight": 12,
+    "opinion_profile": {
+      "player": 95,
+      "government": 20,
+      "corpos": 5,
+      "rapidemart": -10,
+      "corporations_general": 0
+    },
+    "relationships": [
+      {
+        "actor_id": "PLAYER_PRIMARY",
+        "type": "family",
+        "subtype": "child",
+        "strength": 10
+      }
+    ],
+    "current_state": {
+      "location": "home",
+      "activity": "household",
+      "mood": "warm",
+      "last_event": null
+    },
+    "memory": [],
+    "activity_schedule": {
+      "platforms": [],
+      "peak_hours": [
+        9,
+        20
+      ],
+      "frequency": "low"
+    },
+    "site_visibility": {
+      "social": "public",
+      "forum": "alias",
+      "banking": "legal",
+      "government": "legal"
+    },
+    "public_profile": {
+      "display_name": "Betty Hernandez",
+      "bio": "",
+      "occupation": "Retired Teacher",
+      "avatar_description": "Warm middle-aged woman"
+    },
+    "private_profile": {
+      "notes": "",
+      "risk_flags": []
+    },
+    "dcProfile": {
+      "affinity_check": 6,
+      "gossip_check": 12,
+      "info_check": 14,
+      "favor_check": 10,
+      "bribe_check": 18,
+      "intimidation_check": 20,
+      "trust_check": 4
+    },
+    "welcomeMessage": "Richard it's Mom. Your father says good luck. I say don't forget to eat. Call me tonight. xoxo",
     "moneyGivenCount": 0,
     "rudeness_count": 0,
     "rudeness_sms_sent": 0,

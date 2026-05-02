@@ -557,7 +557,7 @@ export function verifyOsLogin(username, password) {
 /* ────────── WorldNet gate interstitial ────────── */
 
 export const CORPOS_GATED_PAGE_KEYS = new Set([
-  'bizreg', 'ssa', 'fra', 'devtools'
+  'bizreg', 'ssa', 'fra', 'devtools', 'corpos_com'
 ]);
 
 export function renderGateInterstitial() {

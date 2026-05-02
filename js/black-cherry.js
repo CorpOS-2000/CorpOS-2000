@@ -1718,7 +1718,13 @@ export function initBlackCherry() {
         closeBlackCherryDock();
         window.openW?.('worldnet');
         if (actionPayload) {
-          setTimeout(() => window.wnetGo?.(actionPayload), 120);
+          setTimeout(() => {
+            if (Array.isArray(actionPayload)) {
+              window.wnetGo?.(actionPayload[0], actionPayload[1] || '');
+            } else {
+              window.wnetGo?.(actionPayload);
+            }
+          }, 120);
         }
         break;
       case 'open_jeemail':

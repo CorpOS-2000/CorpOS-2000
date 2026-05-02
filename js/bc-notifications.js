@@ -31,7 +31,7 @@ const TOAST_KEY_ACTIONS = {
   bank_transfer: { type: 'open_window', payload: 'worldnet' },
   bank_loan_approved: { type: 'open_window', payload: 'worldnet' },
   bank_compliance_notice: { type: 'open_window', payload: 'worldnet' },
-  order_confirmed: { type: 'open_worldnet', payload: 'amazone' },
+  order_confirmed: { type: 'open_worldnet', payload: ['wn_shop', 'amazone/home'] },
   order_delivered: { type: 'open_sms_thread', payload: 'CORPOS_SYSTEM' },
   new_message: { type: 'open_sms_thread', payload: null },
   missed_call: { type: 'open_view', payload: 'dial' },

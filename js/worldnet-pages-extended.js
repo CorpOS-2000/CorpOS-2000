@@ -23,6 +23,7 @@ import {
 } from './worldnet-sites-registry.js';
 import { buildWorldNet100Site } from './worldnet-sites-builders.js';
 import { bumpWorldNetVisit } from './worldnet-counters.js';
+import { ensureAmazoneRivalProducts } from './amazone-rival-catalog.js';
 
 // ── Routes (merged in worldnet-routes.js) — legacy extended sites
 const EXT_BASE_ROOT_URLS = Object.freeze({
@@ -65,8 +66,6 @@ export const RIVAL_CORP_ROOT_URLS = Object.freeze({
 const RIVAL_CORP_HOSTS = [
   ['www.moogle-corp.net', 'moogle_corp'],
   ['moogle-corp.net', 'moogle_corp'],
-  ['www.amazone.com', 'amazone_corp'],
-  ['amazone.com', 'amazone_corp'],
   ['www.rapid-e-mart.com', 'rapidmart_corp'],
   ['rapid-e-mart.com', 'rapidmart_corp'],
   ['www.intek-corp.net', 'intek_corp'],
@@ -152,7 +151,7 @@ export const EXTENDED_PAGE_TITLES = Object.freeze({
   hargrove_vault: 'HargroveVault — Secured Storage',
   stor_it: 'StorIt Hargrove',
   moogle_corp: 'Moogle Inc.',
-  amazone_corp: 'Amazone Corp',
+  amazone_corp: 'Amazone.com — Earth\'s Biggest Selection',
   rapidmart_corp: 'RapidE-Mart',
   intek_corp: 'Intek Systems',
   microcorp_corp: 'MicroCorp',
@@ -187,6 +186,41 @@ const Y2K_FOOTER = `<div style="margin-top:14px;border-top:1px dashed #888;paddi
   <a href="#" data-nav="home" style="font-size:9px;">Wahoo!</a> · WebRing: <font color="#808080">[PREV]</font> <font color="#808080">[RAND]</font> <font color="#808080">[NEXT]</font><br>
   ©1999–2000 · Under Construction <blink>_</blink>
 </div>`;
+
+function buildAmazoneCorpLandingPage(company) {
+  ensureAmazoneRivalProducts();
+  const co = company || {};
+  const dept = (catId, label) =>
+    `<a data-nav="wn_shop" data-wnet-subpath="amazone/category/${escapeHtml(catId)}" href="#" style="color:#ffeb99;margin:0 6px;text-decoration:none;">${escapeHtml(
+      label
+    )}</a>`;
+  return `<div class="iebody amazone-y2k-store" data-wn-ad-page="amazone_corp" style="font-family:Tahoma,Verdana,Arial,sans-serif;background:#e8dcc8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2B4C7E"><tr><td style="padding:10px 14px;">
+  <font size="5" color="#FFCC66" face="Times New Roman, Times, serif"><b>Amazone</b></font><font size="4" color="#ffffff">.com</font>
+  <div style="font-size:10px;color:#bcd4ff;margin-top:4px;">${escapeHtml(co.tagline || "Earth's Biggest Selection — Hargrove Edition")}</div>
+</td></tr></table>
+<table width="100%" cellpadding="10" cellspacing="0" border="0" bgcolor="#003893"><tr><td align="center" style="font-size:11px;color:#fff;">
+  <b>Cart · checkout · standard / premium shipping</b> — Super Saver fiction™ included
+</td></tr>
+<tr bgcolor="#0054a8"><td align="center" style="padding:8px;font-size:10px;">
+  ${dept('books', 'Books')}<font color="#6699cc">|</font>${dept('music', 'Music')}<font color="#6699cc">|</font>${dept('dvd_video', 'DVD / Video')}<font color="#6699cc">|</font>${dept('electronics', 'Electronics')}<font color="#6699cc">|</font>${dept('auctions', 'Auctions')}<font color="#6699cc">|</font>${dept('zshops', 'zShops')}
+</td></tr></table>
+<div style="padding:16px;background:#e8dcc8;font-size:12px;color:#222;line-height:1.45;">
+  <p style="margin-bottom:10px;">Browse every department, add to cart, pay from FNCB or cash on hand, and receive SMS order confirmation — same flow as RapidMart WorldNet Commerce.</p>
+  <p style="margin-bottom:14px;">
+    <a data-nav="wn_shop" data-wnet-subpath="amazone/home" href="#" style="font-weight:bold;color:#039;font-size:13px;">Enter full storefront →</a>
+    &nbsp;·&nbsp;
+    <a data-nav="wn_shop" data-wnet-subpath="amazone/cart" href="#" style="color:#039;">Shopping cart</a>
+    &nbsp;·&nbsp;
+    <a href="#" data-nav="home" style="color:#039;">Wahoo!</a>
+    &nbsp;·&nbsp;
+    <a href="#" data-nav="web_registry" style="color:#039;">WWW Registry</a>
+  </p>
+  <p style="font-size:10px;color:#555;">Tip: type <b>www.amazone.com</b> in the address bar for the live catalog.</p>
+</div>
+${Y2K_FOOTER}
+</div>`;
+}
 
 function buildRivalCorporationPage(company, products) {
   const prows = (products || [])
@@ -370,6 +404,10 @@ export function buildExtendedPage(key, sub = '', navigate) {
       return buildStorItPage();
     case 'etrade_bay':
       return buildETradeBayPage(sub, navigate);
+    case 'amazone_corp': {
+      const co = (st.rivalCompanies || []).find((c) => c.worldnetPageKey === 'amazone_corp');
+      return buildAmazoneCorpLandingPage(co);
+    }
     default: {
       const co = (st.rivalCompanies || []).find((c) => c.worldnetPageKey === key);
       if (co) {

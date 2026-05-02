@@ -54,5 +54,44 @@
       }
     ],
     "adSlots": ["banner-top", "sidebar-right", "inline-product"]
+  },
+  {
+    "id": "amazone",
+    "name": "Amazone.com",
+    "tagline": "Earth's Biggest Selection — Southside Fulfillment since 1999.",
+    "publicHost": "www.amazone.com",
+    "alternateHosts": ["amazone.com"],
+    "themeClass": "wn-shop-root--amazone",
+    "freeShippingThreshold": 49,
+    "shippingFee": 6.49,
+    "premiumShippingFee": 14.99,
+    "deliveryHoursBudget": 36,
+    "deliveryHoursPremium": 8,
+    "featuredProductIds": ["amazone-prime", "amazone-cloud", "amazone-pay"],
+    "categories": [
+      { "id": "books", "name": "Books" },
+      { "id": "music", "name": "Music" },
+      { "id": "dvd_video", "name": "DVD / Video" },
+      { "id": "electronics", "name": "Electronics" },
+      { "id": "auctions", "name": "Auctions & Collectibles" },
+      { "id": "zshops", "name": "zShops — Marketplace" },
+      { "id": "home", "name": "Home & Kitchen" },
+      { "id": "software", "name": "Software & Games" },
+      { "id": "toys", "name": "Toys & Games" },
+      { "id": "sports", "name": "Sports & Outdoors" },
+      { "id": "subscription", "name": "Subscriptions" },
+      { "id": "service", "name": "Services" },
+      { "id": "advertising", "name": "Advertising & Seller Tools" },
+      { "id": "logistics", "name": "Logistics & Fulfillment" },
+      { "id": "food", "name": "Grocery & Fresh" },
+      { "id": "fintech", "name": "Payments & Money" },
+      { "id": "consumer", "name": "Consumer Goods" },
+      { "id": "education", "name": "Education & Training" },
+      { "id": "hardware", "name": "Hardware & Components" },
+      { "id": "office", "name": "Office Supplies" },
+      { "id": "general", "name": "Everything Else" }
+    ],
+    "products": [],
+    "adSlots": ["below-header", "right-rail-primary", "content-break"]
   }
 ]
